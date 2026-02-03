@@ -1,238 +1,313 @@
-# Liturgia Cattolica - Portale Spirituale
+# ✨ Verbum Lucis
 
-Un portale completo per liturgia quotidiana, preghiere, santi, novene e risorse spirituali cattoliche. Costruito con **Astro**, **PostgreSQL**, **Tailwind CSS** e **shadcn/ui**.
+**Il portale spirituale cattolico italiano con 100.000+ pagine programmatiche SEO-ottimizzate.**
 
-## 🚀 Setup Rapido (VPS)
+Un ecosistema completo per liturgia quotidiana, santi, preghiere, novene, catechismo e contenuti spirituali. Costruito con **Astro 5**, **PostgreSQL 16**, **React 18** e **Tailwind CSS**.
 
-### Prerequisiti
-- Docker e Docker Compose installati
-- Node.js 20+ (se esegui senza Docker)
-- Git
+## 🎯 Obiettivo
 
-### 1. Clone Repository
+Generare il portale spirituale cattolico italiano più completo e tecnicamente avanzato, coprendo:
+- ✅ **Liturgia diocesana** per tutte le 226 diocesi italiane (36.500+ pagine/anno)
+- ✅ **Catechismo della Chiesa Cattolica** (2.865 punti searchable)
+- ✅ **Santi e patronati** (10.000+ pagine)
+- ✅ **Preghiere, novene, benedizioni** (5.000+ pagine)
+- ✅ **Intent-based pages** (/prego-per/...) per ricerche naturali
+- ✅ **Struttura SEO programmatica** con schema.org completo
+
+## 🚀 Quick Start
+
+### Con Docker (CONSIGLIATO)
+
 ```bash
-git clone <your-repo-url>
-cd liturgia-cattolica
-```
-
-### 2. Configurazione Ambiente
-```bash
+# Clone e setup
+git clone https://github.com/soliwalker/verbum-lucis.git
+cd verbum-lucis
 cp .env.example .env
-# Modifica .env con le tue credenziali
-```
 
-### 3. Avvio con Docker (CONSIGLIATO)
-```bash
-# Avvia database e applicazione
+# Start
 docker-compose up -d
 
-# Attendi che il database sia pronto, poi esegui migrations
+# Init database
 docker-compose exec app npm run db:push
-
-# Popola database con dati iniziali
 docker-compose exec app npm run db:seed
 
-# L'app sarà disponibile su http://localhost:4321
+# Visita http://localhost:4321
 ```
 
-### 4. Setup Manuale (Senza Docker)
+### Locale (Senza Docker)
+
 ```bash
-# Installa dipendenze
 npm install
 
-# Avvia PostgreSQL localmente o usa un database hosted
-# Aggiorna DATABASE_URL in .env
-
-# Esegui migrations
+# Configura PostgreSQL e DATABASE_URL in .env
 npm run db:push
-
-# Popola database
 npm run db:seed
 
-# Development
 npm run dev
+```
 
-# Production build
-npm run build
-npm run preview
+## 📊 Stack Tecnologico
+
+| Layer | Tecnologia | Versione |
+|-------|-----------|----------|
+| **Frontend** | Astro | 5.17.1 |
+| **UI** | React + shadcn/ui | 18.2 |
+| **Styling** | Tailwind CSS | 3.4 |
+| **Database** | PostgreSQL + Drizzle ORM | 16 + 0.29.3 |
+| **Runtime** | Node.js Alpine | 20 LTS |
+| **Deployment** | Docker Compose + Traefik | latest |
+| **SSL** | Let's Encrypt | Automatic |
+
+## 🏗️ Architettura
+
+```
+┌─────────────────────────────────────┐
+│     Browser (HTTPS)                 │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│  Traefik (Reverse Proxy + SSL)       │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│   Astro SSR (Node.js)                │
+│   - Programmatic pages               │
+│   - Dynamic routes                   │
+│   - API routes                       │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│   PostgreSQL 16                      │
+│   - saints, prayers, liturgy         │
+│   - dioceses, catechism              │
+│   - intentions, angels, blessings    │
+└─────────────────────────────────────┘
 ```
 
 ## 📁 Struttura Progetto
 
 ```
-liturgia-cattolica/
+verbum-lucis/
 ├── src/
-│   ├── pages/              # Route Astro
+│   ├── pages/              # Route Astro (SSR/SSG)
 │   │   ├── index.astro     # Homepage
-│   │   ├── santi/
-│   │   │   └── [slug].astro  # Pagina dinamica santo
-│   │   ├── liturgia/
-│   │   │   └── oggi.astro    # Liturgia del giorno
-│   │   └── preghiere/
-│   ├── layouts/
-│   │   └── BaseLayout.astro
-│   ├── components/         # Componenti React (shadcn)
-│   ├── styles/
-│   │   └── globals.css
-│   └── db/
-│       ├── schema.ts       # Schema database Drizzle
-│       └── index.ts        # Config e utilities
+│   │   ├── santi/          # Saint pages
+│   │   ├── liturgia/       # Liturgy pages (national + diocesan)
+│   │   ├── preghiere/      # Prayer pages
+│   │   ├── catechismo/     # Catechism pages
+│   │   ├── prego-per/      # Intent-based pages
+│   │   └── admin/          # Admin panel
+│   ├── components/         # React components
+│   ├── layouts/            # Astro layouts
+│   ├── lib/                # Utilities & API integrations
+│   └── db.ts              # Database config
+├── db/
+│   └── schema.ts          # Drizzle ORM schema
 ├── scripts/
-│   └── seed.js            # Popolazione database
-├── docker-compose.yml
-├── Dockerfile
-└── package.json
+│   ├── import-*.js        # Data import scripts
+│   ├── update-liturgy.js  # Daily cron job
+│   └── seed.js            # Initial data
+├── data/
+│   ├── diocesi.json       # 226 Italian dioceses
+│   ├── catechismo-it.json # 2865 catechism paragraphs
+│   └── prayers-*.json     # Prayer collections
+├── .github/workflows/     # GitHub Actions
+│   ├── build-test.yml     # Build & test
+│   ├── deploy.yml         # Auto-deploy to VPS
+│   └── backup.yml         # Weekly DB backup
+├── docker-compose.yml     # Production stack
+└── Dockerfile             # Multi-stage build
 ```
 
-## 🗄️ Database Schema
+## 📦 Database Schema
 
-### Tabelle Principali:
-- **saints** - Santi, beati, venerabili
-- **prayers** - Preghiere di ogni tipo
-- **liturgy** - Liturgia giornaliera
-- **novenas** - Novene ai santi
+### Tabelle Principali
+
+- **saints** - Santi, beati, venerabili (10.000+)
+- **prayers** - Preghiere categorizzate (5.000+)
+- **liturgy** - Letture giornaliere per diocesi (365+ giorni)
+- **dioceses** - 226 diocesi italiane con codici LitCal
+- **catechism** - 2.865 punti del Catechismo della Chiesa
+- **novenas** - Novene ai santi (200+)
+- **intentions** - Categorie di intenzioni di preghiera (15+)
 - **angels** - Arcangeli e angeli
-- **blessings** - Benedizioni
-- **intentions** - Categorie di intenzioni
+- **blessings** - Benedizioni per occasione
 
-## 📝 Aggiungere Contenuti
+## 🔄 CI/CD Pipeline
 
-### Aggiungere un Santo
-```javascript
-// In scripts/seed.js o tramite admin panel
-await db.insert(schema.saints).values({
-  nome: 'San Giuseppe',
-  slug: 'san-giuseppe',
-  dataFesta: '03-19',
-  biografia: '...',
-  patronoDi: ['Lavoratori', 'Padri di famiglia'],
-  // ...
-});
+GitHub Actions automatizza build, test e deploy:
+
+### Build & Test (on push)
+```
+Push → GitHub Actions → npm ci → npm build → ✅
 ```
 
-### Aggiungere una Preghiera
-```javascript
-await db.insert(schema.prayers).values({
-  titolo: 'Preghiera del mattino',
-  slug: 'preghiera-mattino',
-  testo: 'Ti adoro, mio Dio...',
-  categoria: 'mattino',
-  // ...
-});
+### Deploy (on main)
+```
+Merge → Build succeeds → SSH to VPS → docker-compose up → Health check → ✅
 ```
 
-## 🎨 Personalizzazione
-
-### Colori Liturgici
-I colori sono definiti in `tailwind.config.mjs`:
-- Verde (Tempo Ordinario)
-- Rosso (Pentecoste, Martiri)
-- Bianco (Natale, Pasqua)
-- Viola (Avvento, Quaresima)
-- Rosa (III Domenica Avvento, IV Quaresima)
-
-### Fonts
-- **Inter** - UI e testo generale
-- **Crimson Text** - Titoli e testo liturgico
-
-## 🔌 Integrazioni API
-
-### API Liturgia Consigliata
-```javascript
-// Aggiungi in src/lib/liturgy-api.ts
-export async function fetchDailyLiturgy(date) {
-  const response = await fetch(`https://calapi.inadiutorium.cz/api/v0/it/calendars/default/${date}`);
-  return response.json();
-}
+### Backup (weekly)
+```
+Sunday 03:00 → pg_dump → compress → rotate → ✅
 ```
 
-### Cron Job per Aggiornamenti Automatici
+### Restore da Backup
 ```bash
-# Crontab per aggiornare liturgia ogni giorno alle 00:01
-1 0 * * * cd /path/to/app && npm run update-liturgy
+# Download from Release
+wget https://github.com/soliwalker/verbum-lucis/releases/download/v1.0.0/restore-point-v1.0.0.sql.gz
+
+# Restore
+gunzip restore-point-v1.0.0.sql.gz
+docker exec -i verbum-lucis-db psql -U verbum_user -d verbum_lucis < restore-point-v1.0.0.sql
 ```
 
-## 📈 SEO e Performance
+## 📊 Data Aggregation
 
-### Sitemap Automatica
-La sitemap viene generata automaticamente con `@astrojs/sitemap`
+Importa dati da multiple fonti:
 
-### Meta Tags
-Ogni pagina ha meta tags ottimizzati per SEO e social sharing
-
-### Schema.org
-Markup strutturato per:
-- Santi (Person)
-- Preghiere (CreativeWork)
-- Eventi liturgici (Event)
-
-## 🚀 Deploy
-
-### VPS/Server Dedicato
 ```bash
-# Pull latest
-git pull
+# From Google Sheets
+npm run import:sheets
 
-# Rebuild
-docker-compose down
-docker-compose up -d --build
+# From CSV files
+npm run import:csv -- ./data/prayers.csv
+
+# From Airtable
+npm run import:airtable
+
+# All at once
+npm run import:external
 ```
 
-### Con Reverse Proxy (Nginx)
-```nginx
-server {
-    listen 80;
-    server_name tuosito.it;
-    
-    location / {
-        proxy_pass http://localhost:4321;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-```
+Vedi [scripts/import-*.js](scripts/) per i template generici e istruzioni di customizzazione.
 
-## 📊 Metriche e Analytics
+## 🛠️ Development
 
-Aggiungi Google Analytics in `BaseLayout.astro`:
-```html
-<!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=GA_TRACKING_ID"></script>
-```
+### Comandi Disponibili
 
-## 🛠️ Sviluppo
-
-### Aggiungere Nuove Pagine Programmatiche
-```astro
----
-// src/pages/benedizioni/[slug].astro
-export async function getStaticPaths() {
-  const benedizioni = await db.query.blessings.findMany();
-  return benedizioni.map(b => ({
-    params: { slug: b.slug },
-    props: { benedizione: b }
-  }));
-}
----
-```
-
-### Componenti shadcn
 ```bash
-# Aggiungi componenti secondo necessità
-npx shadcn-ui@latest add button
-npx shadcn-ui@latest add card
+# Development
+npm run dev                 # Start dev server (http://localhost:4321)
+
+# Building
+npm run build              # Production build
+npm run preview            # Preview build locally
+
+# Database
+npm run db:generate        # Generate migrations from schema
+npm run db:push            # Apply migrations to DB
+npm run db:seed            # Populate sample data
+
+# Data Import
+npm run import:dioceses    # Import dioceses
+npm run import:saints      # Import saints
+npm run import:prayers     # Import prayers
+npm run import:catechism   # Import catechism
+npm run import:intentions  # Import intentions
+npm run import:all         # All imports
+
+# Automation
+npm run update-liturgy     # Update today's liturgy
+npm run update-liturgy:all # Update next 7 days
+npm run sync-saints        # Sync saints with calendar
 ```
+
+## 🌐 Deployment
+
+### Production (VPS)
+
+**VPS Details:**
+- Host: `158.69.219.187` (Debian 13, 6 CPU, 11GB RAM)
+- Domain: `https://verbumlucis.it`
+- SSL: Let's Encrypt via Traefik
+
+**Manual Deploy:**
+```bash
+git push origin main       # Triggers GitHub Actions
+                           # → Builds → Deploys to VPS → Health check
+```
+
+**Manual SSH Deploy (if needed):**
+```bash
+ssh debian@158.69.219.187
+cd /opt/verbum-lucis
+git pull origin main
+docker-compose build
+docker-compose up -d
+docker-compose exec app npm run db:push
+```
+
+**Cron Jobs (on VPS):**
+- Daily: `00:01` - Update liturgy (`npm run update-liturgy`)
+- Weekly: `Sunday 03:00` - Database backup
+
+## 📈 SEO & Performance
+
+### Programmatic Pages
+- National + diocesan liturgy: **82,490/year**
+- Catechism points + themes: **3,065**
+- Intent-based pages: **200+**
+- Saints + patrons: **10,000+**
+- **Total target: 100,000+ pages**
+
+### SEO Features
+- ✅ Auto-generated sitemap (`@astrojs/sitemap`)
+- ✅ Schema.org structured data (Person, Article, Event)
+- ✅ Meta tags & Open Graph on all pages
+- ✅ Canonical URLs
+- ✅ Mobile-first responsive design
+- ✅ Core Web Vitals optimized
+
+### Performance
+- Server-side rendering (SSR) where needed
+- Static generation (SSG) for catechism
+- Lazy loading for images
+- Font preconnect optimization
+- **Target: LCP < 2.5s, FID < 100ms, CLS < 0.1**
+
+## 🔐 Security
+
+- ✅ Environment variables in `.env` (never committed)
+- ✅ Secure database password (generated + rotated)
+- ✅ Let's Encrypt HTTPS with auto-renewal
+- ✅ Docker container isolation
+- ✅ GitHub Actions secrets for deployment
+- ✅ SSH key-based VPS access
+
+**Admin Panel:** Currently without auth (TODO: add before public launch)
+
+## 📚 Documentazione Completa
+
+- **[CLAUDE.md](CLAUDE.md)** - Guida per Claude Code e sviluppatori AI
+- **[TECHNICAL DOC.md](TECHNICAL%20DOC.md)** - Architettura dettagliata + API
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Guida deploy passo-passo
+- **[competitive-strategy.md](competitive-strategy.md)** - Strategia SEO + vantaggi competitivi
+
+## 🤝 Contribuire
+
+1. Fork il repository
+2. Crea un feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push al branch (`git push origin feature/amazing-feature`)
+5. Open una Pull Request
 
 ## 📞 Supporto
 
-Per domande o problemi:
-- Email: info@liturgiacattolica.it
-- GitHub Issues: [link]
+- 🐛 Bug reports: GitHub Issues
+- 💬 Discussioni: GitHub Discussions
+- 📧 Email: info@verbumlucis.it
 
 ## 📜 Licenza
 
-Questo progetto rispetta i diritti d'autore dei testi liturgici ufficiali della CEI. 
+Questo progetto è costruito per rispettare i diritti d'autore dei testi liturgici ufficiali della CEI.
+
+La Bibbia CEI 2008 usata via [BibleGet.io](https://bibleget.io) è fornita con licenza appropriata per uso non-commerciale.
 
 ---
 
-**Costruito con ❤️ e 🙏 per la comunità cattolica italiana**
+**Costruito con ❤️ per la comunità cattolica italiana**
+
+🌐 **[https://verbumlucis.it](https://verbumlucis.it)**
+📊 **[GitHub Repository](https://github.com/soliwalker/verbum-lucis)**
+🚀 **[Latest Release](https://github.com/soliwalker/verbum-lucis/releases)**
