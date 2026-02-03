@@ -1,0 +1,39 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          SITE_URL: https://verbumlucis.it
+
+      - name: Check build artifacts
+        run: |
+          ls -la dist/
+          test -f dist/server/entry.mjs || (echo "Entry point not found!" && exit 1)
+
+      # Future: Add linting and testing steps
+      # - name: Run tests
+      #   run: npm test

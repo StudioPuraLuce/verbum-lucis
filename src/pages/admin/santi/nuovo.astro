@@ -1,0 +1,274 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+
+export const prerender = false;
+
+// Handle form submission
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    
+    const saintData = {
+      nome: formData.get('nome')?.toString() || '',
+      nomeCompleto: formData.get('nomeCompleto')?.toString() || null,
+      slug: formData.get('slug')?.toString() || '',
+      dataFesta: formData.get('dataFesta')?.toString() || '',
+      biografia: formData.get('biografia')?.toString() || '',
+      biografiaBreve: formData.get('biografiaBreve')?.toString() || '',
+      patronoDi: formData.get('patronoDi')?.toString().split(',').map(p => p.trim()).filter(Boolean) || [],
+      immagineUrl: formData.get('immagineUrl')?.toString() || null,
+      titolo: formData.get('titolo')?.toString() || null,
+      epoca: formData.get('epoca')?.toString() || null,
+      ricorrenza: formData.get('ricorrenza')?.toString() || 'Facoltativa',
+      popolarita: parseInt(formData.get('popolarita')?.toString() || '50'),
+    };
+
+    // Import db qui per evitare issues con prerender
+    const { db, schema } = await import('../../../db');
+    const { saints } = schema;
+    
+    await db.insert(saints).values(saintData);
+    
+    return Astro.redirect('/admin?success=santo-aggiunto');
+  } catch (error) {
+    console.error('Errore inserimento santo:', error);
+  }
+}
+---
+
+<BaseLayout title="Aggiungi Santo - Admin">
+  <div class="max-w-3xl mx-auto">
+    <div class="mb-6">
+      <a href="/admin" class="text-sm text-muted-foreground hover:text-primary">
+        ← Torna alla dashboard
+      </a>
+    </div>
+
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold mb-2">Aggiungi Nuovo Santo</h1>
+      <p class="text-muted-foreground">Compila il form per aggiungere un santo al database</p>
+    </header>
+
+    <form method="POST" class="space-y-6">
+      <!-- Nome -->
+      <div>
+        <label for="nome" class="block text-sm font-medium mb-2">
+          Nome <span class="text-destructive">*</span>
+        </label>
+        <input
+          type="text"
+          id="nome"
+          name="nome"
+          required
+          placeholder="San Francesco d'Assisi"
+          class="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
+
+      <!-- Nome Completo -->
+      <div>
+        <label for="nomeCompleto" class="block text-sm font-medium mb-2">
+          Nome Completo
+        </label>
+        <input
+          type="text"
+          id="nomeCompleto"
+          name="nomeCompleto"
+          placeholder="Francesco di Pietro di Bernardone"
+          class="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
+
+      <!-- Slug -->
+      <div>
+        <label for="slug" class="block text-sm font-medium mb-2">
+          Slug (URL) <span class="text-destructive">*</span>
+        </label>
+        <input
+          type="text"
+          id="slug"
+          name="slug"
+          required
+          placeholder="san-francesco-assisi"
+          pattern="[a-z0-9-]+"
+          class="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+        <p class="text-xs text-muted-foreground mt-1">Solo lettere minuscole, numeri e trattini</p>
+      </div>
+
+      <!-- Data Festa -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label for="dataFesta" class="block text-sm font-medium mb-2">
+            Data Festa (MM-DD) <span class="text-destructive">*</span>
+          </label>
+          <input
+            type="text"
+            id="dataFesta"
+            name="dataFesta"
+            required
+            placeholder="10-04"
+            pattern="[0-1][0-9]-[0-3][0-9]"
+            class="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <p class="text-xs text-muted-foreground mt-1">Formato: MM-DD (es. 10-04)</p>
+        </div>
+
+        <div>
+          <label for="titolo" class="block text-sm font-medium mb-2">
+            Titolo
+          </label>
+          <select
+            id="titolo"
+            name="titolo"
+            class="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="Santo">Santo</option>
+            <option value="Santa">Santa</option>
+            <option value="Beato">Beato</option>
+            <option value="Beata">Beata</option>
+            <option value="Venerabile">Venerabile</option>
+            <option value="Santo e Dottore della Chiesa">Santo e Dottore della Chiesa</option>
+            <option value="Santa e Martire">Santa e Martire</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Biografia Breve -->
+      <div>
+        <label for="biografiaBreve" class="block text-sm font-medium mb-2">
+          Biografia Breve
+        </label>
+        <textarea
+          id="biografiaBreve"
+          name="biografiaBreve"
+          rows="2"
+          placeholder="Breve descrizione (1-2 righe)"
+          class="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+        ></textarea>
+      </div>
+
+      <!-- Biografia Completa -->
+      <div>
+        <label for="biografia" class="block text-sm font-medium mb-2">
+          Biografia Completa
+        </label>
+        <textarea
+          id="biografia"
+          name="biografia"
+          rows="8"
+          placeholder="Biografia dettagliata del santo..."
+          class="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+        ></textarea>
+      </div>
+
+      <!-- Patrono di -->
+      <div>
+        <label for="patronoDi" class="block text-sm font-medium mb-2">
+          Patrono di (separati da virgola)
+        </label>
+        <input
+          type="text"
+          id="patronoDi"
+          name="patronoDi"
+          placeholder="Italia, Ecologia, Animali"
+          class="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
+
+      <!-- Altri campi -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label for="epoca" class="block text-sm font-medium mb-2">
+            Epoca
+          </label>
+          <input
+            type="text"
+            id="epoca"
+            name="epoca"
+            placeholder="XIII secolo"
+            class="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+
+        <div>
+          <label for="ricorrenza" class="block text-sm font-medium mb-2">
+            Ricorrenza
+          </label>
+          <select
+            id="ricorrenza"
+            name="ricorrenza"
+            class="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="Obbligatoria">Obbligatoria</option>
+            <option value="Facoltativa">Facoltativa</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- URL Immagine -->
+      <div>
+        <label for="immagineUrl" class="block text-sm font-medium mb-2">
+          URL Immagine
+        </label>
+        <input
+          type="url"
+          id="immagineUrl"
+          name="immagineUrl"
+          placeholder="https://example.com/image.jpg"
+          class="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
+
+      <!-- Popolarità -->
+      <div>
+        <label for="popolarita" class="block text-sm font-medium mb-2">
+          Popolarità (0-100)
+        </label>
+        <input
+          type="number"
+          id="popolarita"
+          name="popolarita"
+          min="0"
+          max="100"
+          value="50"
+          class="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex gap-4 pt-6 border-t">
+        <button
+          type="submit"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6"
+        >
+          Salva Santo
+        </button>
+        <a
+          href="/admin"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent h-10 px-6"
+        >
+          Annulla
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Auto-genera slug dal nome
+    const nomeInput = document.getElementById('nome') as HTMLInputElement;
+    const slugInput = document.getElementById('slug') as HTMLInputElement;
+
+    nomeInput?.addEventListener('input', () => {
+      if (!slugInput.value) {
+        const slug = nomeInput.value
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        slugInput.value = slug;
+      }
+    });
+  </script>
+</BaseLayout>

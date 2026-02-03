@@ -1,0 +1,266 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { db } from '../../db';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+
+const novena = await db.query.novenas.findFirst({
+  where: (novenas, { eq }) => eq(novenas.slug, slug || ''),
+});
+
+if (!novena) {
+  return Astro.redirect('/novene');
+}
+
+const santo = novena.saintId 
+  ? await db.query.saints.findFirst({
+      where: (saints, { eq }) => eq(saints.id, novena.saintId),
+    })
+  : null;
+---
+
+<BaseLayout 
+  title={novena.titolo}
+  description={novena.descrizione || `Novena di 9 giorni. ${novena.quandoPregare || ''}`}
+>
+  <article class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <header class="mb-8">
+      {santo && (
+        <a 
+          href={`/santi/${santo.slug}`}
+          class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition mb-4"
+        >
+          ← Torna a {santo.nome}
+        </a>
+      )}
+      
+      <div class="flex items-start gap-6 mb-6">
+        {santo?.immagineUrl && (
+          <img 
+            src={santo.immagineUrl} 
+            alt={santo.nome}
+            class="w-24 h-24 rounded-lg object-cover shadow-lg"
+          />
+        )}
+        
+        <div class="flex-1">
+          <h1 class="text-4xl md:text-5xl font-bold mb-3 font-serif">
+            {novena.titolo}
+          </h1>
+          
+          {novena.descrizione && (
+            <p class="text-lg text-muted-foreground">
+              {novena.descrizione}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {novena.quandoPregare && (
+        <div class="rounded-lg bg-primary/5 border border-primary/20 p-4">
+          <p class="flex items-center gap-2">
+            <span class="text-xl">📅</span>
+            <span class="font-semibold">Quando pregare:</span>
+            <span class="text-muted-foreground">{novena.quandoPregare}</span>
+          </p>
+        </div>
+      )}
+    </header>
+
+    <!-- Intenzioni -->
+    {novena.intenzioni && novena.intenzioni.length > 0 && (
+      <section class="mb-8">
+        <div class="rounded-lg border bg-card p-6">
+          <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+            <span>🙏</span>
+            Intenzioni della Novena
+          </h2>
+          <ul class="space-y-2">
+            {novena.intenzioni.map(intenzione => (
+              <li class="flex items-start gap-3">
+                <span class="text-primary mt-1">✓</span>
+                <span>{intenzione}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+
+    <!-- Come Pregare la Novena -->
+    <section class="mb-8">
+      <div class="rounded-lg bg-accent/30 p-6">
+        <h2 class="text-xl font-bold mb-4">📖 Come Pregare Questa Novena</h2>
+        <ol class="space-y-3 text-muted-foreground">
+          <li class="flex items-start gap-3">
+            <span class="font-bold text-primary">1.</span>
+            <span>Scegli un momento tranquillo della giornata (mattino o sera)</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="font-bold text-primary">2.</span>
+            <span>Fai il segno della croce e dedica un momento di silenzio</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="font-bold text-primary">3.</span>
+            <span>Leggi e medita la preghiera del giorno corrispondente</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="font-bold text-primary">4.</span>
+            <span>Esprimi le tue intenzioni personali</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="font-bold text-primary">5.</span>
+            <span>Concludi con un Padre Nostro, Ave Maria e Gloria</span>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Giorni della Novena -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-6 font-serif">I 9 Giorni di Preghiera</h2>
+      
+      <div class="space-y-6">
+        {novena.giorniTesti.map((giorno, index) => (
+          <details class="group rounded-lg border bg-card overflow-hidden">
+            <summary class="cursor-pointer p-6 hover:bg-accent transition flex items-center justify-between">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
+                  {giorno.giorno}
+                </div>
+                <div>
+                  <h3 class="font-bold text-lg">{giorno.titolo}</h3>
+                  <p class="text-sm text-muted-foreground">Giorno {giorno.giorno} della Novena</p>
+                </div>
+              </div>
+              <svg class="w-5 h-5 text-muted-foreground group-open:rotate-180 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            
+            <div class="p-6 pt-0 border-t">
+              <div class="prayer-text prose prose-lg max-w-none">
+                <p class="whitespace-pre-line leading-relaxed">{giorno.preghiera}</p>
+              </div>
+              
+              <div class="mt-6 pt-6 border-t flex items-center justify-between">
+                <button 
+                  onclick={`navigator.clipboard.writeText(${JSON.stringify(giorno.preghiera)}); this.textContent='✓ Copiato!'; setTimeout(()=>this.textContent='Copia Preghiera', 2000)`}
+                  class="text-sm text-muted-foreground hover:text-primary transition"
+                >
+                  Copia Preghiera
+                </button>
+                <span class="text-sm text-muted-foreground">
+                  {giorno.giorno} / 9
+                </span>
+              </div>
+            </div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <!-- Preghiera Finale -->
+    {novena.preghieraFinale && (
+      <section class="mb-8">
+        <div class="rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-8">
+          <h2 class="text-2xl font-bold mb-4 font-serif text-center">
+            Preghiera Finale
+          </h2>
+          <p class="text-sm text-center text-muted-foreground mb-6">
+            Da recitare alla fine di ogni giorno della novena
+          </p>
+          <div class="prayer-text prose prose-lg max-w-none text-center">
+            <p class="whitespace-pre-line leading-relaxed">{novena.preghieraFinale}</p>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- Tracker Progresso -->
+    <section class="mb-8">
+      <div class="rounded-lg border bg-card p-6">
+        <h3 class="font-bold mb-4 flex items-center gap-2">
+          <span>📊</span>
+          Traccia il Tuo Progresso
+        </h3>
+        <div class="flex gap-2 mb-4" id="progress-tracker">
+          {Array.from({ length: 9 }, (_, i) => (
+            <button 
+              data-day={i + 1}
+              class="progress-day flex-1 h-12 rounded border-2 border-muted hover:border-primary transition flex items-center justify-center font-bold cursor-pointer"
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+        <p class="text-sm text-muted-foreground text-center">
+          Clicca sui numeri per segnare i giorni completati
+        </p>
+      </div>
+    </section>
+
+    <!-- Call to Action -->
+    <div class="rounded-lg border bg-primary/5 p-8 text-center">
+      <h3 class="text-xl font-bold mb-3">Continua il Tuo Cammino</h3>
+      <p class="text-muted-foreground mb-6">
+        Scopri altre novene e preghiere per la tua vita spirituale
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        {santo && (
+          <a href={`/santi/${santo.slug}`} class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6">
+            Scopri {santo.nome}
+          </a>
+        )}
+        <a href="/novene" class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent h-10 px-6">
+          Altre Novene
+        </a>
+      </div>
+    </div>
+  </article>
+
+  <script>
+    // Progress tracker con localStorage
+    const progressButtons = document.querySelectorAll('.progress-day');
+    const novenaSlug = window.location.pathname.split('/').pop();
+    const storageKey = `novena-progress-${novenaSlug}`;
+
+    // Carica progresso salvato
+    const savedProgress = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    savedProgress.forEach((day: number) => {
+      const btn = document.querySelector(`[data-day="${day}"]`);
+      btn?.classList.add('bg-primary', 'text-primary-foreground', 'border-primary');
+    });
+
+    // Toggle progresso
+    progressButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const day = parseInt(btn.getAttribute('data-day') || '0');
+        const isCompleted = btn.classList.contains('bg-primary');
+        
+        if (isCompleted) {
+          btn.classList.remove('bg-primary', 'text-primary-foreground', 'border-primary');
+          const index = savedProgress.indexOf(day);
+          if (index > -1) savedProgress.splice(index, 1);
+        } else {
+          btn.classList.add('bg-primary', 'text-primary-foreground', 'border-primary');
+          if (!savedProgress.includes(day)) savedProgress.push(day);
+        }
+        
+        localStorage.setItem(storageKey, JSON.stringify(savedProgress));
+      });
+    });
+  </script>
+
+  <!-- Schema.org -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Course",
+    "name": novena.titolo,
+    "description": novena.descrizione,
+    "numberOfDays": 9,
+  })} />
+</BaseLayout>

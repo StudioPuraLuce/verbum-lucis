@@ -1,0 +1,272 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// Determina i misteri del giorno
+const giorniSettimana = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+const oggi = new Date().getDay();
+const giornoNome = giorniSettimana[oggi];
+
+const misteriDelGiorno = {
+  domenica: 'gloriosi',
+  lunedì: 'gaudiosi',
+  martedì: 'dolorosi',
+  mercoledì: 'gloriosi',
+  giovedì: 'luminosi',
+  venerdì: 'dolorosi',
+  sabato: 'gaudiosi'
+}[giornoNome] || 'gaudiosi';
+
+const misteri = {
+  gaudiosi: [
+    { titolo: "L'Annunciazione", descrizione: "L'Angelo Gabriele annuncia a Maria che diventerà la Madre di Dio", riflessione: "Disponibilità alla volontà di Dio" },
+    { titolo: "La Visitazione", descrizione: "Maria visita sua cugina Elisabetta", riflessione: "Carità verso il prossimo" },
+    { titolo: "La Nascita di Gesù", descrizione: "Gesù nasce a Betlemme", riflessione: "Povertà e umiltà" },
+    { titolo: "La Presentazione al Tempio", descrizione: "Gesù è presentato al Tempio da Maria e Giuseppe", riflessione: "Obbedienza alla legge di Dio" },
+    { titolo: "Il Ritrovamento nel Tempio", descrizione: "Gesù dodicenne viene ritrovato nel Tempio", riflessione: "Ricerca di Gesù" }
+  ],
+  luminosi: [
+    { titolo: "Il Battesimo di Gesù", descrizione: "Gesù è battezzato da Giovanni nel Giordano", riflessione: "Nostro battesimo e missione" },
+    { titolo: "Le Nozze di Cana", descrizione: "Gesù compie il primo miracolo", riflessione: "Fede in Cristo" },
+    { titolo: "L'Annuncio del Regno", descrizione: "Gesù annuncia il Regno di Dio", riflessione: "Conversione e penitenza" },
+    { titolo: "La Trasfigurazione", descrizione: "Gesù si trasfigura sul monte Tabor", riflessione: "Ascolto della Parola" },
+    { titolo: "L'Istituzione dell'Eucaristia", descrizione: "Gesù istituisce l'Eucaristia nell'Ultima Cena", riflessione: "Amore eucaristico" }
+  ],
+  dolorosi: [
+    { titolo: "L'Agonia nel Getsemani", descrizione: "Gesù prega nell'orto degli ulivi", riflessione: "Pentimento dei peccati" },
+    { titolo: "La Flagellazione", descrizione: "Gesù è flagellato alla colonna", riflessione: "Mortificazione dei sensi" },
+    { titolo: "La Coronazione di Spine", descrizione: "Gesù è coronato di spine", riflessione: "Umiltà e pazienza" },
+    { titolo: "Il Viaggio al Calvario", descrizione: "Gesù porta la croce", riflessione: "Accettazione della croce" },
+    { titolo: "La Crocifissione", descrizione: "Gesù muore sulla croce", riflessione: "Salvezza delle anime" }
+  ],
+  gloriosi: [
+    { titolo: "La Risurrezione", descrizione: "Gesù risorge dai morti", riflessione: "Fede nella risurrezione" },
+    { titolo: "L'Ascensione", descrizione: "Gesù sale al cielo", riflessione: "Desiderio del Paradiso" },
+    { titolo: "La Pentecoste", descrizione: "Lo Spirito Santo scende sugli apostoli", riflessione: "Doni dello Spirito Santo" },
+    { titolo: "L'Assunzione di Maria", descrizione: "Maria è assunta in cielo", riflessione: "Devozione a Maria" },
+    { titolo: "L'Incoronazione di Maria", descrizione: "Maria è incoronata Regina del cielo", riflessione: "Fiducia nell'intercessione di Maria" }
+  ]
+};
+
+const misteriOggi = misteri[misteriDelGiorno as keyof typeof misteri];
+---
+
+<BaseLayout 
+  title="Santo Rosario"
+  description={`Prega il Santo Rosario. Oggi: Misteri ${misteriDelGiorno}. Rosario completo con meditazioni e preghiere.`}
+>
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <header class="text-center mb-12">
+      <div class="text-6xl mb-4">📿</div>
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 font-serif">
+        Santo Rosario
+      </h1>
+      <p class="text-xl text-muted-foreground mb-6">
+        Oggi preghiamo i Misteri {misteriDelGiorno.charAt(0).toUpperCase() + misteriDelGiorno.slice(1)}
+      </p>
+      
+      <!-- Selettore Misteri -->
+      <div class="flex flex-wrap justify-center gap-3">
+        {Object.keys(misteri).map(tipo => (
+          <button 
+            data-misteri={tipo}
+            class={`px-4 py-2 rounded-full border-2 transition ${tipo === misteriDelGiorno ? 'bg-primary text-primary-foreground border-primary' : 'border-muted hover:border-primary'}`}
+          >
+            {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+          </button>
+        ))}
+      </div>
+    </header>
+
+    <!-- Come Pregare il Rosario -->
+    <section class="mb-12">
+      <details class="rounded-lg border bg-card overflow-hidden">
+        <summary class="cursor-pointer p-6 hover:bg-accent transition font-bold flex items-center justify-between">
+          <span>📖 Come Pregare il Rosario</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </summary>
+        <div class="p-6 pt-0 border-t space-y-4">
+          <div class="space-y-3">
+            <div class="flex gap-3">
+              <span class="font-bold text-primary">1.</span>
+              <p>Fai il <strong>Segno della Croce</strong> e recita il <strong>Credo</strong></p>
+            </div>
+            <div class="flex gap-3">
+              <span class="font-bold text-primary">2.</span>
+              <p>Recita 1 <strong>Padre Nostro</strong></p>
+            </div>
+            <div class="flex gap-3">
+              <span class="font-bold text-primary">3.</span>
+              <p>Recita 3 <strong>Ave Maria</strong> (per Fede, Speranza, Carità)</p>
+            </div>
+            <div class="flex gap-3">
+              <span class="font-bold text-primary">4.</span>
+              <p>Recita 1 <strong>Gloria al Padre</strong></p>
+            </div>
+            <div class="flex gap-3">
+              <span class="font-bold text-primary">5.</span>
+              <p>Annuncia il <strong>primo mistero</strong> e medita brevemente</p>
+            </div>
+            <div class="flex gap-3">
+              <span class="font-bold text-primary">6.</span>
+              <p>Recita 1 <strong>Padre Nostro</strong>, 10 <strong>Ave Maria</strong>, 1 <strong>Gloria</strong></p>
+            </div>
+            <div class="flex gap-3">
+              <span class="font-bold text-primary">7.</span>
+              <p>Ripeti per tutti e 5 i misteri</p>
+            </div>
+            <div class="flex gap-3">
+              <span class="font-bold text-primary">8.</span>
+              <p>Concludi con <strong>Salve Regina</strong> e preghiere finali</p>
+            </div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- I 5 Misteri -->
+    <section id="misteri-container" class="mb-12">
+      <h2 class="text-2xl font-bold mb-6 font-serif">
+        I Misteri {misteriDelGiorno.charAt(0).toUpperCase() + misteriDelGiorno.slice(1)}
+      </h2>
+      
+      <div class="space-y-6">
+        {misteriOggi.map((mistero, index) => (
+          <div class="rounded-lg border bg-card overflow-hidden">
+            <div class="p-6 bg-gradient-to-r from-primary/5 to-transparent">
+              <div class="flex items-start gap-4 mb-4">
+                <div class="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg flex-shrink-0">
+                  {index + 1}
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-xl font-bold mb-2">{mistero.titolo}</h3>
+                  <p class="text-muted-foreground mb-2">{mistero.descrizione}</p>
+                  <p class="text-sm italic text-primary">
+                    🙏 Frutto: {mistero.riflessione}
+                  </p>
+                </div>
+              </div>
+              
+              <!-- Counter Preghiere -->
+              <div class="mt-6 pt-6 border-t">
+                <div class="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div class="text-sm text-muted-foreground mb-2">Padre Nostro</div>
+                    <div class="flex items-center justify-center gap-2">
+                      <button class="prayer-counter w-12 h-12 rounded-full border-2 border-primary/30 hover:bg-primary/10 transition font-bold">
+                        1
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-sm text-muted-foreground mb-2">Ave Maria</div>
+                    <div class="grid grid-cols-5 gap-1">
+                      {Array.from({ length: 10 }, (_, i) => (
+                        <button class="prayer-counter w-8 h-8 rounded border border-primary/30 hover:bg-primary/10 transition text-xs">
+                          {i + 1}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-sm text-muted-foreground mb-2">Gloria</div>
+                    <div class="flex items-center justify-center gap-2">
+                      <button class="prayer-counter w-12 h-12 rounded-full border-2 border-primary/30 hover:bg-primary/10 transition font-bold">
+                        1
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Preghiere -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold mb-6 font-serif">Preghiere del Rosario</h2>
+      
+      <div class="space-y-4">
+        <details class="rounded-lg border bg-card overflow-hidden">
+          <summary class="cursor-pointer p-6 hover:bg-accent transition font-bold">
+            Padre Nostro
+          </summary>
+          <div class="p-6 pt-0 border-t prayer-text">
+            <p>Padre nostro, che sei nei cieli, sia santificato il tuo nome, venga il tuo regno, sia fatta la tua volontà, come in cielo così in terra. Dacci oggi il nostro pane quotidiano, e rimetti a noi i nostri debiti come anche noi li rimettiamo ai nostri debitori, e non abbandonarci alla tentazione, ma liberaci dal male. Amen.</p>
+          </div>
+        </details>
+
+        <details class="rounded-lg border bg-card overflow-hidden">
+          <summary class="cursor-pointer p-6 hover:bg-accent transition font-bold">
+            Ave Maria
+          </summary>
+          <div class="p-6 pt-0 border-t prayer-text">
+            <p>Ave, o Maria, piena di grazia, il Signore è con te. Tu sei benedetta fra le donne e benedetto è il frutto del tuo seno, Gesù. Santa Maria, Madre di Dio, prega per noi peccatori, adesso e nell'ora della nostra morte. Amen.</p>
+          </div>
+        </details>
+
+        <details class="rounded-lg border bg-card overflow-hidden">
+          <summary class="cursor-pointer p-6 hover:bg-accent transition font-bold">
+            Gloria al Padre
+          </summary>
+          <div class="p-6 pt-0 border-t prayer-text">
+            <p>Gloria al Padre e al Figlio e allo Spirito Santo. Come era nel principio, e ora e sempre nei secoli dei secoli. Amen.</p>
+          </div>
+        </details>
+
+        <details class="rounded-lg border bg-card overflow-hidden">
+          <summary class="cursor-pointer p-6 hover:bg-accent transition font-bold">
+            Salve Regina
+          </summary>
+          <div class="p-6 pt-0 border-t prayer-text">
+            <p>Salve, Regina, Madre di misericordia, vita, dolcezza e speranza nostra, salve. A te ricorriamo, esuli figli di Eva; a te sospiriamo, gementi e piangenti in questa valle di lacrime. Orsù dunque, avvocata nostra, rivolgi a noi gli occhi tuoi misericordiosi. E mostraci, dopo questo esilio, Gesù, il frutto benedetto del tuo seno. O clemente, o pia, o dolce Vergine Maria.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Call to Action -->
+    <div class="rounded-lg border bg-primary/5 p-8 text-center">
+      <h3 class="text-xl font-bold mb-3">Continua la Tua Preghiera</h3>
+      <p class="text-muted-foreground mb-6">
+        Scopri altre preghiere e devozioni mariane
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="/preghiere" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6">
+          Tutte le Preghiere
+        </a>
+        <a href="/liturgia/oggi" class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent h-10 px-6">
+          Liturgia di Oggi
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ misteri }}>
+    // Cambia misteri
+    const bottoniMisteri = document.querySelectorAll('[data-misteri]');
+    const container = document.getElementById('misteri-container');
+    
+    bottoniMisteri.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tipo = btn.getAttribute('data-misteri');
+        // Update UI (in produzione: ricarica con query param o usa React)
+        bottoniMisteri.forEach(b => b.classList.remove('bg-primary', 'text-primary-foreground', 'border-primary'));
+        btn.classList.add('bg-primary', 'text-primary-foreground', 'border-primary');
+      });
+    });
+
+    // Prayer counter
+    const counters = document.querySelectorAll('.prayer-counter');
+    counters.forEach(counter => {
+      counter.addEventListener('click', () => {
+        counter.classList.toggle('bg-primary');
+        counter.classList.toggle('text-primary-foreground');
+      });
+    });
+  </script>
+</BaseLayout>

@@ -1,0 +1,207 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { db } from '../db';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
+
+const oggi = format(new Date(), 'yyyy-MM-dd');
+const oggiFormat = format(new Date(), 'dd MMMM yyyy', { locale: it });
+
+// Fetch liturgia di oggi
+const liturgiaOggi = await db.query.liturgy.findFirst({
+  where: (liturgy, { eq }) => eq(liturgy.data, oggi),
+});
+
+// Fetch santi di oggi
+const santiOggi = liturgiaOggi?.santiDelGiorno?.length
+  ? await db.query.saints.findMany({
+      where: (saints, { inArray }) => inArray(saints.id, liturgiaOggi.santiDelGiorno),
+    })
+  : [];
+
+// Fetch preghiere popolari
+const preghierepopolari = await db.query.prayers.findMany({
+  orderBy: (prayers, { desc }) => [desc(prayers.popolarita)],
+  limit: 6,
+});
+
+// Fetch pagina sacra di oggi (if exists)
+let paginaSacraPreview = null;
+try {
+  if (db.query.pagineSacre) {
+    paginaSacraPreview = await db.query.pagineSacre.findFirst({
+      where: (t, { eq }) => eq(t.data, oggi),
+    });
+  }
+} catch { paginaSacraPreview = null; }
+---
+
+<BaseLayout 
+  title="Homepage" 
+  description="Verbum Lucis — Liturgia cattolica quotidiana, preghiere, santi e novene. Il tuo compagno spirituale online."
+>
+  <!-- NUOVO HERO - PAGINA SACRA -->
+  <section class="bg-gradient-to-br from-primary/10 via-background to-primary/5 py-16 mb-12 border-b">
+    <div class="container max-w-6xl mx-auto px-4">
+      
+      <div class="text-center mb-10">
+        <div class="text-6xl mb-4">☩</div>
+        <h2 class="text-4xl md:text-5xl font-bold font-serif mb-4">
+          Pagina Sacra di Oggi
+        </h2>
+        <p class="text-muted-foreground text-lg max-w-2xl mx-auto">
+          Vangelo incarnato · Fuoco nel corpo · Regno nella carne
+        </p>
+      </div>
+
+      <!-- Preview "Il Re Oggi" - fetch dalla pagina sacra di oggi -->
+      {paginaSacraPreview && (
+        <div class="rounded-lg border-2 border-primary/30 bg-card p-8 mb-8 max-w-4xl mx-auto">
+          <h3 class="text-2xl font-bold mb-4 flex items-center gap-3">
+            <span>👑</span> Il Re Oggi...
+          </h3>
+          <div class="prose prose-lg max-w-none line-clamp-6" set:html={paginaSacraPreview.reOggi?.substring(0, 400) + '...'} />
+        </div>
+      )}
+
+      <div class="text-center">
+        <a href="/pagina-sacra/oggi" class="inline-flex items-center justify-center rounded-md text-lg font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-14 px-10 shadow-lg hover:shadow-xl transition">
+          Leggi la Pagina Sacra Completa →
+        </a>
+        <p class="text-sm text-muted-foreground mt-4">
+          Generata ogni giorno con le letture liturgiche del Lezionario
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Hero Section originale -->
+  <section class="text-center py-12 mb-12">
+    <h1 class="text-4xl md:text-6xl font-bold mb-4 font-serif">
+      Verbum Lucis
+    </h1>
+    <p class="text-xl text-muted-foreground mb-8">
+      La tua guida quotidiana alla vita spirituale
+    </p>
+    <div class="flex flex-wrap justify-center gap-4">
+      <a href="/liturgia/oggi" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6 py-2">
+        Liturgia di Oggi
+      </a>
+      <a href="/santi/oggi" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6 py-2">
+        Santo del Giorno
+      </a>
+    </div>
+  </section>
+
+  <!-- Liturgia di Oggi -->
+  {liturgiaOggi && (
+    <section class="mb-12">
+      <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold font-serif">Liturgia di Oggi</h2>
+          <span class={`px-3 py-1 rounded-full text-sm font-medium liturgical-color-${liturgiaOggi.coloreLiturgico}`}>
+            {liturgiaOggi.coloreLiturgico.charAt(0).toUpperCase() + liturgiaOggi.coloreLiturgico.slice(1)}
+          </span>
+        </div>
+        
+        <p class="text-muted-foreground mb-4">{oggiFormat}</p>
+        
+        {liturgiaOggi.domenicaSettimana && (
+          <p class="font-semibold mb-4">{liturgiaOggi.domenicaSettimana}</p>
+        )}
+        
+        <div class="space-y-4">
+          <div>
+            <h3 class="font-semibold mb-2">Prima Lettura</h3>
+            <p class="text-sm text-muted-foreground">{liturgiaOggi.primaLettura.riferimento}</p>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold mb-2">Salmo Responsoriale</h3>
+            <p class="text-sm text-muted-foreground">{liturgiaOggi.salmoResponsoriale.riferimento}</p>
+            <p class="text-sm italic mt-1">{liturgiaOggi.salmoResponsoriale.ritornello}</p>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold mb-2">Vangelo</h3>
+            <p class="text-sm text-muted-foreground">{liturgiaOggi.vangelo.riferimento}</p>
+          </div>
+        </div>
+        
+        <a href="/liturgia/oggi" class="inline-flex items-center mt-6 text-primary hover:underline">
+          Leggi la liturgia completa →
+        </a>
+      </div>
+    </section>
+  )}
+
+  <!-- Santi di Oggi -->
+  {santiOggi.length > 0 && (
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold mb-6 font-serif">Santi di Oggi</h2>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {santiOggi.map(santo => (
+          <a href={`/santi/${santo.slug}`} class="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition p-6">
+            <div class="flex items-start gap-4">
+              {santo.immagineUrl && (
+                <img src={santo.immagineUrl} alt={santo.nome} class="w-16 h-16 rounded-full object-cover" />
+              )}
+              <div>
+                <h3 class="font-bold mb-1">{santo.nome}</h3>
+                {santo.titolo && (
+                  <p class="text-sm text-muted-foreground mb-2">{santo.titolo}</p>
+                )}
+                {santo.biografiaBreve && (
+                  <p class="text-sm line-clamp-2">{santo.biografiaBreve}</p>
+                )}
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- Preghiere Popolari -->
+  <section class="mb-12">
+    <h2 class="text-2xl font-bold mb-6 font-serif">Preghiere Popolari</h2>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {preghierepopolari.map(preghiera => (
+        <a href={`/preghiere/${preghiera.slug}`} class="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition p-6">
+          <h3 class="font-bold mb-2">{preghiera.titolo}</h3>
+          <p class="text-sm text-muted-foreground mb-3 capitalize">{preghiera.categoria}</p>
+          {preghiera.durata && (
+            <p class="text-xs text-muted-foreground">~{preghiera.durata} minuti</p>
+          )}
+        </a>
+      ))}
+    </div>
+    <div class="text-center mt-8">
+      <a href="/preghiere" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6 py-2">
+        Vedi tutte le preghiere
+      </a>
+    </div>
+  </section>
+
+  <!-- Quick Links -->
+  <section class="grid md:grid-cols-3 gap-6">
+    <a href="/rosario" class="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition p-6 text-center">
+      <div class="text-4xl mb-3">📿</div>
+      <h3 class="font-bold mb-2">Rosario</h3>
+      <p class="text-sm text-muted-foreground">Prega il Santo Rosario con i misteri di oggi</p>
+    </a>
+    
+    <a href="/novene" class="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition p-6 text-center">
+      <div class="text-4xl mb-3">🙏</div>
+      <h3 class="font-bold mb-2">Novene</h3>
+      <p class="text-sm text-muted-foreground">Novene ai santi più popolari</p>
+    </a>
+    
+    <a href="/calendario" class="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition p-6 text-center">
+      <div class="text-4xl mb-3">📅</div>
+      <h3 class="font-bold mb-2">Calendario Liturgico</h3>
+      <p class="text-sm text-muted-foreground">Scopri le feste e i tempi liturgici</p>
+    </a>
+  </section>
+</BaseLayout>

@@ -1,0 +1,189 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { db } from '../../db';
+
+export const prerender = false;
+
+// Stats
+const [saintsCount, prayersCount, liturgyCount, novenasCount] = await Promise.all([
+  db.query.saints.findMany().then(r => r.length),
+  db.query.prayers.findMany().then(r => r.length),
+  db.query.liturgy.findMany().then(r => r.length),
+  db.query.novenas.findMany().then(r => r.length),
+]);
+
+// Ultimi inserimenti
+const recentSaints = await db.query.saints.findMany({
+  orderBy: (saints, { desc }) => [desc(saints.createdAt)],
+  limit: 5,
+});
+
+const recentPrayers = await db.query.prayers.findMany({
+  orderBy: (prayers, { desc }) => [desc(prayers.createdAt)],
+  limit: 5,
+});
+---
+
+<BaseLayout title="Admin Dashboard">
+  <div class="max-w-7xl mx-auto">
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold mb-2">Dashboard Admin</h1>
+      <p class="text-muted-foreground">Gestisci contenuti del portale</p>
+    </header>
+
+    <!-- Stats -->
+    <section class="grid md:grid-cols-4 gap-6 mb-8">
+      <div class="rounded-lg border bg-card p-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-2xl">✨</span>
+          <span class="text-3xl font-bold">{saintsCount}</span>
+        </div>
+        <h3 class="font-semibold">Santi</h3>
+        <p class="text-sm text-muted-foreground">Nel database</p>
+        <a href="/admin/santi" class="text-xs text-primary hover:underline mt-2 inline-block">
+          Gestisci →
+        </a>
+      </div>
+
+      <div class="rounded-lg border bg-card p-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-2xl">🙏</span>
+          <span class="text-3xl font-bold">{prayersCount}</span>
+        </div>
+        <h3 class="font-semibold">Preghiere</h3>
+        <p class="text-sm text-muted-foreground">Nel database</p>
+        <a href="/admin/preghiere" class="text-xs text-primary hover:underline mt-2 inline-block">
+          Gestisci →
+        </a>
+      </div>
+
+      <div class="rounded-lg border bg-card p-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-2xl">📖</span>
+          <span class="text-3xl font-bold">{liturgyCount}</span>
+        </div>
+        <h3 class="font-semibold">Liturgie</h3>
+        <p class="text-sm text-muted-foreground">Giorni disponibili</p>
+        <a href="/admin/liturgia" class="text-xs text-primary hover:underline mt-2 inline-block">
+          Gestisci →
+        </a>
+      </div>
+
+      <div class="rounded-lg border bg-card p-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-2xl">🕯️</span>
+          <span class="text-3xl font-bold">{novenasCount}</span>
+        </div>
+        <h3 class="font-semibold">Novene</h3>
+        <p class="text-sm text-muted-foreground">Nel database</p>
+        <a href="/admin/novene" class="text-xs text-primary hover:underline mt-2 inline-block">
+          Gestisci →
+        </a>
+      </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">Azioni Rapide</h2>
+      <div class="grid md:grid-cols-3 gap-4">
+        <a href="/admin/santi/nuovo" class="rounded-lg border bg-card p-6 hover:shadow-md transition">
+          <div class="text-3xl mb-3">➕</div>
+          <h3 class="font-bold mb-2">Aggiungi Santo</h3>
+          <p class="text-sm text-muted-foreground">Crea nuova scheda santo</p>
+        </a>
+
+        <a href="/admin/preghiere/nuova" class="rounded-lg border bg-card p-6 hover:shadow-md transition">
+          <div class="text-3xl mb-3">📝</div>
+          <h3 class="font-bold mb-2">Aggiungi Preghiera</h3>
+          <p class="text-sm text-muted-foreground">Inserisci nuova preghiera</p>
+        </a>
+
+        <button 
+          onclick="if(confirm('Aggiornare la liturgia dei prossimi 7 giorni?')) fetch('/api/update-liturgy', {method: 'POST'}).then(() => alert('Aggiornamento avviato!'))"
+          class="rounded-lg border bg-card p-6 hover:shadow-md transition text-left"
+        >
+          <div class="text-3xl mb-3">🔄</div>
+          <h3 class="font-bold mb-2">Aggiorna Liturgia</h3>
+          <p class="text-sm text-muted-foreground">Sincronizza prossimi 7 giorni</p>
+        </button>
+      </div>
+    </section>
+
+    <!-- Recenti -->
+    <div class="grid md:grid-cols-2 gap-8">
+      <!-- Santi Recenti -->
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold">Santi Recenti</h2>
+          <a href="/admin/santi" class="text-sm text-primary hover:underline">
+            Vedi tutti →
+          </a>
+        </div>
+        <div class="space-y-3">
+          {recentSaints.map(santo => (
+            <a 
+              href={`/admin/santi/${santo.id}`}
+              class="flex items-center gap-3 p-4 rounded-lg border bg-card hover:bg-accent transition"
+            >
+              {santo.immagineUrl && (
+                <img src={santo.immagineUrl} alt={santo.nome} class="w-12 h-12 rounded-full object-cover" />
+              )}
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold truncate">{santo.nome}</p>
+                <p class="text-sm text-muted-foreground">{santo.titolo}</p>
+              </div>
+              <svg class="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <!-- Preghiere Recenti -->
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold">Preghiere Recenti</h2>
+          <a href="/admin/preghiere" class="text-sm text-primary hover:underline">
+            Vedi tutte →
+          </a>
+        </div>
+        <div class="space-y-3">
+          {recentPrayers.map(preghiera => (
+            <a 
+              href={`/admin/preghiere/${preghiera.id}`}
+              class="flex items-center gap-3 p-4 rounded-lg border bg-card hover:bg-accent transition"
+            >
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold truncate">{preghiera.titolo}</p>
+                <p class="text-sm text-muted-foreground capitalize">{preghiera.categoria}</p>
+              </div>
+              <svg class="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          ))}
+        </div>
+      </section>
+    </div>
+
+    <!-- System Info -->
+    <section class="mt-8 rounded-lg border bg-muted/30 p-6">
+      <h3 class="font-bold mb-4">Informazioni Sistema</h3>
+      <div class="grid md:grid-cols-3 gap-4 text-sm">
+        <div>
+          <p class="text-muted-foreground mb-1">Database</p>
+          <p class="font-semibold">PostgreSQL</p>
+        </div>
+        <div>
+          <p class="text-muted-foreground mb-1">Framework</p>
+          <p class="font-semibold">Astro + React</p>
+        </div>
+        <div>
+          <p class="text-muted-foreground mb-1">Ultimo Backup</p>
+          <p class="font-semibold">N/A</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

@@ -1,0 +1,237 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { db } from '../../db';
+
+export const prerender = false;
+
+const { slug } = Astro.params;
+
+const preghiera = await db.query.prayers.findFirst({
+  where: (prayers, { eq }) => eq(prayers.slug, slug || ''),
+});
+
+if (!preghiera) {
+  return Astro.redirect('/preghiere');
+}
+
+// Fetch santo associato se presente
+const santo = preghiera.saintId 
+  ? await db.query.saints.findFirst({
+      where: (saints, { eq }) => eq(saints.id, preghiera.saintId!),
+    })
+  : null;
+
+// Preghiere correlate (stessa categoria)
+const preghiereCorrelate = await db.query.prayers.findMany({
+  where: (prayers, { eq, ne }) => eq(prayers.categoria, preghiera.categoria),
+  limit: 4,
+});
+---
+
+<BaseLayout 
+  title={preghiera.titolo}
+  description={`${preghiera.titolo} - Preghiera ${preghiera.categoria}. ${preghiera.testo.substring(0, 150)}...`}
+>
+  <article class="max-w-3xl mx-auto">
+    <!-- Header -->
+    <header class="mb-8">
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium capitalize">
+          {preghiera.categoria}
+        </span>
+        
+        {preghiera.fonteUfficiale && (
+          <span class="px-3 py-1 rounded-full bg-secondary text-sm font-medium">
+            ✓ Preghiera Ufficiale
+          </span>
+        )}
+        
+        {preghiera.durata && (
+          <span class="px-3 py-1 rounded-full bg-secondary text-sm">
+            ⏱️ {preghiera.durata} {preghiera.durata === 1 ? 'minuto' : 'minuti'}
+          </span>
+        )}
+      </div>
+      
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 font-serif">
+        {preghiera.titolo}
+      </h1>
+      
+      {santo && (
+        <a 
+          href={`/santi/${santo.slug}`}
+          class="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition"
+        >
+          <span>Dedicata a</span>
+          <span class="font-semibold">{santo.nome}</span>
+          →
+        </a>
+      )}
+    </header>
+
+    <!-- Testo Preghiera -->
+    <section class="mb-8">
+      <div class="rounded-lg border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5 p-8 md:p-12">
+        <div class="prayer-text text-lg md:text-xl leading-relaxed text-center">
+          <p class="whitespace-pre-line">{preghiera.testo}</p>
+          
+          {!preghiera.testo.toLowerCase().includes('amen') && (
+            <p class="mt-6 font-semibold">Amen.</p>
+          )}
+        </div>
+      </div>
+      
+      <!-- Versione Latina se disponibile -->
+      {preghiera.testoLatin && (
+        <div class="mt-6 rounded-lg border bg-muted/30 p-6">
+          <h3 class="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
+            Versione Latina
+          </h3>
+          <p class="prayer-text italic text-muted-foreground whitespace-pre-line">
+            {preghiera.testoLatin}
+          </p>
+        </div>
+      )}
+    </section>
+
+    <!-- Metadata -->
+    {preghiera.metadata && (
+      <section class="mb-8">
+        <div class="grid md:grid-cols-2 gap-6">
+          {preghiera.metadata.whenToPray && (
+            <div class="rounded-lg border bg-card p-6">
+              <h3 class="font-bold mb-2 flex items-center gap-2">
+                <span>🕐</span>
+                Quando Pregare
+              </h3>
+              <p class="text-muted-foreground">{preghiera.metadata.whenToPray}</p>
+            </div>
+          )}
+          
+          {preghiera.metadata.benefits && preghiera.metadata.benefits.length > 0 && (
+            <div class="rounded-lg border bg-card p-6">
+              <h3 class="font-bold mb-3 flex items-center gap-2">
+                <span>✨</span>
+                Benefici Spirituali
+              </h3>
+              <ul class="space-y-1 text-sm text-muted-foreground">
+                {preghiera.metadata.benefits.map(benefit => (
+                  <li class="flex items-start gap-2">
+                    <span class="text-primary mt-0.5">•</span>
+                    <span>{benefit}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </section>
+    )}
+
+    <!-- Occasione -->
+    {preghiera.occasione && (
+      <section class="mb-8">
+        <div class="rounded-lg bg-accent/50 p-6">
+          <h3 class="font-bold mb-2">Occasione</h3>
+          <p class="text-muted-foreground capitalize">{preghiera.occasione}</p>
+        </div>
+      </section>
+    )}
+
+    <!-- Azioni -->
+    <section class="mb-8">
+      <div class="flex flex-wrap gap-4 justify-center">
+        <button 
+          onclick="window.print()"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent h-10 px-6"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          Stampa
+        </button>
+        
+        <button 
+          onclick="navigator.share ? navigator.share({title: '{preghiera.titolo}', url: window.location.href}) : null"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent h-10 px-6"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+          </svg>
+          Condividi
+        </button>
+        
+        <button 
+          id="copy-text"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          Copia Testo
+        </button>
+      </div>
+    </section>
+
+    <!-- Preghiere Correlate -->
+    {preghiereCorrelate.length > 0 && (
+      <section class="mt-12">
+        <h2 class="text-2xl font-bold mb-6 font-serif">Altre Preghiere {preghiera.categoria}</h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          {preghiereCorrelate.filter(p => p.slug !== preghiera.slug).slice(0, 3).map(p => (
+            <a 
+              href={`/preghiere/${p.slug}`}
+              class="rounded-lg border bg-card p-4 hover:shadow-md transition"
+            >
+              <h3 class="font-bold mb-2">{p.titolo}</h3>
+              <p class="text-sm text-muted-foreground line-clamp-2">
+                {p.testo.substring(0, 100)}...
+              </p>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Call to Action -->
+    <div class="mt-12 rounded-lg border bg-primary/5 p-8 text-center">
+      <h3 class="text-xl font-bold mb-3">Continua il Tuo Cammino Spirituale</h3>
+      <p class="text-muted-foreground mb-6">
+        Scopri altre preghiere e risorse per la tua vita di fede
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="/preghiere" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6">
+          Tutte le Preghiere
+        </a>
+        <a href="/liturgia/oggi" class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent h-10 px-6">
+          Liturgia di Oggi
+        </a>
+      </div>
+    </div>
+  </article>
+
+  <script>
+    // Copia testo preghiera
+    const copyBtn = document.getElementById('copy-text');
+    copyBtn?.addEventListener('click', async () => {
+      const testoPreghiera = document.querySelector('.prayer-text')?.textContent;
+      if (testoPreghiera) {
+        await navigator.clipboard.writeText(testoPreghiera);
+        copyBtn.textContent = '✓ Copiato!';
+        setTimeout(() => {
+          copyBtn.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>Copia Testo';
+        }, 2000);
+      }
+    });
+  </script>
+
+  <!-- Schema.org -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    "name": preghiera.titolo,
+    "text": preghiera.testo,
+    "inLanguage": "it",
+    "keywords": preghiera.metadata?.keywords?.join(', '),
+  })} />
+</BaseLayout>

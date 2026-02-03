@@ -1,0 +1,191 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { db } from '../../db';
+
+export const prerender = false;
+
+const { numero: numParam } = Astro.params;
+const numero = parseInt(numParam || '0');
+
+if (isNaN(numero) || numero < 1 || numero > 2865) {
+  return Astro.redirect('/catechismo');
+}
+
+// Fetch punto catechismo
+const punto = await db.query.catechism.findFirst({
+  where: (t, { eq }) => eq(t.numero, numero),
+});
+
+if (!punto) {
+  return Astro.redirect('/catechismo');
+}
+
+// Punti correlati (vicini nello stesso contesto)
+const correlati = await db.query.catechism.findMany({
+  where: (t, { and, gt, lte }) => and(
+    gt(t.numero, Math.max(1, numero - 3)),
+    lte(t.numero, numero + 3),
+  ),
+  limit: 6,
+}).then(rows => rows.filter(r => r.numero !== numero));
+
+// Prev / Next
+const prev = await db.query.catechism.findFirst({
+  where: (t, { eq }) => eq(t.numero, numero - 1),
+});
+const next = await db.query.catechism.findFirst({
+  where: (t, { eq }) => eq(t.numero, numero + 1),
+});
+
+// Parti del catechismo
+const parti = {
+  'I': 'La professione della fede',
+  'II': 'La celebrazione del mistero cristiano',
+  'III': 'La vita morale',
+  'IV': 'La preghiera cristiana',
+};
+---
+
+<BaseLayout
+  title={`CCC ${numero} — Catechismo della Chiesa Cattolica`}
+  description={`Punto ${numero} del Catechismo della Chiesa Cattolica. ${punto.testo.substring(0, 150)}...`}
+>
+  <article class="max-w-3xl mx-auto">
+
+    <!-- Breadcrumb -->
+    <nav class="text-sm text-muted-foreground mb-6 flex flex-wrap items-center gap-2">
+      <a href="/catechismo" class="hover:text-primary transition">Catechismo</a>
+      <span>›</span>
+      {punto.parte && (
+        <>
+          <a href={`/catechismo/parte/${punto.parte.toLowerCase()}`} class="hover:text-primary transition">
+            Parte {punto.parte}: {parti[punto.parte]}
+          </a>
+          <span>›</span>
+        </>
+      )}
+      <span>Punto {numero}</span>
+    </nav>
+
+    <!-- Header -->
+    <header class="mb-8">
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+          CCC {numero}
+        </span>
+        {punto.parte && (
+          <span class="px-3 py-1 rounded-full bg-secondary text-sm">
+            Parte {punto.parte}: {parti[punto.parte]}
+          </span>
+        )}
+      </div>
+
+      {punto.sezione && (
+        <p class="text-muted-foreground mb-1">{punto.sezione}</p>
+      )}
+      {punto.capitolo && (
+        <p class="text-muted-foreground mb-1 text-sm">{punto.capitolo}</p>
+      )}
+    </header>
+
+    <!-- Testo principale -->
+    <section class="mb-8">
+      <div class="rounded-lg border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5 p-8">
+        <p class="prayer-text text-lg md:text-xl leading-relaxed whitespace-pre-line">
+          {punto.testo}
+        </p>
+      </div>
+    </section>
+
+    <!-- Riferimenti biblici -->
+    {punto.riferimenti?.length > 0 && (
+      <section class="mb-8">
+        <div class="rounded-lg border bg-card p-6">
+          <h2 class="font-bold mb-3 flex items-center gap-2">
+            <span>📖</span> Riferimenti Biblici
+          </h2>
+          <div class="flex flex-wrap gap-2">
+            {punto.riferimenti.map(ref => (
+              <a
+                href={`/bibbia/${encodeURIComponent(ref)}`}
+                class="text-sm px-3 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition"
+              >
+                {ref}
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- Tags -->
+    {punto.tags?.length > 0 && (
+      <section class="mb-8">
+        <div class="rounded-lg border bg-card p-6">
+          <h2 class="font-bold mb-3 flex items-center gap-2">
+            <span>🏷️</span> Temi
+          </h2>
+          <div class="flex flex-wrap gap-2">
+            {punto.tags.map(tag => (
+              <a
+                href={`/catechismo/tema/${tag}`}
+                class="text-sm px-3 py-1 rounded-full bg-secondary hover:bg-accent transition capitalize"
+              >
+                {tag}
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- Punti correlati -->
+    {correlati.length > 0 && (
+      <section class="mb-8">
+        <h2 class="text-xl font-bold mb-4 font-serif">Punti Correlati</h2>
+        <div class="space-y-3">
+          {correlati.map(p => (
+            <a
+              href={`/catechismo/${p.numero}`}
+              class="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent transition"
+            >
+              <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-bold flex-shrink-0">
+                {p.numero}
+              </span>
+              <p class="text-sm text-muted-foreground line-clamp-2">
+                {p.testo.substring(0, 120)}...
+              </p>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Navigazione Prev/Next -->
+    <div class="flex items-center justify-between pt-6 border-t">
+      {prev ? (
+        <a href={`/catechismo/${prev.numero}`} class="flex items-center gap-2 text-primary hover:underline">
+          <span>←</span>
+          <span>CCC {prev.numero}</span>
+        </a>
+      ) : <span></span>}
+
+      {next ? (
+        <a href={`/catechismo/${next.numero}`} class="flex items-center gap-2 text-primary hover:underline">
+          <span>CCC {next.numero}</span>
+          <span>→</span>
+        </a>
+      ) : <span></span>}
+    </div>
+  </article>
+
+  <!-- Schema.org -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": `Catechismo della Chiesa Cattolica — Punto ${numero}`,
+    "text": punto.testo,
+    "author": { "@type": "Organization", "name": "Studio Pura Luce" },
+    "publisher": { "@type": "Organization", "name": "Verbum Lucis" },
+  })} />
+</BaseLayout>

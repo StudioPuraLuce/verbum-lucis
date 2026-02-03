@@ -1,0 +1,47 @@
+name: Database Backup
+
+on:
+  schedule:
+    # Every Sunday at 03:00 UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Create database backup
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          BACKUP_DATE=$(date +%Y%m%d-%H%M%S)
+          BACKUP_FILE="verbum-lucis-backup-${BACKUP_DATE}.sql.gz"
+
+          ssh -i ~/.ssh/id_ed25519 $SSH_USER@$SSH_HOST << ENDSSH
+            set -e
+            cd /opt/verbum-lucis
+            mkdir -p backups
+
+            echo "📦 Creating backup: ${BACKUP_FILE}..."
+            docker exec verbum-lucis-db pg_dump -U verbum_user verbum_lucis | gzip > "backups/${BACKUP_FILE}"
+
+            echo "🗑️  Rotating old backups (keeping last 8)..."
+            cd backups
+            ls -t *.sql.gz | tail -n +9 | xargs -r rm
+
+            echo "✅ Backup complete: ${BACKUP_FILE}"
+            ls -lh "${BACKUP_FILE}"
+          ENDSSH
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519

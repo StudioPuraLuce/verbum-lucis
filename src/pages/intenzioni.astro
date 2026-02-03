@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { db } from '../db';
+
+export const prerender = false;
+
+let intenzioni = [];
+try {
+  intenzioni = await db.query.intentions.findMany({
+    orderBy: (t, { asc }) => [asc(t.categoria)],
+  });
+} catch { intenzioni = []; }
+
+// Raggruppa per categoria
+const grouped: Record<string, any[]> = {};
+for (const item of intenzioni) {
+  const cat = item.categoria || 'Altre';
+  if (!grouped[cat]) grouped[cat] = [];
+  grouped[cat].push(item);
+}
+const categorie = Object.keys(grouped).sort();
+---
+
+<BaseLayout
+  title="Intenzioni di Preghiera"
+  description="Trova preghiere, santi e riferimenti al Catechismo per le tue intenzioni: famiglia, salute, lavoro, fede e altro."
+>
+  <div class="max-w-4xl mx-auto">
+    <header class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 font-serif">Prego per...</h1>
+      <p class="text-lg text-muted-foreground">
+        Trova preghiere e santi intercedenti per ogni intenzione
+      </p>
+    </header>
+
+    {categorie.map(categoria => (
+      <section class="mb-10">
+        <h2 class="text-2xl font-bold mb-4 font-serif capitalize border-b pb-2">{categoria}</h2>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {grouped[categoria].map(intenzione => (
+            <a
+              href={`/prego-per/${intenzione.slug}`}
+              class="rounded-lg border bg-card p-5 hover:shadow-md transition group"
+            >
+              <h3 class="font-bold group-hover:text-primary transition mb-2">
+                🙏 {intenzione.titolo}
+              </h3>
+              {intenzione.descrizione && (
+                <p class="text-sm text-muted-foreground line-clamp-2">{intenzione.descrizione}</p>
+              )}
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    {intenzioni.length === 0 && (
+      <div class="text-center py-12">
+        <p class="text-muted-foreground">Nessuna intenzione nel database.</p>
+      </div>
+    )}
+  </div>
+</BaseLayout>

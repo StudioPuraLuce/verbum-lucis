@@ -1,0 +1,145 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { db, schema } from '../../../db';
+import { sql } from 'drizzle-orm';
+
+export const prerender = false;
+
+const { causa } = Astro.params;
+const causaDecodificata = decodeURIComponent(causa || '').replace(/-/g, ' ');
+
+// Cerca santi che sono patroni di questa causa
+// Cerca nel campo patronoDi (jsonb array) usando LIKE case-insensitive
+const santi = await db.select()
+  .from(schema.saints)
+  .where(
+    sql`EXISTS (
+      SELECT 1 FROM jsonb_array_elements_text(saints.patrono_di) AS p
+      WHERE LOWER(p) LIKE LOWER(${`%${causaDecodificata}%`})
+    )`
+  )
+  .orderBy(sql`saints.popolarita DESC`);
+
+// Se non trovati, 404
+if (santi.length === 0) {
+  return Astro.redirect('/santi');
+}
+
+// Preghiere correlate (cerca per causa nelle keywords o occasione)
+const preghiereCorrelate = await db.query.prayers.findMany({
+  where: (t, { ilike, or }) => or(
+    ilike(t.occasione, `%${causaDecodificata}%`),
+    ilike(t.categoria, `%${causaDecodificata}%`)
+  ),
+  limit: 4,
+});
+
+// Capitalizza prima lettera
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+---
+
+<BaseLayout
+  title={`Patroni di ${capitalize(causaDecodificata)}`}
+  description={`Santi patroni di ${causaDecodificata}. Scopri quali santi intercedono per ${causaDecodificata} e le preghiere associate.`}
+>
+  <div class="max-w-5xl mx-auto">
+
+    <!-- Header -->
+    <header class="text-center mb-12">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="text-4xl">✝️</span>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 font-serif">
+        Patroni di {capitalize(causaDecodificata)}
+      </h1>
+      <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
+        Questi santi sono i protettori e gli interceditori per {causaDecodificata}.
+        Affida le tue preghiere alla loro intercessione.
+      </p>
+    </header>
+
+    <!-- Santi Patroni -->
+    <section class="mb-12">
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {santi.map(santo => (
+          <a
+            href={`/santi/${santo.slug}`}
+            class="rounded-lg border bg-card hover:shadow-lg transition group p-6"
+          >
+            <div class="flex items-start gap-4">
+              {santo.immagineUrl && (
+                <img
+                  src={santo.immagineUrl}
+                  alt={santo.nome}
+                  class="w-16 h-16 rounded-full object-cover ring-2 ring-primary/10 group-hover:ring-primary/30 transition"
+                />
+              )}
+              <div class="flex-1 min-w-0">
+                <h2 class="text-lg font-bold group-hover:text-primary transition line-clamp-2">
+                  {santo.nome}
+                </h2>
+                {santo.titolo && (
+                  <p class="text-sm text-muted-foreground mb-2">{santo.titolo}</p>
+                )}
+                {santo.geografiaBreve && (
+                  <p class="text-sm text-muted-foreground line-clamp-2">
+                    {santo.geografiaBreve}
+                  </p>
+                )}
+                {santo.patronoDi?.length > 0 && (
+                  <div class="flex flex-wrap gap-1 mt-3">
+                    {santo.patronoDi.slice(0, 4).map((p, i) => (
+                      <span key={i} class="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                        {p}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- Preghiere correlate -->
+    {preghiereCorrelate.length > 0 && (
+      <section class="mb-12">
+        <h2 class="text-2xl font-bold mb-6 font-serif">
+          Preghiere per {capitalize(causaDecodificata)}
+        </h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          {preghiereCorrelate.map(p => (
+            <a
+              href={`/preghiere/${p.slug}`}
+              class="rounded-lg border bg-card p-5 hover:shadow-md transition group"
+            >
+              <h3 class="font-bold group-hover:text-primary transition mb-2">{p.titolo}</h3>
+              <p class="text-sm text-muted-foreground line-clamp-2">
+                {p.testo.substring(0, 100)}...
+              </p>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Prego per correlato -->
+    <div class="rounded-lg border bg-primary/5 p-8 text-center">
+      <h3 class="text-xl font-bold mb-3">Hai bisogno di preghiere specifiche?</h3>
+      <p class="text-muted-foreground mb-6">
+        Cerca tra le pagine "Prego per" una situazione simila alla tua.
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="/preghiere" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6">
+          Tutte le Preghiere
+        </a>
+        <a href="/santi" class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent h-10 px-6">
+          Tutti i Santi
+        </a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

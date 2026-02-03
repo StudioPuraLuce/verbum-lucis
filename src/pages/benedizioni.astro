@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { db } from '../db';
+
+export const prerender = false;
+
+const benedizioni = await db.query.blessings.findMany({
+  orderBy: (t, { asc }) => [asc(t.categoria)],
+});
+
+// Raggruppa per categoria
+const grouped: Record<string, typeof benedizioni> = {};
+for (const b of benedizioni) {
+  const cat = b.categoria || 'Altre';
+  if (!grouped[cat]) grouped[cat] = [];
+  grouped[cat].push(b);
+}
+---
+
+<BaseLayout
+  title="Benedizioni"
+  description="Raccolta di benedizioni cattoliche per ogni occasione: casa, pasto, famiglia, viaggio e altro."
+>
+  <div class="max-w-4xl mx-auto">
+    <header class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 font-serif">Benedizioni</h1>
+      <p class="text-lg text-muted-foreground">
+        Benedizioni per ogni momento della vita
+      </p>
+    </header>
+
+    {benedizioni.length > 0 ? (
+      Object.entries(grouped).map(([categoria, items]) => (
+        <section class="mb-10">
+          <h2 class="text-2xl font-bold mb-4 font-serif capitalize border-b pb-2">{categoria}</h2>
+          <div class="grid md:grid-cols-2 gap-4">
+            {items.map(b => (
+              <div class="rounded-lg border bg-card p-6">
+                <h3 class="font-bold mb-2">{b.titolo}</h3>
+                <p class="text-sm text-muted-foreground line-clamp-3 mb-3">{b.testo.substring(0, 150)}...</p>
+                {b.occasione && (
+                  <p class="text-xs text-muted-foreground capitalize">Occasione: {b.occasione}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))
+    ) : (
+      <div class="text-center py-12">
+        <p class="text-4xl mb-4">✝️</p>
+        <p class="text-lg text-muted-foreground mb-4">
+          Le benedizioni saranno disponibili presto.
+        </p>
+        <a href="/preghiere" class="text-primary hover:underline">Scopri le preghiere disponibili</a>
+      </div>
+    )}
+  </div>
+</BaseLayout>

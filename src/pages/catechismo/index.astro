@@ -1,0 +1,104 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { db } from '../../db';
+
+export const prerender = false;
+
+const totalCount = await db.query.catechism.findMany({ limit: 1 });
+const total = 2865;
+
+const parti = [
+  { num: 'I', titolo: 'La professione della fede', range: '1-1065', desc: 'Il Credo, la fede della Chiesa' },
+  { num: 'II', titolo: 'La celebrazione del mistero cristiano', range: '1066-1690', desc: 'I sacramenti e la liturgia' },
+  { num: 'III', titolo: 'La vita in Cristo', range: '1691-2557', desc: 'La morale cristiana e i comandamenti' },
+  { num: 'IV', titolo: 'La preghiera cristiana', range: '2558-2865', desc: 'Il Padre Nostro e la vita di preghiera' },
+];
+---
+
+<BaseLayout
+  title="Catechismo della Chiesa Cattolica"
+  description="Il Catechismo della Chiesa Cattolica (CCC) completo: 2865 punti con ricerca, navigazione e riferimenti biblici."
+>
+  <div class="max-w-4xl mx-auto">
+    <header class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 font-serif">Catechismo della Chiesa Cattolica</h1>
+      <p class="text-lg text-muted-foreground">
+        {total} punti — La dottrina completa della fede cattolica
+      </p>
+    </header>
+
+    <!-- Parti del catechismo -->
+    <div class="grid md:grid-cols-2 gap-6 mb-12">
+      {parti.map(parte => (
+        <a
+          href={`/catechismo/${parte.range.split('-')[0]}`}
+          class="rounded-lg border bg-card p-6 hover:shadow-md transition"
+        >
+          <div class="flex items-center gap-3 mb-3">
+            <span class="px-3 py-1 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+              Parte {parte.num}
+            </span>
+          </div>
+          <h2 class="text-xl font-bold mb-2 font-serif">{parte.titolo}</h2>
+          <p class="text-sm text-muted-foreground mb-2">{parte.desc}</p>
+          <p class="text-xs text-muted-foreground">Punti {parte.range}</p>
+        </a>
+      ))}
+    </div>
+
+    <!-- Accesso rapido -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold mb-4 font-serif">Accesso Rapido</h2>
+      <div class="rounded-lg border bg-card p-6">
+        <p class="text-sm text-muted-foreground mb-4">Vai direttamente a un punto del Catechismo:</p>
+        <div class="flex gap-2">
+          <input
+            type="number"
+            id="ccc-number"
+            min="1"
+            max="2865"
+            placeholder="Es: 1234"
+            class="flex-1 px-4 py-2 border rounded-md bg-background"
+          />
+          <button
+            id="ccc-go"
+            class="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition font-medium"
+          >
+            Vai
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Punti iniziali di ogni parte -->
+    <section>
+      <h2 class="text-2xl font-bold mb-4 font-serif">Punti Fondamentali</h2>
+      <div class="space-y-3">
+        {[1, 26, 142, 422, 683, 1066, 1210, 1691, 1877, 2558].map(n => (
+          <a
+            href={`/catechismo/${n}`}
+            class="flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent transition"
+          >
+            <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-bold flex-shrink-0">
+              CCC {n}
+            </span>
+          </a>
+        ))}
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const input = document.getElementById('ccc-number') as HTMLInputElement;
+    const btn = document.getElementById('ccc-go');
+    btn?.addEventListener('click', () => {
+      const n = parseInt(input?.value || '0');
+      if (n >= 1 && n <= 2865) {
+        window.location.href = `/catechismo/${n}`;
+      }
+    });
+    input?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') btn?.click();
+    });
+  </script>
+</BaseLayout>

@@ -1,0 +1,232 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { db } from '../../db';
+
+export const prerender = false;
+
+// Fetch tutte le preghiere, raggruppate per categoria
+const tuttePreghiere = await db.query.prayers.findMany({
+  orderBy: (prayers, { desc, asc }) => [asc(prayers.categoria), desc(prayers.popolarita)],
+});
+
+// Raggruppa per categoria
+const categorie = tuttePreghiere.reduce((acc, preghiera) => {
+  if (!acc[preghiera.categoria]) {
+    acc[preghiera.categoria] = [];
+  }
+  acc[preghiera.categoria].push(preghiera);
+  return acc;
+}, {} as Record<string, typeof tuttePreghiere>);
+
+const categorieInfo: Record<string, { nome: string; descrizione: string; icona: string }> = {
+  'fondamentale': {
+    nome: 'Preghiere Fondamentali',
+    descrizione: 'Le preghiere base della tradizione cattolica',
+    icona: '🙏'
+  },
+  'mariana': {
+    nome: 'Preghiere Mariane',
+    descrizione: 'Preghiere dedicate alla Beata Vergine Maria',
+    icona: '👸'
+  },
+  'rosario': {
+    nome: 'Santo Rosario',
+    descrizione: 'I misteri del Rosario e le sue preghiere',
+    icona: '📿'
+  },
+  'novena': {
+    nome: 'Novene',
+    descrizione: 'Novene ai santi e alle intenzioni particolari',
+    icona: '🕯️'
+  },
+  'mattino': {
+    nome: 'Preghiere del Mattino',
+    descrizione: 'Per iniziare la giornata con Dio',
+    icona: '🌅'
+  },
+  'sera': {
+    nome: 'Preghiere della Sera',
+    descrizione: 'Per chiudere la giornata in preghiera',
+    icona: '🌙'
+  },
+  'protezione': {
+    nome: 'Preghiere di Protezione',
+    descrizione: 'Per chiedere protezione divina',
+    icona: '🛡️'
+  },
+  'litania': {
+    nome: 'Litanie',
+    descrizione: 'Litanie tradizionali della Chiesa',
+    icona: '📖'
+  },
+  'angelo custode': {
+    nome: 'Angelo Custode',
+    descrizione: 'Preghiere all\'Angelo Custode',
+    icona: '👼'
+  },
+};
+
+const preghierePopolari = tuttePreghiere
+  .sort((a, b) => (b.popolarita || 0) - (a.popolarita || 0))
+  .slice(0, 6);
+---
+
+<BaseLayout 
+  title="Preghiere Cattoliche"
+  description="Raccolta completa di preghiere cattoliche: Padre Nostro, Ave Maria, Rosario, Novene, Litanie e preghiere per ogni occasione"
+>
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <header class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 font-serif">
+        Preghiere Cattoliche
+      </h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+        Una raccolta completa di preghiere tradizionali e popolari della Chiesa Cattolica
+      </p>
+    </header>
+
+    <!-- Preghiere Popolari -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold mb-6 font-serif">Le Più Pregate</h2>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {preghierePopolari.map(preghiera => (
+          <a 
+            href={`/preghiere/${preghiera.slug}`}
+            class="rounded-lg border bg-card p-6 hover:shadow-lg transition group"
+          >
+            <div class="flex items-start justify-between mb-3">
+              <h3 class="font-bold text-lg group-hover:text-primary transition">
+                {preghiera.titolo}
+              </h3>
+              {preghiera.fonteUfficiale && (
+                <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                  Ufficiale
+                </span>
+              )}
+            </div>
+            <p class="text-sm text-muted-foreground mb-3 line-clamp-2">
+              {preghiera.testo.substring(0, 100)}...
+            </p>
+            <div class="flex items-center gap-3 text-xs text-muted-foreground">
+              <span class="capitalize">{preghiera.categoria}</span>
+              {preghiera.durata && (
+                <span>• {preghiera.durata} min</span>
+              )}
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- Ricerca -->
+    <div class="mb-8">
+      <div class="relative max-w-2xl mx-auto">
+        <input 
+          type="search" 
+          id="search-preghiere"
+          placeholder="Cerca preghiere..." 
+          class="w-full px-4 py-3 pl-12 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Preghiere per Categoria -->
+    <section>
+      <h2 class="text-2xl font-bold mb-6 font-serif">Tutte le Categorie</h2>
+      
+      <div class="space-y-8">
+        {Object.entries(categorie).map(([categoria, preghiere]) => {
+          const info = categorieInfo[categoria] || { 
+            nome: categoria.charAt(0).toUpperCase() + categoria.slice(1), 
+            descrizione: '', 
+            icona: '🙏' 
+          };
+          
+          return (
+            <div class="categoria-section" data-categoria={categoria}>
+              <div class="mb-4">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="text-3xl">{info.icona}</span>
+                  <h3 class="text-2xl font-bold font-serif">{info.nome}</h3>
+                </div>
+                {info.descrizione && (
+                  <p class="text-muted-foreground ml-12">{info.descrizione}</p>
+                )}
+              </div>
+              
+              <div class="grid md:grid-cols-2 gap-4 ml-12">
+                {preghiere.map(preghiera => (
+                  <a 
+                    href={`/preghiere/${preghiera.slug}`}
+                    class="preghiera-item flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent transition group"
+                    data-titolo={preghiera.titolo.toLowerCase()}
+                  >
+                    <div class="flex-1">
+                      <h4 class="font-semibold mb-1 group-hover:text-primary transition">
+                        {preghiera.titolo}
+                      </h4>
+                      <p class="text-sm text-muted-foreground line-clamp-1">
+                        {preghiera.testo.substring(0, 80)}...
+                      </p>
+                      <div class="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                        {preghiera.durata && (
+                          <span>⏱️ {preghiera.durata} min</span>
+                        )}
+                        {preghiera.fonteUfficiale && (
+                          <span class="text-primary">✓ Ufficiale</span>
+                        )}
+                      </div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+
+    <!-- Call to Action -->
+    <div class="mt-12 rounded-lg border bg-gradient-to-br from-primary/5 to-primary/10 p-8 text-center">
+      <h3 class="text-2xl font-bold mb-3 font-serif">Crea la Tua Routine di Preghiera</h3>
+      <p class="text-muted-foreground mb-6 max-w-2xl mx-auto">
+        Scopri novene, litanie e preghiere per ogni momento della giornata
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="/rosario" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6 py-2">
+          Prega il Rosario
+        </a>
+        <a href="/novene" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6 py-2">
+          Inizia una Novena
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Ricerca live
+    const searchInput = document.getElementById('search-preghiere') as HTMLInputElement;
+    const preghiereItems = document.querySelectorAll('.preghiera-item');
+    const categorieSection = document.querySelectorAll('.categoria-section');
+
+    searchInput?.addEventListener('input', (e) => {
+      const query = (e.target as HTMLInputElement).value.toLowerCase();
+      
+      preghiereItems.forEach(item => {
+        const titolo = item.getAttribute('data-titolo') || '';
+        const match = titolo.includes(query);
+        (item as HTMLElement).style.display = match ? 'flex' : 'none';
+      });
+
+      // Nascondi categorie vuote
+      categorieSection.forEach(section => {
+        const visibleItems = section.querySelectorAll('.preghiera-item[style="display: flex;"], .preghiera-item:not([style])');
+        (section as HTMLElement).style.display = visibleItems.length > 0 || !query ? 'block' : 'none';
+      });
+    });
+  </script>
+</BaseLayout>

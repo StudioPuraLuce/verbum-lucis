@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: verbum-lucis-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: verbum_lucis
+      POSTGRES_USER: verbum_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U verbum_user -d verbum_lucis"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: verbum-lucis-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://verbum_user:${DB_PASSWORD:-changeme123}@postgres:5432/verbum_lucis
+      SITE_URL: https://verbumlucis.it
+      NODE_ENV: production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.verbum.rule=Host(`verbumlucis.it`)"
+      - "traefik.http.routers.verbum.entrypoints=websecure"
+      - "traefik.http.routers.verbum.tls.certresolver=letsencrypt"
+      - "traefik.http.services.verbum.loadbalancer.server.port=4321"
+    networks:
+      - internal
+      - dokploy-network
+
+volumes:
+  postgres_data:
+
+networks:
+  internal:
+  dokploy-network:
+    external: true

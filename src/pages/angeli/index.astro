@@ -1,0 +1,66 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { db } from '../../db';
+
+export const prerender = false;
+
+const angeli = await db.query.angels.findMany({
+  orderBy: (t, { asc }) => [asc(t.nome)],
+});
+---
+
+<BaseLayout
+  title="Angeli e Arcangeli"
+  description="Scopri gli angeli e gli arcangeli della tradizione cattolica: San Michele, San Gabriele, San Raffaele e gli angeli custodi."
+>
+  <div class="max-w-4xl mx-auto">
+    <header class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 font-serif">Angeli e Arcangeli</h1>
+      <p class="text-lg text-muted-foreground">
+        I messaggeri celesti nella tradizione cattolica
+      </p>
+    </header>
+
+    <div class="grid md:grid-cols-1 gap-6">
+      {angeli.map(angelo => (
+        <div class="rounded-lg border bg-card p-8">
+          <div class="flex items-start gap-6">
+            {angelo.immagineUrl && (
+              <img src={angelo.immagineUrl} alt={angelo.nome} class="w-24 h-24 rounded-full object-cover flex-shrink-0" />
+            )}
+            <div>
+              <h2 class="text-2xl font-bold font-serif mb-1">{angelo.nome}</h2>
+              {angelo.nomeCompleto && (
+                <p class="text-muted-foreground mb-2">{angelo.nomeCompleto}</p>
+              )}
+              <span class="inline-flex px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium capitalize mb-4">
+                {angelo.categoria}
+              </span>
+              {angelo.ruolo && (
+                <p class="text-sm text-muted-foreground mb-3"><strong>Ruolo:</strong> {angelo.ruolo}</p>
+              )}
+              <p class="leading-relaxed">{angelo.descrizione}</p>
+
+              {angelo.scritture?.length > 0 && (
+                <div class="mt-4">
+                  <p class="text-sm font-semibold mb-2">Riferimenti biblici:</p>
+                  <div class="flex flex-wrap gap-2">
+                    {angelo.scritture.map(s => (
+                      <span class="text-xs px-2 py-1 rounded bg-secondary">{s}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {angeli.length === 0 && (
+      <div class="text-center py-12">
+        <p class="text-muted-foreground">Nessun angelo nel database.</p>
+      </div>
+    )}
+  </div>
+</BaseLayout>

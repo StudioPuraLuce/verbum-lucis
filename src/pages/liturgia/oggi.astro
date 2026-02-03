@@ -1,0 +1,125 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { db } from '../../db';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
+
+export const prerender = false;
+
+const oggi = format(new Date(), 'yyyy-MM-dd');
+const oggiFormat = format(new Date(), 'EEEE d MMMM yyyy', { locale: it });
+
+const liturgia = await db.query.liturgy.findFirst({
+  where: (t, { eq }) => eq(t.data, oggi),
+});
+
+// Santi del giorno
+const santiOggi = liturgia?.santiDelGiorno?.length
+  ? await db.query.saints.findMany({
+      where: (t, { inArray }) => inArray(t.id, liturgia.santiDelGiorno!),
+    })
+  : [];
+
+// Santi per data festa (MM-DD)
+const meseGiorno = format(new Date(), 'MM-dd');
+const santiPerFesta = await db.query.saints.findMany({
+  where: (t, { eq }) => eq(t.dataFesta, meseGiorno),
+});
+---
+
+<BaseLayout
+  title="Liturgia di Oggi"
+  description={`Liturgia cattolica di oggi ${oggiFormat}. Letture, Salmo, Vangelo e santi del giorno.`}
+>
+  <div class="max-w-3xl mx-auto">
+    <header class="text-center mb-10">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 font-serif">Liturgia di Oggi</h1>
+      <p class="text-xl text-muted-foreground capitalize">{oggiFormat}</p>
+    </header>
+
+    {liturgia ? (
+      <article>
+        <!-- Info liturgica -->
+        <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
+          <span class={`px-4 py-2 rounded-full text-sm font-semibold liturgical-color-${liturgia.coloreLiturgico}`}>
+            {liturgia.coloreLiturgico.charAt(0).toUpperCase() + liturgia.coloreLiturgico.slice(1)}
+          </span>
+          <span class="text-sm text-muted-foreground">{liturgia.tempoLiturgico}</span>
+          {liturgia.domenicaSettimana && (
+            <span class="text-sm font-semibold">{liturgia.domenicaSettimana}</span>
+          )}
+        </div>
+
+        <!-- Prima Lettura -->
+        <section class="mb-8">
+          <div class="rounded-lg border bg-card p-6">
+            <h2 class="text-xl font-bold mb-3 font-serif">Prima Lettura</h2>
+            <p class="text-sm text-primary font-semibold mb-3">{liturgia.primaLettura.riferimento}</p>
+            <p class="leading-relaxed whitespace-pre-line">{liturgia.primaLettura.testo}</p>
+          </div>
+        </section>
+
+        <!-- Salmo -->
+        <section class="mb-8">
+          <div class="rounded-lg border bg-card p-6">
+            <h2 class="text-xl font-bold mb-3 font-serif">Salmo Responsoriale</h2>
+            <p class="text-sm text-primary font-semibold mb-2">{liturgia.salmoResponsoriale.riferimento}</p>
+            {liturgia.salmoResponsoriale.ritornello && (
+              <p class="italic text-muted-foreground mb-3">Rit: {liturgia.salmoResponsoriale.ritornello}</p>
+            )}
+            <p class="leading-relaxed whitespace-pre-line">{liturgia.salmoResponsoriale.testo}</p>
+          </div>
+        </section>
+
+        <!-- Seconda Lettura -->
+        {liturgia.secondaLettura && (
+          <section class="mb-8">
+            <div class="rounded-lg border bg-card p-6">
+              <h2 class="text-xl font-bold mb-3 font-serif">Seconda Lettura</h2>
+              <p class="text-sm text-primary font-semibold mb-3">{liturgia.secondaLettura.riferimento}</p>
+              <p class="leading-relaxed whitespace-pre-line">{liturgia.secondaLettura.testo}</p>
+            </div>
+          </section>
+        )}
+
+        <!-- Vangelo -->
+        <section class="mb-8">
+          <div class="rounded-lg border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5 p-6">
+            <h2 class="text-xl font-bold mb-3 font-serif">Vangelo</h2>
+            <p class="text-sm text-primary font-semibold mb-3">{liturgia.vangelo.riferimento}</p>
+            <p class="text-lg leading-relaxed whitespace-pre-line">{liturgia.vangelo.testo}</p>
+          </div>
+        </section>
+      </article>
+    ) : (
+      <div class="text-center py-12">
+        <p class="text-4xl mb-4">📖</p>
+        <p class="text-lg text-muted-foreground mb-4">
+          La liturgia di oggi non è ancora disponibile.
+        </p>
+        <p class="text-sm text-muted-foreground">
+          Le letture vengono aggiornate quotidianamente.
+        </p>
+      </div>
+    )}
+
+    <!-- Santi del giorno -->
+    {(santiOggi.length > 0 || santiPerFesta.length > 0) && (
+      <section class="mt-12">
+        <h2 class="text-2xl font-bold mb-6 font-serif">Santi di Oggi</h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          {[...santiOggi, ...santiPerFesta]
+            .filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i)
+            .map(santo => (
+              <a href={`/santi/${santo.slug}`} class="flex items-center gap-4 p-4 rounded-lg border bg-card hover:shadow-md transition">
+                <div>
+                  <h3 class="font-bold">{santo.nome}</h3>
+                  {santo.titolo && <p class="text-sm text-muted-foreground">{santo.titolo}</p>}
+                </div>
+              </a>
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+</BaseLayout>

@@ -1,0 +1,161 @@
+---
+import '../styles/globals.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  canonicalURL?: string;
+}
+
+const { 
+  title, 
+  description = "Liturgia cattolica, preghiere, santi e novene - Il tuo portale spirituale quotidiano",
+  ogImage = "/og-default.jpg",
+  canonicalURL = Astro.url.pathname
+} = Astro.props;
+
+const fullTitle = `${title} | Verbum Lucis`;
+const siteUrl = import.meta.env.SITE_URL || 'https://verbumlucis.it';
+---
+
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    
+    <!-- SEO -->
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={`${siteUrl}${canonicalURL}`} />
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={`${siteUrl}${canonicalURL}`} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={`${siteUrl}${ogImage}`} />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={`${siteUrl}${canonicalURL}`} />
+    <meta property="twitter:title" content={fullTitle} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={`${siteUrl}${ogImage}`} />
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <style is:global>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      .font-serif {
+        font-family: 'Crimson Text', serif;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-background">
+    <header class="border-b sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
+      <nav class="container mx-auto px-4 py-4">
+        <div class="flex items-center justify-between">
+          <a href="/" class="text-2xl font-bold flex items-center gap-2">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <span>Verbum Lucis</span>
+          </a>
+          
+          <div class="hidden md:flex gap-6">
+            <a href="/pagina-sacra/oggi" class="hover:text-primary transition font-semibold flex items-center gap-1">
+              <span>☩</span>
+              <span>Pagina Sacra</span>
+            </a>
+            <a href="/liturgia/oggi" class="hover:text-primary transition">Liturgia Oggi</a>
+            <a href="/santi" class="hover:text-primary transition">Santi</a>
+            <a href="/preghiere" class="hover:text-primary transition">Preghiere</a>
+            <a href="/novene" class="hover:text-primary transition">Novene</a>
+            <a href="/angeli" class="hover:text-primary transition">Angeli</a>
+          </div>
+          
+          <button id="menu-toggle" class="md:hidden">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden mt-4 pb-4 space-y-2">
+          <a href="/pagina-sacra/oggi" class="block py-2 hover:text-primary transition font-semibold">
+            ☩ Pagina Sacra
+          </a>
+          <a href="/liturgia/oggi" class="block py-2 hover:text-primary transition">Liturgia Oggi</a>
+          <a href="/santi" class="block py-2 hover:text-primary transition">Santi</a>
+          <a href="/preghiere" class="block py-2 hover:text-primary transition">Preghiere</a>
+          <a href="/novene" class="block py-2 hover:text-primary transition">Novene</a>
+          <a href="/angeli" class="block py-2 hover:text-primary transition">Angeli</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+      <slot />
+    </main>
+
+    <footer class="border-t mt-16 py-8 bg-muted/30">
+      <div class="container mx-auto px-4">
+        <div class="grid md:grid-cols-4 gap-8">
+          <div>
+            <h3 class="font-bold mb-4">Verbum Lucis</h3>
+            <p class="text-sm text-muted-foreground">
+              Il tuo portale quotidiano per la liturgia, preghiere e vita spirituale.<br/>
+              <span class="italic">Un progetto di Studio Pura Luce</span>
+            </p>
+          </div>
+          <div>
+            <h4 class="font-semibold mb-4">Liturgia</h4>
+            <ul class="space-y-2 text-sm">
+              <li><a href="/liturgia/oggi" class="hover:text-primary">Liturgia Oggi</a></li>
+              <li><a href="/liturgia/calendario" class="hover:text-primary">Calendario</a></li>
+              <li><a href="/santi/oggi" class="hover:text-primary">Santo del Giorno</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold mb-4">Preghiere</h4>
+            <ul class="space-y-2 text-sm">
+              <li><a href="/preghiere/rosario" class="hover:text-primary">Rosario</a></li>
+              <li><a href="/preghiere/novene" class="hover:text-primary">Novene</a></li>
+              <li><a href="/preghiere/litanie" class="hover:text-primary">Litanie</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold mb-4">Risorse</h4>
+            <ul class="space-y-2 text-sm">
+              <li><a href="/angeli" class="hover:text-primary">Angeli</a></li>
+              <li><a href="/benedizioni" class="hover:text-primary">Benedizioni</a></li>
+              <li><a href="/intenzioni" class="hover:text-primary">Intenzioni</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} Verbum Lucis — Studio Pura Luce. Tutti i diritti riservati.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      const menuToggle = document.getElementById('menu-toggle');
+      const mobileMenu = document.getElementById('mobile-menu');
+      
+      menuToggle?.addEventListener('click', () => {
+        mobileMenu?.classList.toggle('hidden');
+      });
+    </script>
+  </body>
+</html>

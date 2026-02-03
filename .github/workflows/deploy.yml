@@ -1,0 +1,61 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to VPS
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 $SSH_USER@$SSH_HOST << 'ENDSSH'
+            set -e
+            cd /opt/verbum-lucis
+
+            echo "📥 Pulling latest code..."
+            git pull origin main
+
+            echo "🐳 Rebuilding Docker images..."
+            docker compose build
+
+            echo "🔄 Applying database migrations..."
+            docker compose run --rm app npm run db:push
+
+            echo "🚀 Restarting containers..."
+            docker compose up -d --force-recreate
+
+            echo "⏳ Waiting for health check..."
+            sleep 10
+
+            echo "✅ Testing application..."
+            docker exec verbum-lucis-app curl -f http://localhost:4321 || {
+              echo "❌ Health check failed! Rolling back..."
+              docker compose down
+              git reset --hard HEAD~1
+              docker compose up -d
+              exit 1
+            }
+
+            echo "🎉 Deployment successful!"
+          ENDSSH
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519

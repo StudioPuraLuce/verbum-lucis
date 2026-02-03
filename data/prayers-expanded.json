@@ -1,0 +1,137 @@
+[
+  {
+    "titolo": "Preghiera del Mattino",
+    "slug": "preghiera-del-mattino",
+    "testo": "O Dio, Padre mio, a cui dedico questa nuova giornata. Accoglimi nelle tue mani e guidami in ogni passo che compirò oggi. Sia la mia lingua a servizio della tua verità, il mio cuore aperto alla tua grazia e le mie azioni fedeli alla tua volontà. Ti ringrazio per il dono della vita. Amen.",
+    "categoria": "mattino",
+    "fonteUfficiale": false,
+    "popolarita": 88,
+    "durata": 2
+  },
+  {
+    "titolo": "Preghiera della Sera",
+    "slug": "preghiera-della-sera",
+    "testo": "Signore mio Dio, mentre questa giornata si chiude, ti ringrazio per ogni momento che mi hai donato. Perdona i miei peccati, quelli che ho commesso con parole, azioni e pensieri. Custodisci me e la mia famiglia durante la notte. Sia la tua pace con noi. Amen.",
+    "categoria": "sera",
+    "fonteUfficiale": false,
+    "popolarita": 85,
+    "durata": 2
+  },
+  {
+    "titolo": "Preghiera prima dei Pasti",
+    "slug": "preghiera-prima-pasti",
+    "testo": "Benedici, o Signore, noi e questi tuoi doni che stiamo per ricevere dalla tua generosità. Per Cristo nostro Signore. Amen.",
+    "categoria": "fondamentale",
+    "fonteUfficiale": true,
+    "popolarita": 92,
+    "durata": 1
+  },
+  {
+    "titolo": "Credo degli Apostoli",
+    "slug": "credo-degli-apostoli",
+    "testo": "Credo in Dio, Padre onnipotente, creatore del cielo e della terra. Credo in Gesù Cristo, suo unigenito Figlio, nostro Signore, che fu concepito per opera dello Spirito Santo, nacque da Maria Vergine, patì sotto Pontio Pilato, fu crocifisso, morì e fu sepolto. Scese agli inferi, al terzo giorno è risurretto dai morti, è salito al cielo, è assiso alla destra di Dio Padre onnipotente, di là verrà a giudicare i vivi e i morti. Credo nello Spirito Santo, nella Santa Chiesa cattolica, nella comunione dei santi, nella remissione dei peccati, nella risurrezione della carne, nella vita eterna. Amen.",
+    "categoria": "fondamentale",
+    "fonteUfficiale": true,
+    "popolarita": 95,
+    "durata": 2
+  },
+  {
+    "titolo": "Credo di Niceno",
+    "slug": "credo-di-niceno",
+    "testo": "Credo in un solo Dio, Padre onnipotente, creatore del cielo e della terra, di tutte le cose visibili e invisibili. Credo in un solo Signore Gesù Cristo, Figlio unigenito di Dio, nato dal Padre prima di ogni tempo, Dio da Dio, luce da luce, Dio vero da Dio vero, generato non creato, della stessa sostanza del Padre, per mezzo del quale tutto è stato fatto. Per noi uomini e per la nossa salvezza è disceso dal cielo ed è disceso dallo Spirito Santo ed è nato dalla Vergine Maria. È stato crocifisso sotto Pontio Pilato, ha patito, è morto ed è stato sepolto. È disceso all'inferno ed è risurretto al terzo giorno secondo le Scritture, è salito al cielo ed è assiso alla destra del Padre. Verrà di nuovo nella sua gloria per giudicare i vivi e i morti, e il suo Regno non avra' fine. Credo nello Spirito Santo, Signore e vivificatore, che procede dal Padre e dal Figlio, che insieme al Padre e al Figlio è adorato e glorificato, che ha parlato per mezzo dei Profeti. Credo in una sola Chiesa santa cattolica e apostolica. Confesso che v'è un solo battesimo per la remissione dei peccati. Attendo la risurrezione dei morti e la vita del secolo futuro. Amen.",
+    "categoria": "fondamentale",
+    "fonteUfficiale": true,
+    "popolarita": 90,
+    "durata": 3
+  },
+  {
+    "titolo": "Litania della Beata Vergine Maria",
+    "slug": "litania-beata-vergine-maria",
+    "testo": "Signore, abbi pietà di noi. Cristo, abbi pietà di noi. Signore, abbi pietà di noi.\nSanta Maria, prega per noi.\nSanta Madre di Dio, prega per noi.\nSanta Vergine delle Vergini, prega per noi.\nMadre di Cristo, prega per noi.\nMadre della Chiesa, prega per noi.\nMadre della grazia di Dio, prega per noi.\nMadre della misericordia, prega per noi.\nMadre della speranza, prega per noi.\nImmacolata Vergine, prega per noi.\nVergin Santissima, prega per noi.\nRegina degli Angeli, prega per noi.\nRegina dei Patriarchi, prega per noi.\nRegina dei Profeti, prega per noi.\nRegina degli Apostoli, prega per noi.\nRegina dei Martiri, prega per noi.\nRegina della Pace, prega per noi.\nRegina del Cielo, prega per noi.\nPro nobis intercede. Amen.",
+    "categoria": "litania",
+    "fonteUfficiale": true,
+    "popolarita": 88,
+    "durata": 5
+  },
+  {
+    "titolo": "Litania dei Santi",
+    "slug": "litania-dei-santi",
+    "testo": "Signore, abbi pietà di noi. Cristo, abbi pietà di noi. Signore, abbi pietà di noi.\nSanta Maria, Madre di Dio, prega per noi.\nSanto Michele, prega per noi.\nSanti Pietro e Paolo, pregatevi per noi.\nSanto Abraamo, prega per noi.\nSanto Mosè, prega per noi.\nSanto Giovanni il Battista, prega per noi.\nSanti Adamo ed Eva, pregatevi per noi.\nSanto Abraamo, prega per noi.\nSanti patriarchi e profeti, pregatevi per noi.\nSanto Pietro e Sant'Andrea, pregatevi per noi.\nSanti Giovanni, Giacomo e tutti gli apostoli e gli evangelisti, pregatevi per noi.\nSanti Elia e Giovanni il Battista, pregatevi per noi.\nSanto Giuseppe, prega per noi.\nSanta Maria Maddalena, prega per noi.\nSanti santi uomini e donne di Dio, pregatevi per noi.\nTutti i santi di Dio, pregatevi per noi.\nSignore, abbi pietà di noi. Amen.",
+    "categoria": "litania",
+    "fonteUfficiale": true,
+    "popolarita": 82,
+    "durata": 6
+  },
+  {
+    "titolo": "Preghiera per la Pace",
+    "slug": "preghiera-per-la-pace",
+    "testo": "Dio di pace, in cui non c'è divisione, ascolta la nostra preghiera per la pace nel mondo. Converti i cuori di chi semina odio in cuori che producono amore. Trasforma gli strumenti della guerra in strumenti di lavoro e di pace. Iscrivi nel cuore di ogni uomo la sete della pace e la volontà di raggiungerla. Per Cristo nostro Signore. Amen.",
+    "categoria": "mondo",
+    "fonteUfficiale": false,
+    "popolarita": 86,
+    "durata": 2
+  },
+  {
+    "titolo": "Preghiera per la famiglia",
+    "slug": "preghiera-per-la-famiglia",
+    "testo": "Signore Dio nostro, che hai istituito la famiglia come primo cellula della società, custodisci le nostre famiglie dalla divisione e dall'odio. Riversa su di noi la tua grazia affinché ci amiamo come Cristo ha amato la Chiesa. Sii la guida di ogni famiglia nella comprensione, nel rispetto e nel perdono reciproco. Amen.",
+    "categoria": "famiglia",
+    "fonteUfficiale": false,
+    "popolarita": 84,
+    "durata": 2
+  },
+  {
+    "titolo": "Preghiera per i Defunti",
+    "slug": "preghiera-per-i-defunti",
+    "testo": "Dio di misericordia, ricorda i tuoi servi che sono passati da questa vita alla tua casa. Accogli nella tua pace i nostri cari che ci hanno preceduto. Per la tua misericordia infinita, concedi loro il riposo eterno e la luce eterna. E quando anche noi raggiungeremo la tua presenza, accoglici nel tuo amore. Amen.",
+    "categoria": "defunti",
+    "fonteUfficiale": false,
+    "popolarita": 80,
+    "durata": 2
+  },
+  {
+    "titolo": "Preghiera a Santa Rita da Cascia",
+    "slug": "preghiera-santa-rita",
+    "testo": "Santa Rita, tu che sei la santa dei casi impossibili, a te ricorriamo con fiducia. Intercedi dinanzi a Dio per la nostra situazione che ci sembra impossibile risolvere. Insegnaci la pazienza che hai mostrato nella tua vita, la fede che hai mantenuto nelle prove più dure. Intercedi per noi che speriamo nella misericordia di Dio. Amen.",
+    "categoria": "intercessione",
+    "fonteUfficiale": false,
+    "popolarita": 89,
+    "durata": 2
+  },
+  {
+    "titolo": "Preghiera a Sant'Antonio da Padova",
+    "slug": "preghiera-santantonio",
+    "testo": "Sant'Antonio, taumaturgo e Dottore della Chiesa, a te si ricorriamo con fiducia. Tu che hai sempre ricevuto con amore ogni persona che si rivolgeva a te, intercedi per noi davanti a Dio. Guidaci nel cammino della vita e proteggici dalle insidie. Intercedi per le nostre necessità e per la nostra salvezza eterna. Amen.",
+    "categoria": "intercessione",
+    "fonteUfficiale": false,
+    "popolarita": 87,
+    "durata": 2
+  },
+  {
+    "titolo": "Preghiera a San Giuseppe per il Lavoro",
+    "slug": "preghiera-san-giuseppe-lavoro",
+    "testo": "San Giuseppe, lavoratore fedelissimo, che con le tue mani hai provveduto alla famiglia più santa che mai sia esistita, a te affido la mia situazione lavorativa. Intercedi per me affinché Dio mi conceda il dono del lavoro onesto. Insegnami la tua umiltà, la tua pazienza e la tua fede nella provvidenza di Dio. Amen.",
+    "categoria": "lavoro",
+    "fonteUfficiale": false,
+    "popolarita": 83,
+    "durata": 2
+  },
+  {
+    "titolo": "Preghiera per la Salute",
+    "slug": "preghiera-per-la-salute",
+    "testo": "Signore Dio, creatore e custode della vita, a te affido la salute di me e dei miei cari. Se è nella tua volontà, concedi la guarigione dei corpi e degli animi. Sostieni noi che soffriaamo nel dolore e dacci la forza di sopportare le prove con pazienza cristiana. Amen.",
+    "categoria": "salute",
+    "fonteUfficiale": false,
+    "popolarita": 86,
+    "durata": 2
+  },
+  {
+    "titolo": "Preghiera a Padre Pio",
+    "slug": "preghiera-padre-pio",
+    "testo": "Padre Pio, frate cappuccino stigmatizzato, intercedi per me davanti a Dio. Tu che hai offerto la tua vita e i tuoi dolori per la salvezza delle anime, abbi pietà di noi. Chiedi a Dio per noi la grazia di pentirci dei nostri peccati e di camminare sulla via della santità. Custodiscici sotto la tua protezione. Amen.",
+    "categoria": "intercessione",
+    "fonteUfficiale": false,
+    "popolarita": 88,
+    "durata": 2
+  }
+]

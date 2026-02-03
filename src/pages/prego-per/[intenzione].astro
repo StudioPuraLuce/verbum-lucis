@@ -1,0 +1,224 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { db } from '../../db';
+
+export const prerender = false;
+
+const { intenzione: slug } = Astro.params;
+
+// Fetch intenzione
+const intenzione = await db.query.intentions.findFirst({
+  where: (t, { eq }) => eq(t.slug, slug || ''),
+});
+
+if (!intenzione) {
+  return Astro.redirect('/preghiere');
+}
+
+// Risolvi preghiere suggerite
+const preghiere = intenzione.preghiereSuggerite?.length
+  ? await db.query.prayers.findMany({
+      where: (t, { inArray }) => inArray(t.id, intenzione.preghiereSuggerite!),
+    })
+  : [];
+
+// Risolvi santi intercedenti
+const santi = intenzione.santiIntercedenti?.length
+  ? await db.query.saints.findMany({
+      where: (t, { inArray }) => inArray(t.id, intenzione.santiIntercedenti!),
+    })
+  : [];
+
+// Risolvi punti catechismo
+const catechismoPunti = intenzione.catechismoPunti?.length
+  ? await db.query.catechism.findMany({
+      where: (t, { inArray }) => inArray(t.numero, intenzione.catechismoPunti!),
+    })
+  : [];
+
+// Altre intenzioni nella stessa categoria
+let altre_filtrate: any[] = [];
+try {
+  const altre = await db.query.intentions.findMany({
+    where: (t, { eq }) => eq(t.categoria, intenzione.categoria || ''),
+    limit: 6,
+  });
+  altre_filtrate = altre.filter(i => i.slug !== intenzione.slug).slice(0, 4);
+} catch { altre_filtrate = []; }
+---
+
+<BaseLayout
+  title={`Prego per: ${intenzione.titolo}`}
+  description={`${intenzione.descrizione} Trova preghiere, santi intercedenti e riferimenti al Catechismo per ${intenzione.titolo}.`}
+>
+  <article class="max-w-4xl mx-auto">
+
+    <!-- Header -->
+    <header class="text-center mb-12">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="text-4xl">🙏</span>
+      </div>
+      <p class="text-muted-foreground mb-2 text-lg">Prego per</p>
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 font-serif">
+        {intenzione.titolo}
+      </h1>
+      <span class="inline-flex px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium capitalize">
+        {intenzione.categoria}
+      </span>
+    </header>
+
+    <!-- Descrizione -->
+    {intenzione.descrizione && (
+      <section class="mb-10">
+        <div class="rounded-lg border bg-gradient-to-br from-primary/5 to-primary/10 p-8 text-center">
+          <p class="text-lg leading-relaxed text-muted-foreground">
+            {intenzione.descrizione}
+          </p>
+        </div>
+      </section>
+    )}
+
+    <!-- Santi Intercedenti -->
+    {santi.length > 0 && (
+      <section class="mb-10">
+        <h2 class="text-2xl font-bold mb-6 font-serif flex items-center gap-2">
+          <span>✨</span> Santi Intercedenti
+        </h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          {santi.map(santo => (
+            <a
+              href={`/santi/${santo.slug}`}
+              class="flex items-center gap-4 p-5 rounded-lg border bg-card hover:shadow-md transition group"
+            >
+              {santo.immagineUrl && (
+                <img src={santo.immagineUrl} alt={santo.nome} class="w-16 h-16 rounded-full object-cover" />
+              )}
+              <div>
+                <h3 class="font-bold group-hover:text-primary transition">{santo.nome}</h3>
+                {santo.titolo && <p class="text-sm text-muted-foreground">{santo.titolo}</p>}
+                {santo.patronoDi?.length > 0 && (
+                  <p class="text-xs text-muted-foreground mt-1">
+                    Patrono di: {santo.patronoDi.slice(0, 2).join(', ')}
+                  </p>
+                )}
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Preghiere Suggerite -->
+    {preghiere.length > 0 && (
+      <section class="mb-10">
+        <h2 class="text-2xl font-bold mb-6 font-serif flex items-center gap-2">
+          <span>📿</span> Preghiere Suggerite
+        </h2>
+        <div class="space-y-4">
+          {preghiere.map(preghiera => (
+            <div class="rounded-lg border bg-card overflow-hidden">
+              <!-- Header preghiera -->
+              <div class="p-5 border-b bg-card">
+                <div class="flex items-center justify-between">
+                  <h3 class="font-bold text-lg">{preghiera.titolo}</h3>
+                  <a
+                    href={`/preghiere/${preghiera.slug}`}
+                    class="text-sm text-primary hover:underline"
+                  >
+                    Leggi completa →
+                  </a>
+                </div>
+                <p class="text-sm text-muted-foreground capitalize mt-1">{preghiera.categoria}</p>
+              </div>
+
+              <!-- Testo preghiera (inline) -->
+              <div class="p-5">
+                <p class="prayer-text leading-relaxed text-sm">
+                  {preghiera.testo.length > 300
+                    ? preghiera.testo.substring(0, 300) + '...'
+                    : preghiera.testo}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Catechismo correlato -->
+    {catechismoPunti.length > 0 && (
+      <section class="mb-10">
+        <h2 class="text-2xl font-bold mb-6 font-serif flex items-center gap-2">
+          <span>📖</span> Il Catechismo Dice
+        </h2>
+        <div class="space-y-4">
+          {catechismoPunti.map(punto => (
+            <a
+              href={`/catechismo/${punto.numero}`}
+              class="flex items-start gap-4 p-5 rounded-lg border bg-card hover:bg-accent transition"
+            >
+              <span class="px-3 py-1 rounded-full bg-primary text-primary-foreground text-sm font-bold flex-shrink-0">
+                {punto.numero}
+              </span>
+              <p class="text-sm text-muted-foreground line-clamp-3">
+                {punto.testo.substring(0, 200)}...
+              </p>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Altre intenzioni nella stessa categoria -->
+    {altre_filtrate.length > 0 && (
+      <section class="mb-10">
+        <h2 class="text-2xl font-bold mb-6 font-serif">
+          Altre intenzioni ({intenzione.categoria})
+        </h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          {altre_filtrate.map(altra => (
+            <a
+              href={`/prego-per/${altra.slug}`}
+              class="p-5 rounded-lg border bg-card hover:shadow-md transition group"
+            >
+              <h3 class="font-bold group-hover:text-primary transition">
+                🙏 Prego per: {altra.titolo}
+              </h3>
+              {altra.descrizione && (
+                <p class="text-sm text-muted-foreground mt-2 line-clamp-2">
+                  {altra.descrizione}
+                </p>
+              )}
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- CTA -->
+    <div class="rounded-lg border bg-primary/5 p-8 text-center">
+      <h3 class="text-xl font-bold mb-3">Continua la tua preghiera</h3>
+      <p class="text-muted-foreground mb-6">
+        Scopri altre preghiere e risorse spirituali nel tuo cammino di fede.
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="/preghiere" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6">
+          Tutte le Preghiere
+        </a>
+        <a href="/rosario" class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent h-10 px-6">
+          Prega il Rosario
+        </a>
+      </div>
+    </div>
+  </article>
+
+  <!-- Schema.org -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": `Prego per: ${intenzione.titolo}`,
+    "description": intenzione.descrizione,
+    "author": { "@type": "Organization", "name": "Studio Pura Luce" },
+    "publisher": { "@type": "Organization", "name": "Verbum Lucis" },
+  })} />
+</BaseLayout>

@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { db } from '../db';
+import { format, addDays } from 'date-fns';
+import { it } from 'date-fns/locale';
+
+export const prerender = false;
+
+const today = new Date();
+const days = [];
+
+for (let i = 0; i < 7; i++) {
+  const date = addDays(today, i);
+  const dateStr = format(date, 'yyyy-MM-dd');
+  const liturgia = await db.query.liturgy.findFirst({
+    where: (t, { eq }) => eq(t.data, dateStr),
+  });
+  days.push({
+    date: dateStr,
+    formatted: format(date, 'EEEE d MMMM', { locale: it }),
+    isToday: i === 0,
+    liturgia,
+  });
+}
+---
+
+<BaseLayout
+  title="Calendario Liturgico"
+  description="Calendario liturgico cattolico con le letture, i colori liturgici e i santi del giorno."
+>
+  <div class="max-w-3xl mx-auto">
+    <header class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 font-serif">Calendario Liturgico</h1>
+      <p class="text-lg text-muted-foreground">Prossimi 7 giorni</p>
+    </header>
+
+    <div class="space-y-4">
+      {days.map(day => (
+        <div class={`rounded-lg border p-6 ${day.isToday ? 'border-primary bg-primary/5' : 'bg-card'}`}>
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="font-bold capitalize text-lg">
+              {day.isToday && <span class="text-primary mr-2">Oggi —</span>}
+              {day.formatted}
+            </h2>
+            {day.liturgia && (
+              <span class={`px-3 py-1 rounded-full text-xs font-medium liturgical-color-${day.liturgia.coloreLiturgico}`}>
+                {day.liturgia.coloreLiturgico}
+              </span>
+            )}
+          </div>
+          {day.liturgia ? (
+            <div>
+              {day.liturgia.domenicaSettimana && (
+                <p class="text-sm font-semibold mb-1">{day.liturgia.domenicaSettimana}</p>
+              )}
+              <p class="text-sm text-muted-foreground">{day.liturgia.tempoLiturgico}</p>
+              <div class="mt-3 flex gap-3">
+                <a href={`/liturgia/oggi`} class="text-xs text-primary hover:underline">Letture</a>
+              </div>
+            </div>
+          ) : (
+            <p class="text-sm text-muted-foreground">Dati liturgici non ancora disponibili</p>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

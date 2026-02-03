@@ -1,0 +1,137 @@
+[
+  {
+    "titolo": "Mia madre",
+    "slug": "mia-madre",
+    "categoria": "famiglia",
+    "descrizione": "Preghiere per la salute e il benessere di tua madre. Affida la tua mammina all'intercessione dei santi e alla misericordia di Dio.",
+    "preghiereSuggerikeSlug": ["ave-maria", "padre-nostro", "gloria-al-padre"],
+    "santiIntercedenti": ["santa-monica", "san-giuseppe", "santa-rita-cascia"],
+    "catechismoTemi": ["famiglia", "preghiera", "salvezza"]
+  },
+  {
+    "titolo": "Mio padre",
+    "slug": "mio-padre",
+    "categoria": "famiglia",
+    "descrizione": "Preghiere per tuo padre. Chiedi a Dio la sua protezione, salute e pace spirituale.",
+    "preghiereSuggerite": ["ave-maria", "padre-nostro", "gloria-al-padre"],
+    "santiIntercedenti": ["san-giuseppe", "san-giovanni-bosco", "san-padre-pio"],
+    "catechismoTemi": ["famiglia", "preghiera"]
+  },
+  {
+    "titolo": "Trovare lavoro",
+    "slug": "trovare-lavoro",
+    "categoria": "lavoro",
+    "descrizione": "Stai cercando lavoro? Prega con fiducia. Dio ha un piano per te. Affida la tua situazione a San Giuseppe, patrono dei lavoratori.",
+    "preghiereSuggerite": ["padre-nostro", "ave-maria", "angelo-di-dio"],
+    "santiIntercedenti": ["san-giuseppe", "san-giovanni-bosco", "san-francesco-assisi"],
+    "catechismoTemi": ["lavoro", "speranza", "fiducia"]
+  },
+  {
+    "titolo": "Superare l'ansia",
+    "slug": "superare-lansia",
+    "categoria": "salute",
+    "descrizione": "L'ansia può essere pesante. La preghiera è uno dei modi più potenti per trovare pace interiore. Lascia le tue preoccupazioni nelle mani di Dio.",
+    "preghiereSuggerite": ["padre-nostro", "ave-maria", "angelo-di-dio", "preghiera-san-michele"],
+    "santiIntercedenti": ["santa-rita-cascia", "san-padre-pio", "san-francesco-assisi"],
+    "catechismoTemi": ["pace", "preghiera", "fede"]
+  },
+  {
+    "titolo": "Il matrimonio di mio figlio",
+    "slug": "matrimonio-figlio",
+    "categoria": "famiglia",
+    "descrizione": "Un matrimonio è un dono di Dio. Prega per il tuo figlio e il suo futuro coniuge affinché la loro unione sia protetta dalla grazia divina.",
+    "preghiereSuggerite": ["ave-maria", "padre-nostro", "gloria-al-padre"],
+    "santiIntercedenti": ["san-giuseppe", "santa-monica", "san-parent-pio"],
+    "catechismoTemi": ["matrimonio", "famiglia", "sacramento"]
+  },
+  {
+    "titolo": "Chiedere perdono",
+    "slug": "chiedere-perdono",
+    "categoria": "fede",
+    "descrizione": "Dio è misericordioso. Se senti il peso del peccato, sappi che la sua misericordia è infinita. Prega con sincerità e abriti alla grazia del perdono.",
+    "preghiereSuggerite": ["padre-nostro", "ave-maria", "gloria-al-padre"],
+    "santiIntercedenti": ["san-padre-pio", "santa-rita-cascia", "san-francesco-assisi"],
+    "catechismoTemi": ["pentitenza", "misericordia", "sacramento", "perdono"]
+  },
+  {
+    "titolo": "La salute di un amico",
+    "slug": "salute-amico",
+    "categoria": "salute",
+    "descrizione": "Quando un amico sta male, la preghiera è il regalo più grande che puoi fare. Affida la sua guarigione a Dio e ai santi intercessori.",
+    "preghiereSuggerite": ["ave-maria", "padre-nostro", "gloria-al-padre"],
+    "santiIntercedenti": ["santa-rita-cascia", "san-padre-pio", "santantonio-padova"],
+    "catechismoTemi": ["salute", "intercessione", "carità"]
+  },
+  {
+    "titolo": "Prima degli esami",
+    "slug": "prima-degli-esami",
+    "categoria": "studio",
+    "descrizione": "Prima degli esami la stress è normale. Prega per avere calma, lucidità e forza. San Giovanni Bosco è il tuo alleato.",
+    "preghiereSuggerite": ["ave-maria", "padre-nostro", "angelo-di-dio"],
+    "santiIntercedenti": ["san-giovanni-bosco", "santa-chiara-assisi", "san-tommaso-daquino"],
+    "catechismoTemi": ["studio", "speranza", "preghiera"]
+  },
+  {
+    "titolo": "Un viaggio sicuro",
+    "slug": "viaggio-sicuro",
+    "categoria": "protezione",
+    "descrizione": "Prima di ogni viaggio, affida te stesso e i tuoi cari alla protezione di Dio. Sant'Antonio da Padova e San Cristoforo sono i patroni dei viaggiatori.",
+    "preghiereSuggerite": ["angelo-di-dio", "padre-nostro", "ave-maria"],
+    "santiIntercedenti": ["santantonio-padova", "san-cristoforo", "san-raffaele-arcangelo"],
+    "catechismoTemi": ["protezione", "viaggio", "preghiera"]
+  },
+  {
+    "titolo": "La conversione di un familiare",
+    "slug": "conversione-familiare",
+    "categoria": "fede",
+    "descrizione": "Quando un familiare si è allontanato dalla fede, la tua preghiera conta più di quanto pensi. Santa Monica ha pregato per anni per suo figlio Agostino.",
+    "preghiereSuggerite": ["ave-maria", "padre-nostro", "gloria-al-padre"],
+    "santiIntercedenti": ["santa-monica", "san-padre-pio", "san-francesco-assisi"],
+    "catechismoTemi": ["conversione", "famiglia", "fede", "preghiera"]
+  },
+  {
+    "titolo": "Pace nel mondo",
+    "slug": "pace-nel-mondo",
+    "categoria": "mondo",
+    "descrizione": "Il mondo ha bisogno di pace. Ogni preghiera conta. Cristo stesso ci ha chiesto di pregare per la pace e per tutti quelli che soffrono.",
+    "preghiereSuggerite": ["padre-nostro", "ave-maria", "gloria-al-padre"],
+    "santiIntercedenti": ["san-francesco-assisi", "santa-teresa-calcutta", "san-parent-pio"],
+    "catechismoTemi": ["pace", "mondo", "giustizia", "carità"]
+  },
+  {
+    "titolo": "Superare una malattia",
+    "slug": "superare-malattia",
+    "categoria": "salute",
+    "descrizione": "La malattia è una prova difficile, ma non sei solo. Dio è con te in ogni momento. Santa Rita è la santa dei casi impossibili.",
+    "preghiereSuggerite": ["ave-maria", "padre-nostro", "gloria-al-padre", "preghiera-san-michele"],
+    "santiIntercedenti": ["santa-rita-cascia", "san-padre-pio", "san-luca"],
+    "catechismoTemi": ["salute", "sofferenza", "fede", "speranza"]
+  },
+  {
+    "titolo": "Prima di una decisione importante",
+    "slug": "decisione-importante",
+    "categoria": "vita",
+    "descrizione": "Le decisioni importanti della vita meritano preghiera e discernimento. Chiedi a Dio la sua guida e fidati della sua volontà.",
+    "preghiereSuggerite": ["padre-nostro", "ave-maria", "angelo-di-dio"],
+    "santiIntercedenti": ["san-giuseppe", "san-planeta-pio", "san-giovanni-bosco"],
+    "catechismoTemi": ["discernimento", "volontà di Dio", "preghiera"]
+  },
+  {
+    "titolo": "Un bambino malato",
+    "slug": "bambino-malato",
+    "categoria": "salute",
+    "descrizione": "Quando un bambino sta male, il dolore dei genitori è immenso. Prega con everything il tuo cuore. Gesù ha sempre mostrato un amore speciale per i bambini.",
+    "preghiereSuggerite": ["ave-maria", "padre-nostro", "gloria-al-padre"],
+    "santiIntercedenti": ["san-parent-pio", "santa-rita-cascia", "san-giovanni-bosco"],
+    "catechismoTemi": ["bambini", "salute", "misericordia", "preghiera"]
+  },
+  {
+    "titolo": "Prima di una chirurgia",
+    "slug": "prima-chirurgia",
+    "categoria": "salute",
+    "descrizione": "Prima di un intervento chirurgico è normale avere paura. Affida il tuo corpo e la tua vita alle mani di Dio. San Raffaele Arcangelo è il patrono dei guaritori.",
+    "preghiereSuggerite": ["padre-nostro", "ave-maria", "angelo-di-dio"],
+    "santiIntercedenti": ["san-raffaele-arcangelo", "santa-rita-cascia", "san-parent-pio"],
+    "catechismoTemi": ["salute", "protezione", "fede", "preghiera"]
+  }
+]

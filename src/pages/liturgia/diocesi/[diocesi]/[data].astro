@@ -1,0 +1,228 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import { db } from '../../../../db';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
+
+export const prerender = false;
+
+const { diocesi: diocesiSlug, data: dateParam } = Astro.params;
+
+// Verifica diocesi valida
+const diocesi = await db.query.dioceses.findFirst({
+  where: (t, { eq }) => eq(t.slug, diocesiSlug || ''),
+});
+
+if (!diocesi) {
+  return Astro.redirect('/liturgia/oggi');
+}
+
+// Verifica data valida
+const dataRegex = /^\d{4}-\d{2}-\d{2}$/;
+if (!dataRegex.test(dateParam || '')) {
+  return Astro.redirect(`/liturgia/diocesi/${diocesiSlug}`);
+}
+
+// Fetch liturgia diocesana per questa data
+const liturgia = await db.query.liturgy.findFirst({
+  where: (t, { eq, and }) => and(
+    eq(t.data, dateParam!),
+    eq(t.diocesiId, diocesi.id)
+  ),
+});
+
+// Se non esiste diocesana, prova nazionale (diocesiId = NULL)
+const liturgiaFallback = !liturgia
+  ? await db.query.liturgy.findFirst({
+      where: (t, { eq, isNull, and }) => and(
+        eq(t.data, dateParam!),
+        isNull(t.diocesiId)
+      ),
+    })
+  : null;
+
+const liturgiaFinale = liturgia || liturgiaFallback;
+
+if (!liturgiaFinale) {
+  return Astro.redirect('/liturgia/oggi');
+}
+
+const dataFormat = format(new Date(dateParam + 'T00:00:00'), 'EEEE d MMMM yyyy', { locale: it });
+const isDiocesana = !!liturgia; // true = dati diocesani, false = fallback nazionale
+
+// Santi del giorno
+const santiOggi = liturgiaFinale.santiDelGiorno?.length
+  ? await db.query.saints.findMany({
+      where: (t, { inArray }) => inArray(t.id, liturgiaFinale.santiDelGiorno!),
+    })
+  : [];
+---
+
+<BaseLayout
+  title={`Liturgia ${diocesi.nome} — ${dataFormat}`}
+  description={`Liturgia diocesana della diocesi di ${diocesi.nome} per il ${dataFormat}. ${liturgiaFinale.domenicaSettimana || liturgiaFinale.tempoLiturgico}.`}
+>
+  <article class="max-w-4xl mx-auto">
+
+    <!-- Breadcrumb -->
+    <nav class="text-sm text-muted-foreground mb-6 flex flex-wrap items-center gap-2">
+      <a href="/liturgia/oggi" class="hover:text-primary transition">Liturgia</a>
+      <span>›</span>
+      <a href={`/liturgia/diocesi/${diocesi.slug}`} class="hover:text-primary transition">
+        Diocesi di {diocesi.nome}
+      </a>
+      <span>›</span>
+      <span>{dataFormat}</span>
+    </nav>
+
+    <!-- Header -->
+    <header class="mb-8">
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class={`px-4 py-2 rounded-full text-sm font-semibold liturgical-color-${liturgiaFinale.coloreLiturgico}`}>
+          {liturgiaFinale.coloreLiturgico.charAt(0).toUpperCase() + liturgiaFinale.coloreLiturgico.slice(1)}
+        </span>
+        <span class="px-4 py-2 rounded-full bg-secondary text-sm font-semibold">
+          {liturgiaFinale.tempoLiturgico}
+        </span>
+        {!isDiocesana && (
+          <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-medium">
+            ⚠️ Calendario nazionale (diocesano non disponibile)
+          </span>
+        )}
+      </div>
+
+      <h1 class="text-3xl md:text-4xl font-bold mb-2 font-serif">
+        Liturgia della Diocesi di {diocesi.nome}
+      </h1>
+      <p class="text-xl text-muted-foreground">{dataFormat}</p>
+      {liturgiaFinale.domenicaSettimana && (
+        <p class="text-lg font-semibold text-primary mt-2">{liturgiaFinale.domenicaSettimana}</p>
+      )}
+
+      <!-- Info diocesi -->
+      <div class="mt-4 p-4 rounded-lg bg-muted/30 flex flex-wrap gap-4 text-sm">
+        <span><strong>Tipo:</strong> {diocesi.tipo}</span>
+        <span><strong>Regione:</strong> {diocesi.regione}</span>
+        <span><strong>R. Ecclesiastica:</strong> {diocesi.regioneEcclesiastica}</span>
+      </div>
+    </header>
+
+    <!-- Santi del Giorno -->
+    {santiOggi.length > 0 && (
+      <section class="mb-8">
+        <div class="rounded-lg border bg-card p-6">
+          <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+            <span>✨</span> Santi del Giorno
+          </h2>
+          <div class="flex flex-wrap gap-3">
+            {santiOggi.map(santo => (
+              <a
+                href={`/santi/${santo.slug}`}
+                class="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent transition"
+              >
+                <div>
+                  <p class="font-semibold">{santo.nome}</p>
+                  {santo.titolo && <p class="text-xs text-muted-foreground">{santo.titolo}</p>}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- Prima Lettura -->
+    <section class="mb-6">
+      <div class="rounded-lg border bg-card p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-1 h-8 bg-primary rounded"></div>
+          <div>
+            <h2 class="text-xl font-bold font-serif">Prima Lettura</h2>
+            <p class="text-sm text-muted-foreground">{liturgiaFinale.primaLettura.riferimento}</p>
+          </div>
+        </div>
+        <p class="prayer-text whitespace-pre-line">{liturgiaFinale.primaLettura.testo}</p>
+      </div>
+    </section>
+
+    <!-- Salmo Responsoriale -->
+    <section class="mb-6">
+      <div class="rounded-lg border bg-gradient-to-br from-primary/5 to-primary/10 p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-1 h-8 bg-primary rounded"></div>
+          <div>
+            <h2 class="text-xl font-bold font-serif">Salmo Responsoriale</h2>
+            <p class="text-sm text-muted-foreground">{liturgiaFinale.salmoResponsoriale.riferimento}</p>
+          </div>
+        </div>
+        {liturgiaFinale.salmoResponsoriale.ritornello && (
+          <div class="bg-primary/20 rounded-lg p-4 mb-4 text-center">
+            <p class="font-bold italic">{liturgiaFinale.salmoResponsoriale.ritornello}</p>
+          </div>
+        )}
+        <p class="prayer-text whitespace-pre-line">{liturgiaFinale.salmoResponsoriale.testo}</p>
+      </div>
+    </section>
+
+    <!-- Seconda Lettura -->
+    {liturgiaFinale.secondaLettura && (
+      <section class="mb-6">
+        <div class="rounded-lg border bg-card p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-1 h-8 bg-primary rounded"></div>
+            <div>
+              <h2 class="text-xl font-bold font-serif">Seconda Lettura</h2>
+              <p class="text-sm text-muted-foreground">{liturgiaFinale.secondaLettura.riferimento}</p>
+            </div>
+          </div>
+          <p class="prayer-text whitespace-pre-line">{liturgiaFinale.secondaLettura.testo}</p>
+        </div>
+      </section>
+    )}
+
+    <!-- Vangelo -->
+    <section class="mb-8">
+      <div class="rounded-lg border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-1 h-8 bg-primary rounded"></div>
+          <div>
+            <h2 class="text-xl font-bold font-serif text-primary">Santo Vangelo</h2>
+            <p class="text-sm text-muted-foreground">{liturgiaFinale.vangelo.riferimento}</p>
+          </div>
+        </div>
+        <p class="prayer-text whitespace-pre-line leading-relaxed">{liturgiaFinale.vangelo.testo}</p>
+        <p class="font-semibold mt-4 text-right">Parola del Signore</p>
+      </div>
+    </section>
+
+    <!-- Navigazione date -->
+    <div class="flex items-center justify-between mt-8 pt-6 border-t">
+      {(() => {
+        const d = new Date(dateParam + 'T00:00:00');
+        const prev = new Date(d); prev.setDate(d.getDate() - 1);
+        const next = new Date(d); next.setDate(d.getDate() + 1);
+        const fmt = (date) => date.toISOString().split('T')[0];
+        return (
+          <>
+            <a href={`/liturgia/diocesi/${diocesi.slug}/${fmt(prev)}`} class="text-primary hover:underline">
+              ← Ieri
+            </a>
+            <a href={`/liturgia/diocesi/${diocesi.slug}/${fmt(next)}`} class="text-primary hover:underline">
+              Domani →
+            </a>
+          </>
+        );
+      })()}
+    </div>
+  </article>
+
+  <!-- Schema.org -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": `Liturgia diocesana di ${diocesi.nome} — ${dataFormat}`,
+    "datePublished": dateParam,
+    "author": { "@type": "Organization", "name": "Studio Pura Luce" },
+    "publisher": { "@type": "Organization", "name": "Verbum Lucis" },
+  })} />
+</BaseLayout>

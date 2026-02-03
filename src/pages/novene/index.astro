@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { db } from '../../db';
+
+export const prerender = false;
+
+const novene = await db.query.novenas.findMany({
+  orderBy: (t, { desc }) => [desc(t.popolarita)],
+});
+---
+
+<BaseLayout
+  title="Novene"
+  description="Raccolta di novene cattoliche: nove giorni di preghiera intensa per intercessione dei santi."
+>
+  <div class="max-w-4xl mx-auto">
+    <header class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 font-serif">Novene</h1>
+      <p class="text-lg text-muted-foreground">
+        Nove giorni di preghiera intensa per intercessione dei santi
+      </p>
+    </header>
+
+    {novene.length > 0 ? (
+      <div class="grid md:grid-cols-2 gap-6">
+        {novene.map(novena => (
+          <a href={`/novene/${novena.slug}`} class="rounded-lg border bg-card p-6 hover:shadow-md transition">
+            <h2 class="text-xl font-bold mb-2 font-serif">{novena.titolo}</h2>
+            {novena.descrizione && (
+              <p class="text-sm text-muted-foreground mb-3 line-clamp-2">{novena.descrizione}</p>
+            )}
+            {novena.quandoPregare && (
+              <p class="text-xs text-muted-foreground">Quando: {novena.quandoPregare}</p>
+            )}
+          </a>
+        ))}
+      </div>
+    ) : (
+      <div class="text-center py-12">
+        <p class="text-4xl mb-4">🙏</p>
+        <p class="text-lg text-muted-foreground mb-4">
+          Le novene saranno disponibili presto.
+        </p>
+        <a href="/preghiere" class="text-primary hover:underline">Scopri le preghiere disponibili</a>
+      </div>
+    )}
+  </div>
+</BaseLayout>

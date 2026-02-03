@@ -1,0 +1,252 @@
+[
+  {
+    "nome": "San Giuseppe",
+    "nomeCompleto": "Giuseppe di Nazareth",
+    "slug": "san-giuseppe",
+    "dataFesta": "03-19",
+    "biografiaBreve": "Padre terreno di Gesù, patrono dei lavoratori e delle famiglie",
+    "patronoDi": [
+      "Lavoratori",
+      "Famiglie",
+      "Padri",
+      "Italia",
+      "Carpentieri"
+    ],
+    "titolo": "Santo",
+    "epoca": "I secolo",
+    "popolarita": 99,
+    "sorgente": "manuale"
+  },
+  {
+    "nome": "Santa Monica",
+    "nomeCompleto": "Monica di Ippona",
+    "slug": "santa-monica",
+    "dataFesta": "08-27",
+    "biografiaBreve": "Madre di Sant'Agostino, esemplare di pazienza e preghiera",
+    "patronoDi": [
+      "Madri",
+      "Famiglie",
+      "Conversione dei figli"
+    ],
+    "titolo": "Santa",
+    "epoca": "IV secolo",
+    "popolarita": 88,
+    "sorgente": "manuale"
+  },
+  {
+    "nome": "San Tommaso d'Aquino",
+    "nomeCompleto": "Tommaso di Aquino",
+    "slug": "san-tommaso-daquino",
+    "dataFesta": "01-28",
+    "biografiaBreve": "Dottore della Chiesa, filosofo e teologo più grande del Medioevo",
+    "patronoDi": [
+      "Filosofi",
+      "Teologi",
+      "Studenti",
+      "Universitari",
+      "Domenicani"
+    ],
+    "titolo": "Santo e Dottore della Chiesa",
+    "epoca": "XIII secolo",
+    "popolarita": 92,
+    "sorgente": "manuale"
+  },
+  {
+    "nome": "Santa Teresa d'Avila",
+    "nomeCompleto": "Teresa di Gesù",
+    "slug": "santa-teresa-davila",
+    "dataFesta": "10-15",
+    "biografiaBreve": "Mistica spagnola, Dottore della Chiesa, fondatrice dei Carmelitani Scalzi",
+    "patronoDi": [
+      "Spagne",
+      "Carmelitani",
+      "Malattia",
+      "Filosofi"
+    ],
+    "titolo": "Santa e Dottore della Chiesa",
+    "epoca": "XVI secolo",
+    "popolarita": 90,
+    "sorgente": "manuale"
+  },
+  {
+    "nome": "San Pietro Apostolo",
+    "nomeCompleto": "Simone Pietro",
+    "slug": "san-pietro-apostolo",
+    "dataFesta": "06-29",
+    "biografiaBreve": "Primo Papa, fondatore della Chiesa, apostolo di Cristo",
+    "patronoDi": [
+      "Pescatori",
+      "Papi",
+      "Roma",
+      "Pescatori"
+    ],
+    "titolo": "Santo e Apostolo",
+    "epoca": "I secolo",
+    "popolarita": 98,
+    "sorgente": "manuale"
+  },
+  {
+    "nome": "San Paolo Apostolo",
+    "nomeCompleto": "Saulo di Tarso",
+    "slug": "san-paolo-apostolo",
+    "dataFesta": "06-29",
+    "biografiaBreve": "Apostolo delle nazioni, evangelizzatore del mondo romano",
+    "patronoDi": [
+      "Missionaries",
+      "Scrittori",
+      "Predicatori"
+    ],
+    "titolo": "Santo e Apostolo",
+    "epoca": "I secolo",
+    "popolarita": 96,
+    "sorgente": "manuale"
+  },
+  {
+    "nome": "Santa Lucia",
+    "nomeCompleto": "Lucia di Siracusa",
+    "slug": "santa-lucia",
+    "dataFesta": "12-13",
+    "biografiaBreve": "Martire siracusana, protettrice della vista",
+    "patronoDi": [
+      "Vista",
+      "Ciechi",
+      "Siracusa",
+      "Elettricisti"
+    ],
+    "titolo": "Santa e Martire",
+    "epoca": "III secolo",
+    "popolarita": 93,
+    "sorgente": "manuale"
+  },
+  {
+    "nome": "San Cristoforo",
+    "nomeCompleto": "Cristoforo",
+    "slug": "san-cristoforo",
+    "dataFesta": "07-25",
+    "biografiaBreve": "Martire, patrono dei viaggiatori e degli autisti",
+    "patronoDi": [
+      "Viaggiatori",
+      "Autisti",
+      "Trasportatori"
+    ],
+    "titolo": "Santo e Martire",
+    "epoca": "III secolo",
+    "popolarita": 85,
+    "sorgente": "manuale"
+  },
+  {
+    "nome": "Santa Cecilia",
+    "nomeCompleto": "Cecilia di Roma",
+    "slug": "santa-cecilia",
+    "dataFesta": "11-22",
+    "biografiaBreve": "Martire romana, patrona della musica e dei musicisti",
+    "patronoDi": [
+      "Musica",
+      "Musicisti",
+      "Cantanti",
+      "Roma"
+    ],
+    "titolo": "Santa e Martire",
+    "epoca": "III secolo",
+    "popolarita": 87,
+    "sorgente": "manuale"
+  },
+  {
+    "nome": "San Luca Evangelista",
+    "nomeCompleto": "Luca",
+    "slug": "san-luca-evangelista",
+    "dataFesta": "10-18",
+    "biografiaBreve": "Evangelista e medico, autore del terzo Vangelo e degli Atti degli Apostoli",
+    "patronoDi": [
+      "Medici",
+      "Artisti",
+      "Pittori",
+      "Evangelisti"
+    ],
+    "titolo": "Santo ed Evangelista",
+    "epoca": "I secolo",
+    "popolarita": 91,
+    "sorgente": "manuale"
+  },
+  {
+    "nome": "Sant'Anna",
+    "nomeCompleto": "Anna, madre di Maria",
+    "slug": "santanna",
+    "dataFesta": "07-26",
+    "biografiaBreve": "Madre della Vergine Maria, nonna di Gesù",
+    "patronoDi": [
+      "Nonne",
+      "Madri",
+      "Famiglia"
+    ],
+    "titolo": "Santa",
+    "epoca": "I secolo a.C.",
+    "popolarita": 82,
+    "sorgente": "manuale"
+  },
+  {
+    "nome": "San Bartolomeo Apostolo",
+    "nomeCompleto": "Bartolomeo",
+    "slug": "san-bartolomeo-apostolo",
+    "dataFesta": "08-24",
+    "biografiaBreve": "Uno dei dodici apostoli di Gesù Cristo",
+    "patronoDi": [
+      "Conciatori",
+      "Macellai",
+      "Missionaries"
+    ],
+    "titolo": "Santo e Apostolo",
+    "epoca": "I secolo",
+    "popolarita": 78,
+    "sorgente": "manuale"
+  },
+  {
+    "nome": "San Gerolamo",
+    "nomeCompleto": "Girolamo di Stridon",
+    "slug": "san-gerolamo",
+    "dataFesta": "09-30",
+    "biografiaBreve": "Dottore della Chiesa, traduttore della Bibbia in Latino (Vulgata)",
+    "patronoDi": [
+      "Traduttori",
+      "Studiosi",
+      "Bibliotecari"
+    ],
+    "titolo": "Santo e Dottore della Chiesa",
+    "epoca": "IV-V secolo",
+    "popolarita": 84,
+    "sorgente": "manuale"
+  },
+  {
+    "nome": "Santa Chiara d'Assisi",
+    "nomeCompleto": "Chiara Offreduccio",
+    "slug": "santa-chiara-assisi",
+    "dataFesta": "08-11",
+    "biografiaBreve": "Fondatrice delle Clarisse, discepola di San Francesco",
+    "patronoDi": [
+      "Televisione",
+      "Ricamatrici",
+      "Sorelle religiose"
+    ],
+    "titolo": "Santa",
+    "epoca": "XIII secolo",
+    "popolarita": 89,
+    "sorgente": "manuale"
+  },
+  {
+    "nome": "San Benedetto da Norcia",
+    "nomeCompleto": "Benedetto",
+    "slug": "san-benedetto-norcia",
+    "dataFesta": "03-21",
+    "biografiaBreve": "Fondatore dell'Ordine Benedettino, patrono d'Europa",
+    "patronoDi": [
+      "Europa",
+      "Monaci",
+      "Studenti",
+      "Agricoltori"
+    ],
+    "titolo": "Santo",
+    "epoca": "V-VI secolo",
+    "popolarita": 90,
+    "sorgente": "manuale"
+  }
+]

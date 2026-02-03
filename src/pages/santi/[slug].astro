@@ -1,0 +1,181 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { db } from '../../db';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
+
+export const prerender = false; // SSR per pagine dinamiche
+
+const { slug } = Astro.params;
+
+const santo = await db.query.saints.findFirst({
+  where: (saints, { eq }) => eq(saints.slug, slug || ''),
+});
+
+if (!santo) {
+  return Astro.redirect('/404');
+}
+
+// Fetch preghiere associate
+const preghiere = await db.query.prayers.findMany({
+  where: (prayers, { eq }) => eq(prayers.saintId, santo.id),
+  limit: 5,
+});
+
+// Fetch novene associate
+const novene = await db.query.novenas.findMany({
+  where: (novenas, { eq }) => eq(novenas.saintId, santo.id),
+});
+
+const dataFestaFormat = format(new Date(`2024-${santo.dataFesta}`), 'd MMMM', { locale: it });
+---
+
+<BaseLayout 
+  title={santo.nome}
+  description={santo.biografiaBreve || `Scopri la vita di ${santo.nome}, ${santo.titolo || 'santo'} della Chiesa Cattolica`}
+  ogImage={santo.immagineUrl}
+>
+  <article class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <header class="mb-8">
+      <div class="flex flex-col md:flex-row gap-6 items-start">
+        {santo.immagineUrl && (
+          <img 
+            src={santo.immagineUrl} 
+            alt={santo.nome}
+            class="w-48 h-48 rounded-lg object-cover shadow-lg"
+          />
+        )}
+        
+        <div class="flex-1">
+          <h1 class="text-4xl md:text-5xl font-bold mb-3 font-serif">
+            {santo.nome}
+          </h1>
+          
+          {santo.nomeCompleto && (
+            <p class="text-xl text-muted-foreground mb-3">{santo.nomeCompleto}</p>
+          )}
+          
+          <div class="flex flex-wrap gap-4 text-sm">
+            {santo.titolo && (
+              <span class="px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
+                {santo.titolo}
+              </span>
+            )}
+            
+            <span class="px-3 py-1 rounded-full bg-secondary">
+              Festa: {dataFestaFormat}
+            </span>
+            
+            {santo.epoca && (
+              <span class="px-3 py-1 rounded-full bg-secondary">
+                {santo.epoca}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Biografia Breve -->
+    {santo.biografiaBreve && (
+      <div class="rounded-lg border bg-card p-6 mb-8">
+        <p class="text-lg leading-relaxed">{santo.biografiaBreve}</p>
+      </div>
+    )}
+
+    <!-- Biografia Completa -->
+    {santo.biografia && (
+      <section class="mb-8">
+        <h2 class="text-2xl font-bold mb-4 font-serif">Vita e Storia</h2>
+        <div class="prose prose-lg max-w-none">
+          <p class="prayer-text whitespace-pre-line">{santo.biografia}</p>
+        </div>
+      </section>
+    )}
+
+    <!-- Patrono di -->
+    {santo.patronoDi && santo.patronoDi.length > 0 && (
+      <section class="mb-8">
+        <h2 class="text-2xl font-bold mb-4 font-serif">Patrono di</h2>
+        <div class="flex flex-wrap gap-2">
+          {santo.patronoDi.map(patronato => (
+            <span class="px-3 py-1 rounded-full bg-accent text-sm">
+              {patronato}
+            </span>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Preghiere -->
+    {preghiere.length > 0 && (
+      <section class="mb-8">
+        <h2 class="text-2xl font-bold mb-4 font-serif">Preghiere a {santo.nome}</h2>
+        <div class="space-y-4">
+          {preghiere.map(preghiera => (
+            <a 
+              href={`/preghiere/${preghiera.slug}`}
+              class="block rounded-lg border bg-card p-6 hover:shadow-md transition"
+            >
+              <h3 class="font-bold mb-2">{preghiera.titolo}</h3>
+              <p class="text-sm text-muted-foreground line-clamp-2">
+                {preghiera.testo.substring(0, 150)}...
+              </p>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Novene -->
+    {novene.length > 0 && (
+      <section class="mb-8">
+        <h2 class="text-2xl font-bold mb-4 font-serif">Novene</h2>
+        <div class="space-y-4">
+          {novene.map(novena => (
+            <a 
+              href={`/novene/${novena.slug}`}
+              class="block rounded-lg border bg-card p-6 hover:shadow-md transition"
+            >
+              <h3 class="font-bold mb-2">{novena.titolo}</h3>
+              {novena.descrizione && (
+                <p class="text-sm text-muted-foreground mb-3">{novena.descrizione}</p>
+              )}
+              {novena.quandoPregare && (
+                <p class="text-xs text-muted-foreground">
+                  📅 {novena.quandoPregare}
+                </p>
+              )}
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Call to Action -->
+    <div class="rounded-lg border bg-primary/5 p-8 text-center">
+      <h3 class="text-xl font-bold mb-3">Prega con {santo.nome}</h3>
+      <p class="text-muted-foreground mb-6">
+        Affida le tue intenzioni all'intercessione di {santo.nome}
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="/preghiere" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6 py-2">
+          Scopri altre preghiere
+        </a>
+        <a href="/santi" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6 py-2">
+          Tutti i santi
+        </a>
+      </div>
+    </div>
+  </article>
+
+  <!-- Schema.org markup -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": santo.nome,
+    "description": santo.biografiaBreve,
+    "image": santo.immagineUrl,
+  })} />
+</BaseLayout>
