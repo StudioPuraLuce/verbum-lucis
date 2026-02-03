@@ -51,11 +51,65 @@ npm run scrape:saints          # Scrape saints data
 npm run import:all             # Run all imports sequentially
 ```
 
+### External Data Aggregation (Airtable, Google Sheets, CSV)
+**Configuration:** Environment variables in `.env` (see [.env.example](.env.example))
+
+```bash
+npm run import:airtable        # Import from Airtable tables
+npm run import:sheets          # Import from Google Sheets
+npm run import:csv -- ./data/file.csv  # Import from CSV file
+npm run import:external        # Run all external imports (orchestrator)
+```
+
+**Setup Required:**
+1. **Airtable:** Set `AIRTABLE_API_KEY` and `AIRTABLE_BASE_ID` in `.env`
+2. **Google Sheets:** Set `GOOGLE_SHEETS_CREDENTIALS` (JSON service account) and `GOOGLE_SHEET_ID` in `.env`
+3. **CSV Files:** Place files in `data/` directory with headers
+
+**Script Templates:**
+- [scripts/import-airtable.js](scripts/import-airtable.js) - Customizable Airtable mapper
+- [scripts/import-sheets.js](scripts/import-sheets.js) - Google Sheets API v4 integration
+- [scripts/import-csv.js](scripts/import-csv.js) - Generic CSV parser with column mapping
+- [scripts/import-external.js](scripts/import-external.js) - Orchestrator (runs all imports)
+
 ### Liturgy Updates
 ```bash
 npm run update-liturgy         # Update today's liturgy
 npm run update-liturgy:all     # Update liturgy for next 7 days
 npm run sync-saints            # Sync saints with liturgy calendar
+```
+
+### MCP Integration (Model Context Protocol)
+**MCP Server:** Liturgical Calendar via [CatholicOS/liturgical-calendar-mcp](https://github.com/CatholicOS/liturgical-calendar-mcp)
+
+**Configuration:** `~/.config/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
+
+```bash
+npm run populate:dioceses      # Populate liturgy for all 226 Italian dioceses (requires MCP)
+```
+
+**Available MCP Tools:**
+- `list_available_calendars()` - Enumera tutte le diocesi disponibili (226 diocesi italiane)
+- `get_national_calendar(year)` - Calendario nazionale cattolico
+- `get_diocesan_calendar(code, year)` - Calendario diocesano specifico
+- `get_liturgy_of_the_day(date, calendar)` - Celebrazioni per data specifica
+- `get_announcement_easter_and_moveable_feasts(year)` - Epiphany announcement with moveable feasts
+
+**Benefits:**
+- Direct API access without manual HTTP requests
+- Built-in caching (24h metadata, 168h calendar data)
+- Automatic detection of particular celebrations (diocesan patrons, saints)
+- Type-safe liturgical data structures
+
+**Usage in Scripts:**
+```javascript
+// When MCP is available in VS Code, you can use:
+const result = await mcp.get_diocesan_calendar({
+  calendar: 'IT-RM',  // Diocese code
+  year: 2026
+});
+
+// Returns: { date: { celebrations: [...], color: 'white', ... }, ... }
 ```
 
 ### Cron Setup

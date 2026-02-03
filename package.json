@@ -26,7 +26,8 @@
     "import:airtable": "tsx scripts/import-airtable.js",
     "import:sheets": "tsx scripts/import-sheets.js",
     "import:csv": "tsx scripts/import-csv.js",
-    "import:external": "tsx scripts/import-external.js"
+    "import:external": "tsx scripts/import-external.js",
+    "populate:dioceses": "tsx scripts/populate-dioceses-mcp.js"
   },
   "dependencies": {
     "airtable": "^0.12.2",
