@@ -298,6 +298,38 @@ Aggiungi Google Analytics in `src/layouts/BaseLayout.astro`:
 </script>
 ```
 
+## 🎯 Popolare Diocesi Italiane con MCP
+
+### Setup Locale (Development)
+
+Per popolare il database con la liturgia di tutte le 226 diocesi italiane usando il MCP server:
+
+```bash
+# 1. Assicurati che diocesi siano importate
+npm run import:dioceses
+
+# 2. Esegui script MCP (richiede MCP abilitato in VS Code)
+npm run populate:dioceses
+
+# 3. Verifica risultati
+docker exec verbum-lucis-db psql -U verbum_user -d verbum_lucis \
+  -c "SELECT COUNT(*) FROM liturgy;"
+```
+
+### Setup VPS (Production)
+
+Su VPS senza MCP server VS Code, usa l'API direttamente:
+
+```bash
+# Su VPS, cron job giornaliero (già configurato):
+docker compose exec app npm run update-liturgy:all
+
+# Oppure manualmente per sincronizzare tutte le diocesi:
+docker compose exec app tsx scripts/sync-all-dioceses.js
+```
+
+**Nota:** Il populate via MCP è ottimale durante sviluppo. In production, usa il cron job che sincronizza giornalmente via LitCal API.
+
 ## 🔐 Sicurezza
 
 ### Firewall

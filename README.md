@@ -211,7 +211,26 @@ npm run import:all         # All imports
 npm run update-liturgy     # Update today's liturgy
 npm run update-liturgy:all # Update next 7 days
 npm run sync-saints        # Sync saints with calendar
+
+# MCP (Model Context Protocol) - Popola 82,490 diocesan pages
+npm run populate:dioceses  # Populate liturgy for all 226 dioceses (requires MCP enabled)
 ```
+
+### MCP Liturgical Calendar Integration
+
+Abilita il **Model Context Protocol** per accesso diretto ai dati liturgici:
+
+- 📖 **Direct API access:** No HTTP requests, built-in caching
+- 🎯 **226 diocesi:** Genera automaticamente 82,490 pagine/anno
+- ⚡ **Cached:** 24h metadata, 168h calendar data
+- 🏛️ **Particular celebrations:** Auto-detects diocesan patrons, local saints
+
+**Setup:**
+1. Il MCP server è configurato in VS Code: `~/.config/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
+2. Importa diocesi: `npm run import:dioceses`
+3. Popola: `npm run populate:dioceses`
+
+Vedi [CLAUDE.md](CLAUDE.md) per dettagli tecnici e tool MCP disponibili.
 
 ## 🌐 Deployment
 
