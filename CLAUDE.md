@@ -112,6 +112,24 @@ const result = await mcp.get_diocesan_calendar({
 // Returns: { date: { celebrations: [...], color: 'white', ... }, ... }
 ```
 
+### Catechism Themes (Temi Catechismo)
+**Feature Status:** ✅ Implemented & Ready for Migration
+**Routes:** `/catechismo/temi` (index), `/catechismo/tema/[tema]` (dynamic)
+**SEO Impact:** +2,500 pages, +15K monthly searches
+
+```bash
+npm run migrate:theme-tags    # Populate theme tags in catechism table
+npm run verify:theme-tags     # Verify migration success
+```
+
+**Documentation:** See [THEMES.md](THEMES.md) for complete feature guide
+
+**What it does:**
+- Groups 2,865 CCC paragraphs into 25 thematic clusters
+- Creates high-value SEO pages targeting specific theological topics
+- Adds JSONB tags to catechism table for theme filtering
+- Generates pages like `/catechismo/tema/trinita`, `/catechismo/tema/eucarestia`, etc.
+
 ### Cron Setup
 ```bash
 npm run setup-cron             # Configure automated daily updates
@@ -129,7 +147,7 @@ npm run setup-cron             # Configure automated daily updates
 - **liturgy** - Daily liturgical readings with `diocesiId` (NULL = national calendar). Includes first reading, responsorial psalm, second reading (optional), gospel, liturgical color, season
 - **dioceses** - 226 Italian dioceses with codes (e.g., "IT-RM", "IT-MI"), ecclesiastical regions
 - **novenas** - Nine-day prayers linked to saints with `giorniTesti` (JSON array of daily texts)
-- **catechism** - Catechism paragraphs 1-2865 with hierarchical structure (parte, sezione, capitolo, articolo)
+- **catechism** - Catechism paragraphs 1-2865 with hierarchical structure (parte, sezione, capitolo, articolo). JSONB `tags` field contains theme slugs (e.g., ["trinita", "chiesa-cattolica"]) after theme migration
 - **intentions** - Intent-based categories linking to suggested prayers, interceding saints, and catechism points
 - **angels** - Archangels and angels with feast dates and biblical references
 - **blessings** - Liturgical blessings by category and occasion
@@ -160,6 +178,8 @@ npm run setup-cron             # Configure automated daily updates
 
 - **Pre-rendered:** Static content like catechism paragraphs
   - [src/pages/catechismo/\[numero\].astro](src/pages/catechismo/[numero].astro) - Catechism paragraphs
+  - [src/pages/catechismo/temi.astro](src/pages/catechismo/temi.astro) - Catechism themes index (NEW)
+  - [src/pages/catechismo/tema/\[tema\].astro](src/pages/catechismo/tema/[tema].astro) - Dynamic theme pages (NEW)
 
 ### External API Integration
 

@@ -23,6 +23,8 @@
     "update-liturgy:all": "tsx scripts/update-liturgy.js --all --days 7",
     "sync-saints": "tsx scripts/sync-saints.js",
     "setup-cron": "bash scripts/setup-cron.sh",
+    "migrate:theme-tags": "tsx scripts/migrate-theme-tags.js",
+    "verify:theme-tags": "tsx scripts/verify-theme-tags.js",
     "import:airtable": "tsx scripts/import-airtable.js",
     "import:sheets": "tsx scripts/import-sheets.js",
     "import:csv": "tsx scripts/import-csv.js",
