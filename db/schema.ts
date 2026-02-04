@@ -172,3 +172,45 @@ export const pagineSacre = pgTable('pagine_sacre', {
   views: integer('views').default(0),
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+// ─── BIBBIA (Bible) ───────────────────────────────────
+export const bibleBooks = pgTable('bible_books', {
+  id: serial('id').primaryKey(),
+  nome: text('nome').notNull(),                    // "Giovanni"
+  nomeCompleto: text('nome_completo'),             // "Vangelo secondo Giovanni"
+  slug: text('slug').notNull().unique(),           // "giovanni"
+  abbreviazione: text('abbreviazione').notNull(),  // "Gv"
+  testamento: text('testamento').notNull(),        // "NT" or "AT"
+  categoria: text('categoria'),                    // "Vangeli", "Pentateuco", "Profeti"
+  numeroCapitoli: integer('numero_capitoli').notNull(),
+  autore: text('autore'),                          // "Giovanni Apostolo"
+  contestoStorico: text('contesto_storico'),
+  temiPrincipali: jsonb('temi_principali').$type<string[]>().default([]),
+  ordine: integer('ordine').notNull(),             // Display order (1-73)
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const bibleVerses = pgTable('bible_verses', {
+  id: serial('id').primaryKey(),
+  bookId: integer('book_id').notNull().references(() => bibleBooks.id),
+  capitolo: integer('capitolo').notNull(),
+  versetto: integer('versetto').notNull(),
+  testo: text('testo').notNull(),                  // Italian CEI text
+  testoLatin: text('testo_latin'),                 // Latin Vulgate (optional)
+  riferimento: text('riferimento').notNull(),      // "Giovanni 3:16"
+  slug: text('slug').notNull().unique(),           // "giovanni/3/16"
+  tags: jsonb('tags').$type<string[]>().default([]), // ["amore", "salvezza"]
+  catechismRefs: jsonb('catechism_refs').$type<number[]>().default([]), // [214, 221]
+  liturgyDates: jsonb('liturgy_dates').$type<string[]>().default([]),   // ["2026-03-15"]
+  views: integer('views').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Unique constraint: one verse per book-chapter-verse
+pgTable('bible_verses_unique', {
+  bookId: integer('book_id').notNull(),
+  capitolo: integer('capitolo').notNull(),
+  versetto: integer('versetto').notNull(),
+}, (table) => ({
+  uniqueVerse: unique().on(table.bookId, table.capitolo, table.versetto),
+}));
