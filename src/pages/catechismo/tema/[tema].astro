@@ -1,0 +1,575 @@
+---
+/**
+ * Dynamic Catechism Theme Pages
+ * Route: /catechismo/tema/[tema]
+ *
+ * Groups all CCC paragraphs by theme tag
+ * Each theme page shows:
+ * - Theme description
+ * - All related CCC paragraphs
+ * - SEO-optimized meta tags
+ * - Related prayers, saints, intentions
+ */
+
+import { db } from '../../../db/db-config';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+
+// Tema mapping - keys are URL-friendly slugs, values are display names + descriptions
+const CATECHISM_THEMES = {
+  // Part I: The Creed
+  'trinita': {
+    name: 'Trinità',
+    description: 'La trinità: Padre, Figlio e Spirito Santo - tre persone in un solo Dio',
+    keywordVolume: 1200,
+  },
+  'incarnazione': {
+    name: 'Incarnazione',
+    description: 'L\'incarnazione del Verbo: Dio fatto uomo in Gesù Cristo',
+    keywordVolume: 900,
+  },
+  'redenzione': {
+    name: 'Redenzione',
+    description: 'La redenzione dell\'uomo attraverso il sacrificio di Cristo',
+    keywordVolume: 800,
+  },
+  'peccato-originale': {
+    name: 'Peccato Originale',
+    description: 'Il peccato originale di Adamo ed Eva e le sue conseguenze',
+    keywordVolume: 700,
+  },
+  'resurrezione': {
+    name: 'Risurrezione',
+    description: 'La risurrezione di Gesù Cristo e la risurrezione finale dei morti',
+    keywordVolume: 720,
+  },
+
+  // Part II: Sacraments & Life of Grace
+  'eucarestia': {
+    name: 'Eucarestia',
+    description: 'L\'Eucarestia: il corpo e il sangue di Cristo nel sacramento',
+    keywordVolume: 1100,
+  },
+  'battesimo': {
+    name: 'Battesimo',
+    description: 'Il sacramento del battesimo: morte e risurrezione in Cristo',
+    keywordVolume: 950,
+  },
+  'confessione': {
+    name: 'Confessione',
+    description: 'La penitenza e il perdono dei peccati attraverso la confessione',
+    keywordVolume: 890,
+  },
+  'matrimonio': {
+    name: 'Matrimonio',
+    description: 'Il sacramento del matrimonio: unione indissolubile fra uomo e donna',
+    keywordVolume: 820,
+  },
+  'ordinamento': {
+    name: 'Ordinamento',
+    description: 'Il sacramento dell\'ordine: sacerdozio e diaconato',
+    keywordVolume: 410,
+  },
+  'grazia-giustificazione': {
+    name: 'Grazia e Giustificazione',
+    description: 'La grazia di Dio e la giustificazione dell\'uomo dinanzi a Dio',
+    keywordVolume: 650,
+  },
+
+  // Part III: Moral Life
+  'carità': {
+    name: 'Carità',
+    description: 'La carità: l\'amore di Dio e del prossimo',
+    keywordVolume: 580,
+  },
+  'speranza': {
+    name: 'Speranza',
+    description: 'La speranza cristiana nella promessa eterna di Dio',
+    keywordVolume: 450,
+  },
+  'fede': {
+    name: 'Fede',
+    description: 'La fede: credere in Dio e nelle sue promesse',
+    keywordVolume: 780,
+  },
+  'comandamenti': {
+    name: 'Comandamenti',
+    description: 'I Dieci Comandamenti: la legge morale di Dio',
+    keywordVolume: 2100,
+  },
+  'peccato': {
+    name: 'Peccato',
+    description: 'Il peccato mortale e veniale: il male morale',
+    keywordVolume: 1500,
+  },
+  'virtù-cristiane': {
+    name: 'Virtù Cristiane',
+    description: 'Le virtù teologali e cardinali: sapienza, fortezza, temperanza, prudenza',
+    keywordVolume: 1800,
+  },
+
+  // Part IV: Prayer
+  'preghiera': {
+    name: 'Preghiera',
+    description: 'La preghiera cristiana: elevazione dell\'anima a Dio',
+    keywordVolume: 1500,
+  },
+  'padre-nostro': {
+    name: 'Padre Nostro',
+    description: 'La preghiera del Padre Nostro: la preghiera del Signore',
+    keywordVolume: 3400,
+  },
+  'ave-maria': {
+    name: 'Ave Maria',
+    description: 'L\'Ave Maria: la salutazione all\'Immacolata Vergine Maria',
+    keywordVolume: 2800,
+  },
+  'rosario': {
+    name: 'Rosario',
+    description: 'Il rosario: la corona della Vergine Maria e i suoi misteri',
+    keywordVolume: 1200,
+  },
+  'maria-santissima': {
+    name: 'Maria Santissima',
+    description: 'La Vergine Maria, madre di Dio e nostra madre',
+    keywordVolume: 1600,
+  },
+  'chiesa-cattolica': {
+    name: 'Chiesa Cattolica',
+    description: 'La chiesa cattolica: il corpo mistico di Cristo',
+    keywordVolume: 2400,
+  },
+  'inferno-paradiso-purgatorio': {
+    name: 'Inferno, Paradiso, Purgatorio',
+    description: 'I novissimi: il destino eterno dell\'anima dopo la morte',
+    keywordVolume: 1400,
+  },
+  'angeli': {
+    name: 'Angeli',
+    description: 'Gli angeli e i demoni nel disegno divino',
+    keywordVolume: 900,
+  },
+  'comunione-santi': {
+    name: 'Comunione dei Santi',
+    description: 'La comunione fra i vivi, i defunti e i santi in gloria',
+    keywordVolume: 340,
+  },
+};
+
+// Generate static paths for all themes
+export async function getStaticPaths() {
+  return Object.keys(CATECHISM_THEMES).map((tema) => ({
+    params: { tema },
+  }));
+}
+
+interface Props {
+  params: { tema: string };
+}
+
+const { tema } = Astro.props.params as { tema: string };
+
+// Validate tema parameter
+if (!CATECHISM_THEMES[tema as keyof typeof CATECHISM_THEMES]) {
+  return Astro.redirect('/404');
+}
+
+const themeInfo = CATECHISM_THEMES[tema as keyof typeof CATECHISM_THEMES];
+
+// Fetch all CCC paragraphs with this theme tag
+const catechismPoints = await db
+  .select()
+  .from(db.schema.catechism)
+  .where((t) => {
+    // PostgreSQL JSONB array contains operator
+    return db.sql`${t.tags} @> '["${tema}"]'::jsonb`;
+  })
+  .orderBy((t) => t.numero);
+
+// Fetch related prayers (from keywords)
+const relatedPrayers = await db
+  .select()
+  .from(db.schema.prayers)
+  .where((t) => {
+    const lowerTema = tema.replace(/-/g, ' ');
+    return db.sql`
+      LOWER(${t.categoria}) LIKE ${`%${lowerTema}%`}
+      OR LOWER(${t.metadata}) LIKE ${`%${lowerTema}%`}
+    `;
+  })
+  .limit(5);
+
+// Fetch related saints (from patronage or title)
+const relatedSaints = await db
+  .select()
+  .from(db.schema.saints)
+  .limit(3);
+
+const pageTitle = `${themeInfo.name} - Catechismo della Chiesa Cattolica`;
+const pageDescription = themeInfo.description;
+const pageUrl = `${Astro.site}catechismo/tema/${tema}`;
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+>
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="Breadcrumb" class="breadcrumb">
+    <ol>
+      <li><a href="/">Home</a></li>
+      <li><a href="/catechismo">Catechismo</a></li>
+      <li aria-current="page">{themeInfo.name}</li>
+    </ol>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>{themeInfo.name}</h1>
+    <p class="subtitle">{themeInfo.description}</p>
+    <div class="meta">
+      <span class="badge">{catechismPoints.length} punti</span>
+      <span class="badge secondary">~{themeInfo.keywordVolume.toLocaleString('it-IT')} ricerche/mese</span>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <article class="theme-content">
+    <!-- Catechism Points -->
+    <section class="ccc-points">
+      <h2>Punti del Catechismo</h2>
+      <div class="points-list">
+        {catechismPoints.length > 0 ? (
+          <ul>
+            {catechismPoints.map((point) => (
+              <li class="point-item">
+                <a href={`/catechismo/${point.numero}`} class="point-link">
+                  <span class="numero">CCC {point.numero}</span>
+                  <span class="preview">{point.testo.substring(0, 100)}...</span>
+                </a>
+                {point.parte && (
+                  <span class="parte">Parte {point.parte}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="empty">Nessun punto catechismo trovato per questo tema.</p>
+        )}
+      </div>
+    </section>
+
+    <!-- Related Content Sidebar -->
+    <aside class="sidebar">
+      {relatedPrayers.length > 0 && (
+        <section class="related-section">
+          <h3>Preghiere Consigliate</h3>
+          <ul class="related-list">
+            {relatedPrayers.map((prayer) => (
+              <li>
+                <a href={`/preghiere/${prayer.slug}`}>{prayer.titolo}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {relatedSaints.length > 0 && (
+        <section class="related-section">
+          <h3>Santi Correlati</h3>
+          <ul class="related-list">
+            {relatedSaints.map((saint) => (
+              <li>
+                <a href={`/santi/${saint.slug}`}>{saint.nome}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <!-- Quick Actions -->
+      <section class="actions">
+        <h3>Azioni</h3>
+        <button class="btn btn-primary" onclick="print()">
+          🖨️ Stampa Tema
+        </button>
+        <button class="btn btn-secondary" onclick="share()">
+          📤 Condividi
+        </button>
+      </section>
+    </aside>
+  </article>
+
+  <!-- Schema.org Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Course",
+    "name": themeInfo.name,
+    "description": themeInfo.description,
+    "url": pageUrl,
+    "hasPart": catechismPoints.map((point) => ({
+      "@type": "Lesson",
+      "name": `CCC ${point.numero}`,
+      "text": point.testo.substring(0, 200),
+      "url": `${Astro.site}catechismo/${point.numero}`,
+    })),
+    "isPartOf": {
+      "@type": "Course",
+      "name": "Catechismo della Chiesa Cattolica",
+      "url": `${Astro.site}catechismo`,
+    },
+  })}/>
+</BaseLayout>
+
+<style>
+  .breadcrumb {
+    margin-bottom: 2rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+  }
+
+  .breadcrumb ol {
+    list-style: none;
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .breadcrumb li:not(:last-child)::after {
+    content: '/';
+    margin-left: 0.5rem;
+    color: var(--text-secondary, #6b7280);
+  }
+
+  .breadcrumb a {
+    color: var(--primary, #3b82f6);
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    text-decoration: underline;
+  }
+
+  .hero {
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 1.125rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.95;
+  }
+
+  .meta {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .badge.secondary {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .theme-content {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 2rem;
+    margin-bottom: 3rem;
+  }
+
+  .ccc-points h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary, #111827);
+  }
+
+  .points-list ul {
+    list-style: none;
+  }
+
+  .point-item {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .point-item:hover {
+    border-color: var(--primary, #3b82f6);
+    background-color: var(--bg-light, #f3f4f6);
+  }
+
+  .point-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .numero {
+    display: block;
+    font-weight: 700;
+    color: var(--primary, #3b82f6);
+    margin-bottom: 0.25rem;
+  }
+
+  .preview {
+    display: block;
+    color: var(--text-secondary, #6b7280);
+    font-size: 0.875rem;
+  }
+
+  .parte {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: var(--bg-light, #f3f4f6);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-secondary, #6b7280);
+  }
+
+  .empty {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-secondary, #6b7280);
+  }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .related-section {
+    padding: 1.5rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 8px;
+    background: var(--bg-light, #f9fafb);
+  }
+
+  .related-section h3 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary, #111827);
+  }
+
+  .related-list {
+    list-style: none;
+  }
+
+  .related-list li {
+    margin-bottom: 0.5rem;
+  }
+
+  .related-list a {
+    color: var(--primary, #3b82f6);
+    text-decoration: none;
+    font-size: 0.875rem;
+  }
+
+  .related-list a:hover {
+    text-decoration: underline;
+  }
+
+  .actions {
+    padding: 1.5rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 8px;
+  }
+
+  .actions h3 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+  }
+
+  .btn-primary {
+    background: var(--primary, #3b82f6);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #2563eb;
+  }
+
+  .btn-secondary {
+    background: var(--bg-light, #f3f4f6);
+    color: var(--text-primary, #111827);
+  }
+
+  .btn-secondary:hover {
+    background: #e5e7eb;
+  }
+
+  @media (max-width: 768px) {
+    .theme-content {
+      grid-template-columns: 1fr;
+    }
+
+    .hero h1 {
+      font-size: 1.75rem;
+    }
+
+    .meta {
+      justify-content: flex-start;
+    }
+  }
+</style>
+
+<script>
+  function print() {
+    window.print();
+  }
+
+  function share() {
+    const title = document.querySelector('h1')?.textContent || 'Tema Catechismo';
+    const text = document.querySelector('.subtitle')?.textContent || '';
+    const url = window.location.href;
+
+    if (navigator.share) {
+      navigator.share({
+        title,
+        text,
+        url,
+      });
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Link copiato negli appunti!');
+      });
+    }
+  }
+</script>

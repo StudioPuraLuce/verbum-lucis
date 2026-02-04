@@ -1,0 +1,567 @@
+---
+/**
+ * Catechism Themes Index Page
+ * Route: /catechismo/temi
+ *
+ * Lists all CCC themes with:
+ * - Theme description
+ * - Number of related paragraphs
+ * - Search volume estimate
+ * - Direct links to theme pages
+ */
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { db } from '../../db/db-config';
+
+// Theme data (matches [tema].astro)
+const THEMES = [
+  // Part I: The Creed
+  {
+    slug: 'trinita',
+    name: 'Trinità',
+    description: 'La trinità: Padre, Figlio e Spirito Santo',
+    part: 'I',
+  },
+  {
+    slug: 'incarnazione',
+    name: 'Incarnazione',
+    description: 'Il Verbo incarnato: Gesù Cristo',
+    part: 'I',
+  },
+  {
+    slug: 'redenzione',
+    name: 'Redenzione',
+    description: 'La redenzione attraverso il sacrificio di Cristo',
+    part: 'I',
+  },
+  {
+    slug: 'peccato-originale',
+    name: 'Peccato Originale',
+    description: 'La caduta di Adamo e le sue conseguenze',
+    part: 'I',
+  },
+  {
+    slug: 'resurrezione',
+    name: 'Risurrezione',
+    description: 'La risurrezione di Gesù e della carne',
+    part: 'I',
+  },
+
+  // Part II: Sacraments
+  {
+    slug: 'eucarestia',
+    name: 'Eucarestia',
+    description: 'Il corpo e sangue di Cristo nel sacramento',
+    part: 'II',
+  },
+  {
+    slug: 'battesimo',
+    name: 'Battesimo',
+    description: 'Il sacramento della rinascita in Cristo',
+    part: 'II',
+  },
+  {
+    slug: 'confessione',
+    name: 'Confessione',
+    description: 'La penitenza e il perdono dei peccati',
+    part: 'II',
+  },
+  {
+    slug: 'matrimonio',
+    name: 'Matrimonio',
+    description: 'L\'alleanza indissolubile fra sposi',
+    part: 'II',
+  },
+  {
+    slug: 'ordinamento',
+    name: 'Ordinamento',
+    description: 'Il sacramento dell\'ordine sacro',
+    part: 'II',
+  },
+  {
+    slug: 'grazia-giustificazione',
+    name: 'Grazia e Giustificazione',
+    description: 'L\'opera della grazia divina nel cuore umano',
+    part: 'II',
+  },
+
+  // Part III: Moral Life
+  {
+    slug: 'carità',
+    name: 'Carità',
+    description: 'L\'amore di Dio e del prossimo',
+    part: 'III',
+  },
+  {
+    slug: 'speranza',
+    name: 'Speranza',
+    description: 'La speranza nella promessa eterna',
+    part: 'III',
+  },
+  {
+    slug: 'fede',
+    name: 'Fede',
+    description: 'La fede: credere in Dio',
+    part: 'III',
+  },
+  {
+    slug: 'comandamenti',
+    name: 'Comandamenti',
+    description: 'I Dieci Comandamenti: la legge di Dio',
+    part: 'III',
+  },
+  {
+    slug: 'peccato',
+    name: 'Peccato',
+    description: 'Il peccato mortale e veniale',
+    part: 'III',
+  },
+  {
+    slug: 'virtù-cristiane',
+    name: 'Virtù Cristiane',
+    description: 'Le virtù teologali e cardinali',
+    part: 'III',
+  },
+
+  // Part IV: Prayer
+  {
+    slug: 'preghiera',
+    name: 'Preghiera',
+    description: 'La vita di preghiera del cristiano',
+    part: 'IV',
+  },
+  {
+    slug: 'padre-nostro',
+    name: 'Padre Nostro',
+    description: 'La preghiera del Signore',
+    part: 'IV',
+  },
+  {
+    slug: 'ave-maria',
+    name: 'Ave Maria',
+    description: 'La salutazione all\'Immacolata',
+    part: 'IV',
+  },
+  {
+    slug: 'rosario',
+    name: 'Rosario',
+    description: 'La corona della Vergine Maria',
+    part: 'IV',
+  },
+  {
+    slug: 'maria-santissima',
+    name: 'Maria Santissima',
+    description: 'La madre di Dio e nostra madre',
+    part: 'IV',
+  },
+  {
+    slug: 'chiesa-cattolica',
+    name: 'Chiesa Cattolica',
+    description: 'Il corpo mistico di Cristo',
+    part: 'IV',
+  },
+  {
+    slug: 'inferno-paradiso-purgatorio',
+    name: 'Inferno, Paradiso, Purgatorio',
+    description: 'Il destino eterno dell\'anima',
+    part: 'IV',
+  },
+  {
+    slug: 'angeli',
+    name: 'Angeli',
+    description: 'Gli angeli e i demoni',
+    part: 'IV',
+  },
+  {
+    slug: 'comunione-santi',
+    name: 'Comunione dei Santi',
+    description: 'La comunione fra i vivi e i defunti',
+    part: 'IV',
+  },
+];
+
+// Group themes by part
+const themesByPart = {
+  I: THEMES.filter((t) => t.part === 'I'),
+  II: THEMES.filter((t) => t.part === 'II'),
+  III: THEMES.filter((t) => t.part === 'III'),
+  IV: THEMES.filter((t) => t.part === 'IV'),
+};
+
+const pageTitle = 'Temi Catechismo - Catechismo della Chiesa Cattolica';
+const pageDescription = 'Esplora il Catechismo della Chiesa Cattolica per temi: trinità, sacramenti, morale, preghiera e molto altro';
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+>
+  <!-- Breadcrumb -->
+  <nav aria-label="Breadcrumb" class="breadcrumb">
+    <ol>
+      <li><a href="/">Home</a></li>
+      <li><a href="/catechismo">Catechismo</a></li>
+      <li aria-current="page">Temi</li>
+    </ol>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Temi Catechismo</h1>
+    <p class="subtitle">Esplora il Catechismo della Chiesa Cattolica per tema</p>
+    <p class="count">{THEMES.length} temi • 2,865 punti catechismo</p>
+  </section>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-part="I">Parte I: La Fede</button>
+    <button class="tab" data-part="II">Parte II: I Sacramenti</button>
+    <button class="tab" data-part="III">Parte III: La Morale</button>
+    <button class="tab" data-part="IV">Parte IV: La Preghiera</button>
+  </div>
+
+  <!-- Themes Grid -->
+  <div class="themes-container">
+    {Object.entries(themesByPart).map(([partNumber, themes]) => (
+      <section class="part-section" id={`part-${partNumber}`} data-part={partNumber}>
+        <h2 class="part-title">
+          Parte {partNumber}:
+          {partNumber === 'I' && ' La Fede'}
+          {partNumber === 'II' && ' I Sacramenti'}
+          {partNumber === 'III' && ' La Vita Morale'}
+          {partNumber === 'IV' && ' La Preghiera'}
+        </h2>
+
+        <div class="themes-grid">
+          {themes.map((theme) => (
+            <a href={`/catechismo/tema/${theme.slug}`} class="theme-card">
+              <h3>{theme.name}</h3>
+              <p>{theme.description}</p>
+              <span class="arrow">→</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+
+  <!-- CTA Section -->
+  <section class="cta">
+    <h2>Non Trovi Quello Che Cerchi?</h2>
+    <p>Consulta il catechismo per numero:</p>
+    <div class="search-box">
+      <input
+        type="number"
+        id="cccSearch"
+        placeholder="Inserisci numero CCC (1-2865)"
+        min="1"
+        max="2865"
+      />
+      <button onclick="searchCCC()">Vai al Punto</button>
+    </div>
+  </section>
+
+  <!-- Schema.org -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Temi Catechismo",
+    "description": pageDescription,
+    "url": `${Astro.site}catechismo/temi`,
+    "hasPart": THEMES.map((theme) => ({
+      "@type": "Course",
+      "name": theme.name,
+      "description": theme.description,
+      "url": `${Astro.site}catechismo/tema/${theme.slug}`,
+    })),
+    "isPartOf": {
+      "@type": "Course",
+      "name": "Catechismo della Chiesa Cattolica",
+      "url": `${Astro.site}catechismo`,
+    },
+  })}/>
+</BaseLayout>
+
+<style>
+  .breadcrumb {
+    margin-bottom: 2rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .breadcrumb ol {
+    list-style: none;
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .breadcrumb li:not(:last-child)::after {
+    content: '/';
+    margin-left: 0.5rem;
+    color: #6b7280;
+  }
+
+  .breadcrumb a {
+    color: #3b82f6;
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    text-decoration: underline;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+    opacity: 0.95;
+  }
+
+  .count {
+    font-size: 0.875rem;
+    opacity: 0.85;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #e5e7eb;
+    overflow-x: auto;
+  }
+
+  .tab {
+    padding: 1rem;
+    border: none;
+    background: none;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .tab:hover,
+  .tab.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+  }
+
+  .themes-container {
+    margin-bottom: 4rem;
+  }
+
+  .part-section {
+    display: none;
+    margin-bottom: 3rem;
+  }
+
+  .part-section.active {
+    display: block;
+  }
+
+  .part-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #111827;
+  }
+
+  .themes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .theme-card {
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: white;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .theme-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .theme-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
+  }
+
+  .theme-card:hover::before {
+    left: 100%;
+  }
+
+  .theme-card h3 {
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+    color: #111827;
+  }
+
+  .theme-card p {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 1rem;
+  }
+
+  .arrow {
+    display: inline-block;
+    color: #3b82f6;
+    font-weight: 600;
+    transition: transform 0.3s ease;
+  }
+
+  .theme-card:hover .arrow {
+    transform: translateX(4px);
+  }
+
+  .cta {
+    background: #f9fafb;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .cta h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .cta p {
+    margin-bottom: 1.5rem;
+    color: #6b7280;
+  }
+
+  .search-box {
+    display: flex;
+    gap: 1rem;
+    max-width: 400px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+  }
+
+  .search-box input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+
+  .search-box button {
+    padding: 0.75rem 1.5rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .search-box button:hover {
+    background: #2563eb;
+  }
+
+  @media (max-width: 768px) {
+    .hero h1 {
+      font-size: 1.75rem;
+    }
+
+    .tabs {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .tab {
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+    }
+
+    .themes-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .search-box {
+      flex-direction: column;
+    }
+
+    .search-box input {
+      min-width: 100%;
+    }
+  }
+</style>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('.tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const part = tab.dataset.part;
+
+      // Update tabs
+      document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      // Update sections
+      document.querySelectorAll('.part-section').forEach((section) => {
+        section.classList.remove('active');
+      });
+      document.getElementById(`part-${part}`)?.classList.add('active');
+
+      // Scroll to section
+      document.getElementById(`part-${part}`)?.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  // Initialize first tab as active
+  document.querySelector('.tab')?.classList.add('active');
+  document.querySelector('.part-section')?.classList.add('active');
+
+  // Search function
+  function searchCCC() {
+    const input = document.getElementById('cccSearch') as HTMLInputElement;
+    const numero = parseInt(input.value);
+
+    if (numero >= 1 && numero <= 2865) {
+      window.location.href = `/catechismo/${numero}`;
+    } else {
+      alert('Inserisci un numero fra 1 e 2865');
+    }
+  }
+
+  // Allow Enter key
+  document.getElementById('cccSearch')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') searchCCC();
+  });
+</script>
