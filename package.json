@@ -26,6 +26,8 @@
     "migrate:theme-tags": "tsx scripts/migrate-theme-tags.js",
     "verify:theme-tags": "tsx scripts/verify-theme-tags.js",
     "import:bible": "tsx scripts/import-bible.js",
+    "import:bible-verses": "tsx scripts/import-bible-verses.js",
+    "import:bible-demo": "tsx scripts/import-bible-demo.js",
     "import:airtable": "tsx scripts/import-airtable.js",
     "import:sheets": "tsx scripts/import-sheets.js",
     "import:csv": "tsx scripts/import-csv.js",

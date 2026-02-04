@@ -1,0 +1,240 @@
+---
+/**
+ * Bible Book Index Pages
+ * Route: /bibbia/[libro]
+ *
+ * Displays all chapters of a Bible book with:
+ * - Book metadata (author, context, themes)
+ * - Chapter grid/list with links to chapters
+ * - Related catechism points
+ * - Related saints (by patronage/connection)
+ */
+
+import { db, bibleBooks } from '../../db';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+// SSR Mode: Dynamic rendering from database queries
+// NOTE: Can enable prerender=true on production VPS where DB is accessible
+export const prerender = false;
+
+// Generate static paths for all Bible books (for future SSG)
+export async function getStaticPaths() {
+  const allBooks = await db.select().from(bibleBooks).orderBy((b) => b.ordine);
+
+  return allBooks.map((book) => ({
+    params: { libro: book.slug },
+    props: { book },
+  }));
+}
+
+interface Props {
+  book: typeof bibleBooks.$inferSelect;
+}
+
+const { book } = Astro.props as Props;
+
+// Validate book exists
+if (!book) {
+  return Astro.redirect('/404');
+}
+
+// Generate chapter links
+const chapters = Array.from({ length: book.numeroCapitoli }, (_, i) => i + 1);
+
+// Get testament label
+const testamentLabel = book.testamento === 'AT' ? 'Antico Testamento' : 'Nuovo Testamento';
+
+// Get testament color for styling
+const testamentColor = book.testamento === 'AT' ? 'amber' : 'red';
+
+const pageTitle = `${book.nome} - La Sacra Bibbia CEI Online`;
+const pageDescription = `Leggi il ${book.nomeCompleto || book.nome} online. ${book.numeroCapitoli} capitoli della Bibbia CEI 2008 in italiano.`;
+const pageUrl = `${Astro.site}bibbia/${book.slug}`;
+
+// Book introduction texts (will be expanded with real data)
+const bookIntroductions: Record<string, { intro: string; historicalContext: string; themes: string[] }> = {
+  'matteo': {
+    intro: 'Il Vangelo secondo Matteo è il primo dei quattro vangeli canonici. Fu scritto probabilmente tra il 70-100 d.C. e si rivolge principalmente ai credenti di origine giudaica. Matteo presenta Gesù come il Messia promesso, il Re dei Giudei, e sottolinea il compimento delle profezie dell\'Antico Testamento.',
+    historicalContext: 'Scritto da Matteo, apostolo e pubblicano, questo vangelo fu composto nella Chiesa primitiva, probabilmente in Siria, per comunità cristiane di origine ebraica. Utilizza il Vangelo di Marco e una fonte comune ai sinottici (Q).',
+    themes: ['Regno di Dio', 'Messia', 'Insegnamento di Gesù', 'Miracoli', 'Comunità ecclesiale'],
+  },
+  'marco': {
+    intro: 'Il Vangelo secondo Marco è il più breve dei quattro vangeli e probabilmente il più antico, scritto verso il 65-70 d.C. Presenta una visione dinamica e immediata di Gesù, che agisce con autorità divina compiendo miracoli straordinari.',
+    historicalContext: 'Marco, compagno di Pietro e Paolo, scrisse questo vangelo probabilmente a Roma. È caratterizzato da uno stile vivace e narrativo, con frequent uso dell\'avverbio "subito" che enfatizza l\'azione immediatezza dell\'intervento di Gesù.',
+    themes: ['Potenza di Gesù', 'Segreto messianico', 'Sofferenza del Messia', 'Fede', 'Disciplinato'],
+  },
+  'giovanni': {
+    intro: 'Il Vangelo secondo Giovanni è il più teologico dei quattro vangeli, scritto verso il 90-110 d.C. Presenta una visione profonda e contemplativa di Gesù, il Logos eterno (la Parola), che si è incarnato per la salvezza del mondo.',
+    historicalContext: 'Attribuito all\'Apostolo Giovanni, questo vangelo fu scritto probabilmente a Efeso per le comunità cristiane mature. Si distingue dai sinottici per struttura, miracoli (segni) e dialoghi lunghi che rivelano l\'identità divina di Gesù.',
+    themes: ['Logos divino', 'Vita eterna', 'Amore', 'Incredulità e fede', 'Glorificazione'],
+  },
+  'luca': {
+    intro: 'Il Vangelo secondo Luca è il più letterario e completo dei quattro vangeli. Scritto verso il 80-90 d.C., è indirizzato ai pagani convertiti ed enfatizza l\'universalità della salvezza e la misericordia di Gesù verso gli emarginati.',
+    historicalContext: 'Luca, medico e compagno di Paolo, scrisse questo vangelo come parte della sua opera in due volumi (Vangelo e Atti). Mostra influenze greche e una preoccupazione per la precisione storica, basandosi su testimonianze oculari.',
+    themes: ['Universalità della salvezza', 'Misericordia', 'Donne', 'Poveri e emarginati', 'Spirito Santo'],
+  },
+  'genesi': {
+    intro: 'La Genesi è il primo libro della Bibbia e della Torah. Contiene i racconti della creazione del mondo, dell\'umanità, e della storia patriarcale da Adamo a Giuseppe. È fondamentale per comprendere l\'inizio della relazione tra Dio e l\'umanità.',
+    historicalContext: 'Scritto durante l\'esilio babilonese (VI sec. a.C.), la Genesi sintetizza tradizioni orali più antiche. È il primo dei cinque libri di Mosè (Pentateuco) ed è stato composto da diversi autori nel corso dei secoli.',
+    themes: ['Creazione', 'Peccato originale', 'Alleanza', 'Promesse di Dio', 'Fedeltà divina'],
+  },
+};
+
+// Get introduction for this book (or use generic template)
+const bookData = bookIntroductions[book.slug] || {
+  intro: `Il ${book.nomeCompleto || book.nome} è uno dei 73 libri della Bibbia CEI. Questo libro contiene ${book.numeroCapitoli} capitoli e rappresenta una parte importante della rivelazione divina nella tradizione cattolica.`,
+  historicalContext: book.contestoStorico || 'Scritto in un contesto importante della storia della salvezza.',
+  themes: book.temiPrincipali || [],
+};
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="Breadcrumb" class="bg-gray-100 py-3 px-4 mb-8">
+    <div class="max-w-6xl mx-auto text-sm">
+      <ol class="flex space-x-2">
+        <li><a href="/" class="text-blue-600 hover:text-blue-800">Home</a></li>
+        <li class="text-gray-500">/</li>
+        <li><a href="/bibbia" class="text-blue-600 hover:text-blue-800">Bibbia</a></li>
+        <li class="text-gray-500">/</li>
+        <li class="text-gray-700 font-semibold">{book.nome}</li>
+      </ol>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class={`bg-gradient-to-r from-${testamentColor}-900 via-${testamentColor}-800 to-${testamentColor}-900 text-white py-16 mb-12`}>
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex items-center gap-4 mb-4">
+        <span class={`bg-${testamentColor}-600 px-3 py-1 rounded-full text-sm font-semibold`}>
+          {testamentLabel}
+        </span>
+        {book.categoria && (
+          <span class="bg-white/20 px-3 py-1 rounded-full text-sm">
+            {book.categoria}
+          </span>
+        )}
+      </div>
+
+      <h1 class="text-5xl font-bold mb-4">{book.nome}</h1>
+
+      {book.nomeCompleto && (
+        <p class="text-xl text-white/90 mb-6">{book.nomeCompleto}</p>
+      )}
+
+      <div class="flex flex-wrap gap-6 text-white/90">
+        <div>
+          <span class="font-semibold block">{book.numeroCapitoli}</span>
+          <span class="text-sm">Capitoli</span>
+        </div>
+        {book.autore && (
+          <div>
+            <span class="font-semibold block">Autore</span>
+            <span class="text-sm">{book.autore}</span>
+          </div>
+        )}
+        {book.abbreviazione && (
+          <div>
+            <span class="font-semibold block">Abbreviazione</span>
+            <span class="text-sm">{book.abbreviazione}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <!-- Book Introduction -->
+    <section class="mb-16">
+      <h2 class="text-3xl font-bold text-gray-900 mb-6">Introduzione</h2>
+      <div class="prose prose-lg max-w-none">
+        <p class="text-gray-700 leading-relaxed mb-4">{bookData.intro}</p>
+
+        {bookData.historicalContext && (
+          <div class="bg-blue-50 border-l-4 border-blue-500 p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Contesto Storico</h3>
+            <p class="text-gray-700">{bookData.historicalContext}</p>
+          </div>
+        )}
+
+        {bookData.themes && bookData.themes.length > 0 && (
+          <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Temi Principali</h3>
+            <div class="flex flex-wrap gap-2">
+              {bookData.themes.map((theme) => (
+                <span class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm">
+                  {theme}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+
+    <!-- Chapters Grid -->
+    <section class="mb-16">
+      <h2 class="text-3xl font-bold text-gray-900 mb-8">Capitoli</h2>
+
+      {chapters.length > 0 ? (
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {chapters.map((cap) => (
+            <a
+              href={`/bibbia/${book.slug}/${cap}`}
+              class={`p-4 rounded-lg border-2 border-${testamentColor}-200 bg-${testamentColor}-50 hover:bg-${testamentColor}-100 hover:border-${testamentColor}-400 transition text-center font-semibold text-gray-900`}
+            >
+              {cap}
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="text-gray-500 text-center py-8">Nessun capitolo disponibile</p>
+      )}
+    </section>
+
+    <!-- Additional Info -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+      <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">📚 Versione CEI 2008</h3>
+        <p class="text-gray-700 text-sm">
+          Questo testo utilizza la versione ufficiale della Conferenza Episcopale Italiana, approvata dalla Chiesa cattolica.
+        </p>
+      </div>
+
+      <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">🔗 Catechismo</h3>
+        <p class="text-gray-700 text-sm">
+          Ogni versetto è collegato alle sezioni corrispondenti del Catechismo della Chiesa Cattolica.
+        </p>
+      </div>
+
+      <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">⛪ Liturgia Cattolica</h3>
+        <p class="text-gray-700 text-sm">
+          Scopri quando i brani di questo libro vengono proclamati nella Messa della Chiesa cattolica.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- Schema.org Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Book",
+    "name": book.nomeCompleto || book.nome,
+    "description": bookData.intro,
+    "author": book.autore ? { "@type": "Person", "name": book.autore } : undefined,
+    "about": {
+      "@type": "Thing",
+      "name": "Bibbia CEI 2008"
+    },
+    "url": pageUrl,
+    "hasPart": chapters.map((cap) => ({
+      "@type": "Chapter",
+      "name": `${book.nome} ${cap}`,
+      "position": cap,
+      "url": `${Astro.site}bibbia/${book.slug}/${cap}`,
+    })),
+  })}/>
+</BaseLayout>

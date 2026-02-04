@@ -1,0 +1,346 @@
+---
+/**
+ * Bible Verse Pages
+ * Route: /bibbia/[libro]/[capitolo]/[versetto]
+ *
+ * Displays individual Bible verses with:
+ * - Full verse text (emphasized, large font)
+ * - Context: surrounding verses (±2 verses)
+ * - Catechism connections (UNIQUE VALUE ⭐⭐⭐)
+ * - Liturgy appearances (UNIQUE VALUE ⭐⭐⭐)
+ * - Related saints & prayers
+ * - Share/Print functionality
+ */
+
+import { db, bibleBooks, bibleVerses } from '../../../../db';
+import { eq, and, gte, lte } from 'drizzle-orm';
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+
+// SSR Page - no prerendering needed (31,000+ verses)
+export const prerender = false;
+
+// Get URL parameters
+const { libro, capitolo, versetto } = Astro.params;
+const chapter = parseInt(capitolo || '0');
+const verse = parseInt(versetto || '0');
+
+// Find the book
+const book = await db
+  .select()
+  .from(bibleBooks)
+  .where(eq(bibleBooks.slug, libro || ''))
+  .then((books) => books[0]);
+
+if (!book || chapter < 1 || verse < 1 || chapter > book.numeroCapitoli) {
+  return Astro.redirect('/404');
+}
+
+// Get verse data (when available after Phase 4 import)
+// For now, this is a placeholder that will work once verses are imported
+const verseData = await db
+  .select()
+  .from(bibleVerses)
+  .where(
+    and(
+      eq(bibleVerses.bookId, book.id),
+      eq(bibleVerses.capitolo, chapter),
+      eq(bibleVerses.versetto, verse)
+    )
+  )
+  .then((verses) => verses[0]);
+
+// Get surrounding verses for context (when available)
+const contextVerses = verseData
+  ? await db
+      .select()
+      .from(bibleVerses)
+      .where(
+        and(
+          eq(bibleVerses.bookId, book.id),
+          eq(bibleVerses.capitolo, chapter),
+          gte(bibleVerses.versetto, Math.max(1, verse - 2)),
+          lte(bibleVerses.versetto, verse + 2)
+        )
+      )
+      .orderBy((v) => v.versetto)
+  : [];
+
+// Get testament color
+const testamentColor = book.testamento === 'AT' ? 'amber' : 'red';
+
+const pageTitle = `${book.nome} ${chapter}:${verse} - La Sacra Bibbia CEI Online`;
+const pageDescription = verseData
+  ? `${book.nome} ${chapter}:${verse} - ${verseData.testo.substring(0, 100)}...`
+  : `${book.nome} capitolo ${chapter}, versetto ${verse} dalla Bibbia CEI 2008`;
+const pageUrl = `${Astro.site}bibbia/${libro}/${capitolo}/${versetto}`;
+
+// For future use: Related catechism paragraphs
+const relatedCatechism = verseData?.catechismRefs || [];
+
+// For future use: Liturgy appearances
+const liturgyAppearances = verseData?.liturgyDates || [];
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="Breadcrumb" class="bg-gray-100 py-3 px-4 mb-8">
+    <div class="max-w-4xl mx-auto text-sm">
+      <ol class="flex space-x-2 flex-wrap gap-2">
+        <li><a href="/" class="text-blue-600 hover:text-blue-800">Home</a></li>
+        <li class="text-gray-500">/</li>
+        <li><a href="/bibbia" class="text-blue-600 hover:text-blue-800">Bibbia</a></li>
+        <li class="text-gray-500">/</li>
+        <li>
+          <a href={`/bibbia/${libro}`} class="text-blue-600 hover:text-blue-800">
+            {book.nome}
+          </a>
+        </li>
+        <li class="text-gray-500">/</li>
+        <li>
+          <a href={`/bibbia/${libro}/${capitolo}`} class="text-blue-600 hover:text-blue-800">
+            Capitolo {capitolo}
+          </a>
+        </li>
+        <li class="text-gray-500">/</li>
+        <li class="text-gray-700 font-semibold">Versetto {versetto}</li>
+      </ol>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class={`bg-gradient-to-r from-${testamentColor}-900 via-${testamentColor}-800 to-${testamentColor}-900 text-white py-16 mb-12`}>
+    <div class="max-w-4xl mx-auto px-4">
+      <h1 class="text-4xl font-bold mb-4">{book.nome} {capitolo}:{versetto}</h1>
+
+      <!-- Verse Navigation -->
+      <div class="flex gap-4 flex-wrap">
+        <button
+          onclick="window.print()"
+          class={`px-4 py-2 bg-${testamentColor}-700 hover:bg-${testamentColor}-600 rounded transition`}
+        >
+          🖨️ Stampa
+        </button>
+
+        <button
+          onclick="shareVerse()"
+          class={`px-4 py-2 bg-${testamentColor}-700 hover:bg-${testamentColor}-600 rounded transition`}
+        >
+          📤 Condividi
+        </button>
+
+        <button
+          onclick="copyReference()"
+          class={`px-4 py-2 bg-${testamentColor}-700 hover:bg-${testamentColor}-600 rounded transition`}
+        >
+          📋 Copia Riferimento
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <!-- Verse Text (Main Content) -->
+    {verseData ? (
+      <article class="mb-12">
+        <div class="bg-white rounded-lg border-2 border-blue-200 p-8">
+          {/* Main verse emphasized */}
+          <div class="mb-8 pb-8 border-b-2 border-gray-200">
+            <p class="text-4xl font-serif font-bold text-gray-900 mb-4 leading-relaxed">
+              "{verseData.testo}"
+            </p>
+            <p class="text-sm text-gray-600 font-semibold">
+              {book.nome} {capitolo}:{versetto}
+            </p>
+          </div>
+
+          {/* Context verses */}
+          {contextVerses.length > 1 && (
+            <div class="mb-8">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4">Contesto</h3>
+              <div class="space-y-4 text-gray-700">
+                {contextVerses.map((cv) => (
+                  <p class={cv.versetto === verse ? 'font-bold text-blue-900 bg-blue-50 p-3 rounded' : ''}>
+                    <span class="text-sm font-semibold text-blue-600">{capitolo}:{cv.versetto}</span> {cv.testo}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Latin version if available */}
+          {verseData.testoLatin && (
+            <div class="mt-8 pt-8 border-t-2 border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-900 mb-3">Vulgata Latina</h3>
+              <p class="text-gray-700 italic font-serif">
+                "{verseData.testoLatin}"
+              </p>
+            </div>
+          )}
+        </div>
+      </article>
+    ) : (
+      <article class="bg-gray-50 rounded-lg border-2 border-gray-300 p-8 mb-12">
+        <div class="text-center py-12">
+          <p class="text-gray-600 text-lg mb-4">
+            📖 Il versetto {capitolo}:{versetto} di {book.nome}
+          </p>
+          <p class="text-gray-500 text-sm mb-6">
+            I dati dei versetti saranno disponibili una volta importati dal BibleGet.io nella Fase 4
+          </p>
+          <div class="bg-blue-50 p-6 rounded border border-blue-200 text-left max-w-md mx-auto">
+            <p class="font-semibold text-gray-900 mb-3">Quando completato, questa pagina mostrerà:</p>
+            <ul class="list-disc list-inside space-y-2 text-gray-700 text-sm">
+              <li>Testo completo del versetto</li>
+              <li>Versetti circostanti per contesto</li>
+              <li>Connessioni al Catechismo della Chiesa Cattolica</li>
+              <li>Date e letture liturgiche</li>
+              <li>Santi e preghiere correlati</li>
+              <li>Versione latina (Vulgata)</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+    )}
+
+    <!-- Info Sections -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">📚 Versione CEI 2008</h3>
+        <p class="text-gray-700 text-sm">
+          Testo ufficiale della Conferenza Episcopale Italiana, approvato dalla Chiesa cattolica.
+        </p>
+      </div>
+
+      <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">🔗 Catechismo</h3>
+        <p class="text-gray-700 text-sm">
+          {relatedCatechism.length > 0
+            ? `Citato in ${relatedCatechism.length} punti del Catechismo della Chiesa Cattolica`
+            : 'Connessioni al Catechismo disponibili dopo il caricamento dei dati'}
+        </p>
+      </div>
+
+      <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">⛪ Liturgia Cattolica</h3>
+        <p class="text-gray-700 text-sm">
+          {liturgyAppearances.length > 0
+            ? `Proclamato in ${liturgyAppearances.length} letture liturgiche`
+            : 'Apparizioni liturgiche disponibili dopo il caricamento dei dati'}
+        </p>
+      </div>
+    </section>
+
+    {/* Related Content - When Verses Are Available */}
+    {verseData && (
+      <>
+        {/* Related Catechism */}
+        {relatedCatechism.length > 0 && (
+          <section class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Citato nel Catechismo</h2>
+            <div class="space-y-3">
+              {relatedCatechism.map((cccNum) => (
+                <a
+                  href={`/catechismo/${cccNum}`}
+                  class="block p-4 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 transition"
+                >
+                  <span class="font-bold text-blue-600">CCC {cccNum}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Liturgy Appearances */}
+        {liturgyAppearances.length > 0 && (
+          <section class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Nella Liturgia</h2>
+            <div class="space-y-3">
+              {liturgyAppearances.map((date) => (
+                <a
+                  href={`/liturgia/${date}`}
+                  class="block p-4 bg-purple-50 border border-purple-200 rounded hover:bg-purple-100 transition"
+                >
+                  <span class="font-bold text-purple-600">{date}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+      </>
+    )}
+
+    <!-- Navigation -->
+    <section class="bg-gray-100 rounded-lg p-6 mt-12">
+      <div class="flex justify-between items-center">
+        <a
+          href={`/bibbia/${libro}/${capitolo}`}
+          class="text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-2"
+        >
+          ← Torna al capitolo
+        </a>
+
+        <a
+          href={`/bibbia/${libro}`}
+          class="text-blue-600 hover:text-blue-800 font-semibold text-center"
+        >
+          {book.nome}
+        </a>
+
+        <a
+          href="/bibbia"
+          class="text-blue-600 hover:text-blue-800 font-semibold"
+        >
+          Bibbia Completa →
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <!-- Schema.org Structured Data -->
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "CreativeWork",
+      "name": `${book.nome} ${capitolo}:${versetto}`,
+      "text": verseData?.testo || `${book.nome} ${capitolo}:${versetto}`,
+      "about": {
+        "@type": "Book",
+        "name": book.nomeCompleto || book.nome,
+      },
+      "isPartOf": {
+        "@type": "Book",
+        "name": "Bibbia CEI 2008",
+        "url": `${Astro.site}bibbia`,
+      },
+      "url": pageUrl,
+    })}
+  />
+</BaseLayout>
+
+<script>
+  function shareVerse() {
+    const title = document.querySelector('h1')?.textContent || 'Versetto Biblico';
+    const url = window.location.href;
+
+    if (navigator.share) {
+      navigator.share({
+        title,
+        text: 'Leggi questo versetto della Bibbia CEI online',
+        url,
+      });
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Link copiato negli appunti!');
+      });
+    }
+  }
+
+  function copyReference() {
+    const title = document.querySelector('h1')?.textContent || 'Versetto';
+    navigator.clipboard.writeText(title).then(() => {
+      alert('Riferimento copiato: ' + title);
+    });
+  }
+</script>

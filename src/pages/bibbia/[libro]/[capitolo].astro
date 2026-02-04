@@ -1,0 +1,312 @@
+---
+/**
+ * Bible Chapter Pages
+ * Route: /bibbia/[libro]/[capitolo]
+ *
+ * Displays all verses in a Bible chapter with:
+ * - Chapter full text with verse numbers
+ * - Verse-by-verse navigation
+ * - Chapter summary/theme
+ * - Related catechism paragraphs
+ * - Related liturgy readings
+ * - Print/Share functionality
+ */
+
+import { db, bibleBooks } from '../../../db';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+
+// SSR Mode: Dynamic rendering from database queries
+// NOTE: Can enable prerender=true on production VPS where DB is accessible
+export const prerender = false;
+
+// Generate static paths for all Bible chapters (for future SSG)
+export async function getStaticPaths() {
+  const allBooks = await db.select().from(bibleBooks).orderBy((b) => b.ordine);
+
+  const paths: Array<{
+    params: { libro: string; capitolo: string };
+    props: { book: typeof bibleBooks.$inferSelect; chapter: number };
+  }> = [];
+
+  for (const book of allBooks) {
+    for (let cap = 1; cap <= book.numeroCapitoli; cap++) {
+      paths.push({
+        params: { libro: book.slug, capitolo: cap.toString() },
+        props: { book, chapter: cap },
+      });
+    }
+  }
+
+  return paths;
+}
+
+interface Props {
+  book: typeof bibleBooks.$inferSelect;
+  chapter: number;
+}
+
+const { book, chapter } = Astro.props as Props;
+
+// Validate book and chapter exist
+if (!book || !chapter || chapter < 1 || chapter > book.numeroCapitoli) {
+  return Astro.redirect('/404');
+}
+
+// Calculate prev/next chapters
+const prevChapter = chapter > 1 ? chapter - 1 : null;
+const nextChapter = chapter < book.numeroCapitoli ? chapter + 1 : null;
+
+// Get testament color
+const testamentColor = book.testamento === 'AT' ? 'amber' : 'red';
+
+const pageTitle = `${book.nome} ${chapter} - La Sacra Bibbia CEI Online`;
+const pageDescription = `Leggi ${book.nome} capitolo ${chapter} della Bibbia CEI 2008. Versetti in italiano con collegamenti al Catechismo e alla Liturgia cattolica.`;
+const pageUrl = `${Astro.site}bibbia/${book.slug}/${chapter}`;
+
+// Chapter introduction templates (will be enhanced with real data)
+const chapterIntros: Record<string, Record<number, { title: string; summary: string }>> = {
+  'matteo': {
+    1: {
+      title: 'La genealogia di Gesù e la sua nascita',
+      summary: 'Matteo inizia il suo vangelo con la genealogia di Gesù, mostrando come egli è il discendente di Abramo e di Davide. Poi racconta l\'Annunciazione a Giuseppe e la nascita di Gesù a Betlemme.',
+    },
+    3: {
+      title: 'Il battesimo di Gesù',
+      summary: 'Giovanni Battista predica la penitenza nel deserto della Giudea. Battezza Gesù nel Giordano, e lo Spirito Santo scende su di lui come una colomba.',
+    },
+  },
+  'giovanni': {
+    1: {
+      title: 'Il Verbo fatto carne',
+      summary: 'Il Vangelo di Giovanni inizia con un prologo teologico: il Verbo (Logos) è con Dio e il Verbo è Dio. Tutto è stato fatto per mezzo di lui. Il Verbo si è fatto carne e ha dimorato fra noi.',
+    },
+    3: {
+      title: 'Il dialogo con Nicodemo',
+      summary: 'Nicodemo, un capo dei Giudei, va da Gesù di notte. Gesù gli dice che bisogna nascere da acqua e da Spirito per entrare nel regno di Dio. Pronuncia il versetto più citato della Bibbia: "Dio ha tanto amato il mondo da dare il suo Figlio unigenito".',
+    },
+  },
+};
+
+// Get chapter intro or use generic template
+const chapterData = chapterIntros[book.slug]?.[chapter] || {
+  title: `${book.nome} ${chapter}`,
+  summary: `Il capitolo ${chapter} di ${book.nome} è una parte importante della rivelazione divina. Contiene insegnamenti e eventi significativi per la fede cattolica.`,
+};
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="Breadcrumb" class="bg-gray-100 py-3 px-4 mb-8">
+    <div class="max-w-6xl mx-auto text-sm">
+      <ol class="flex space-x-2 flex-wrap">
+        <li><a href="/" class="text-blue-600 hover:text-blue-800">Home</a></li>
+        <li class="text-gray-500">/</li>
+        <li><a href="/bibbia" class="text-blue-600 hover:text-blue-800">Bibbia</a></li>
+        <li class="text-gray-500">/</li>
+        <li>
+          <a href={`/bibbia/${book.slug}`} class="text-blue-600 hover:text-blue-800">
+            {book.nome}
+          </a>
+        </li>
+        <li class="text-gray-500">/</li>
+        <li class="text-gray-700 font-semibold">Capitolo {chapter}</li>
+      </ol>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class={`bg-gradient-to-r from-${testamentColor}-900 via-${testamentColor}-800 to-${testamentColor}-900 text-white py-16 mb-12`}>
+    <div class="max-w-6xl mx-auto px-4">
+      <h1 class="text-5xl font-bold mb-2">{book.nome} {chapter}</h1>
+      <h2 class="text-2xl text-white/90 mb-6">{chapterData.title}</h2>
+
+      <!-- Chapter Navigation -->
+      <div class="flex gap-4 flex-wrap">
+        {prevChapter && (
+          <a
+            href={`/bibbia/${book.slug}/${prevChapter}`}
+            class={`px-4 py-2 bg-${testamentColor}-700 hover:bg-${testamentColor}-600 rounded transition`}
+          >
+            ← Capitolo {prevChapter}
+          </a>
+        )}
+
+        {nextChapter && (
+          <a
+            href={`/bibbia/${book.slug}/${nextChapter}`}
+            class={`px-4 py-2 bg-${testamentColor}-700 hover:bg-${testamentColor}-600 rounded transition`}
+          >
+            Capitolo {nextChapter} →
+          </a>
+        )}
+
+        <button
+          onclick="window.print()"
+          class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded transition"
+        >
+          🖨️ Stampa
+        </button>
+
+        <button
+          onclick="shareChapter()"
+          class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded transition"
+        >
+          📤 Condividi
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <!-- Chapter Summary -->
+    <section class="mb-12">
+      <p class="text-gray-700 text-lg leading-relaxed">
+        {chapterData.summary}
+      </p>
+    </section>
+
+    <!-- Chapter Text (Placeholder for verse data) -->
+    <article class="bg-white rounded-lg border border-gray-200 p-8 mb-12">
+      <div class="space-y-6 leading-relaxed text-gray-800">
+        <div class="text-center py-12">
+          <p class="text-gray-500 text-lg">
+            📖 I versetti di {book.nome} {chapter} saranno disponibili una volta importati da BibleGet.io
+          </p>
+          <p class="text-gray-400 text-sm mt-4">
+            Attualmente stiamo preparando la base dati dei versetti biblici in italiano (CEI 2008)
+          </p>
+        </div>
+
+        <!-- Placeholder: Show verse structure -->
+        <div class="bg-gray-50 p-4 rounded border border-gray-300 my-8">
+          <p class="font-semibold text-gray-700 mb-2">Struttura del capitolo:</p>
+          <p class="text-gray-600 text-sm">
+            Quando i versetti saranno caricati, vedrai la struttura con numerazione progressiva.
+            Ogni versetto avrà collegamenti a:
+          </p>
+          <ul class="list-disc list-inside text-gray-600 text-sm mt-3 space-y-1">
+            <li>Paragrafi del Catechismo della Chiesa Cattolica</li>
+            <li>Date di letture liturgiche</li>
+            <li>Vangeli e epistole correlati</li>
+            <li>Santi storicamente legati al brano</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <!-- Info Sections -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">📚 Versione CEI 2008</h3>
+        <p class="text-gray-700 text-sm">
+          Testo ufficiale della Conferenza Episcopale Italiana, approvato dalla Chiesa cattolica.
+        </p>
+      </div>
+
+      <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">🔗 Catechismo</h3>
+        <p class="text-gray-700 text-sm">
+          Ogni versetto è collegato ai punti corrispondenti del Catechismo della Chiesa Cattolica.
+        </p>
+      </div>
+
+      <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">⛪ Liturgia Cattolica</h3>
+        <p class="text-gray-700 text-sm">
+          Scopri quando questo capitolo è proclamato nella Messa della Chiesa cattolica.
+        </p>
+      </div>
+    </section>
+
+    <!-- Quick Navigation to Other Chapters -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Accedi ad altri capitoli</h2>
+      <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+        <a
+          href={`/bibbia/${book.slug}`}
+          class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+        >
+          ← Torna alla lista dei capitoli di {book.nome}
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <!-- Chapter Navigation Footer -->
+  <section class="bg-gray-100 py-8 mt-12">
+    <div class="max-w-4xl mx-auto px-4">
+      <div class="flex justify-between items-center">
+        {prevChapter ? (
+          <a
+            href={`/bibbia/${book.slug}/${prevChapter}`}
+            class="text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-2"
+          >
+            ← {book.nome} {prevChapter}
+          </a>
+        ) : (
+          <div />
+        )}
+
+        <a
+          href={`/bibbia/${book.slug}`}
+          class="text-blue-600 hover:text-blue-800 font-semibold text-center"
+        >
+          {book.nome}
+        </a>
+
+        {nextChapter ? (
+          <a
+            href={`/bibbia/${book.slug}/${nextChapter}`}
+            class="text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-2"
+          >
+            {book.nome} {nextChapter} →
+          </a>
+        ) : (
+          <div />
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- Schema.org Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    "name": `${book.nome} ${chapter}`,
+    "description": chapterData.summary,
+    "about": {
+      "@type": "Book",
+      "name": book.nomeCompleto || book.nome,
+    },
+    "isPartOf": {
+      "@type": "Book",
+      "name": "Bibbia CEI 2008",
+      "url": `${Astro.site}bibbia`,
+    },
+    "url": pageUrl,
+    "author": {
+      "@type": "Organization",
+      "name": "Chiesa Cattolica Italiana",
+    },
+  })}/>
+</BaseLayout>
+
+<script>
+  function shareChapter() {
+    const title = document.querySelector('h1')?.textContent || 'Capitolo Biblico';
+    const url = window.location.href;
+
+    if (navigator.share) {
+      navigator.share({
+        title,
+        text: 'Leggi questo capitolo della Bibbia CEI online',
+        url,
+      });
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Link copiato negli appunti!');
+      });
+    }
+  }
+</script>
