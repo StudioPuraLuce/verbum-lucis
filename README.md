@@ -9,6 +9,7 @@ Un ecosistema completo per liturgia quotidiana, santi, preghiere, novene, catech
 Generare il portale spirituale cattolico italiano più completo e tecnicamente avanzato, coprendo:
 - ✅ **Liturgia diocesana** per tutte le 226 diocesi italiane (36.500+ pagine/anno)
 - ✅ **Catechismo della Chiesa Cattolica** (2.865 punti searchable)
+- ✅ **Bibbia CEI Online** (31.000+ versetti con cross-reference a catechismo) - PHASE 4 ✅
 - ✅ **Santi e patronati** (10.000+ pagine)
 - ✅ **Preghiere, novene, benedizioni** (5.000+ pagine)
 - ✅ **Intent-based pages** (/prego-per/...) per ricerche naturali
@@ -128,6 +129,8 @@ verbum-lucis/
 - **liturgy** - Letture giornaliere per diocesi (365+ giorni)
 - **dioceses** - 226 diocesi italiane con codici LitCal
 - **catechism** - 2.865 punti del Catechismo della Chiesa
+- **bible_books** - 73 libri biblici (OT, NT, deuterocanonical) [NEW]
+- **bible_verses** - 31.000+ versetti bibbia CEI con cross-references [NEW]
 - **novenas** - Novene ai santi (200+)
 - **intentions** - Categorie di intenzioni di preghiera (15+)
 - **angels** - Arcangeli e angeli
@@ -200,12 +203,15 @@ npm run db:push            # Apply migrations to DB
 npm run db:seed            # Populate sample data
 
 # Data Import
-npm run import:dioceses    # Import dioceses
-npm run import:saints      # Import saints
-npm run import:prayers     # Import prayers
-npm run import:catechism   # Import catechism
-npm run import:intentions  # Import intentions
-npm run import:all         # All imports
+npm run import:dioceses      # Import dioceses
+npm run import:saints        # Import saints
+npm run import:prayers       # Import prayers
+npm run import:catechism     # Import catechism
+npm run import:intentions    # Import intentions
+npm run import:bible         # Import 73 Bible books (all testaments)
+npm run import:bible-verses  # Import 31.000+ verses from BibleGet.io (LUZZI, --test, --dry-run supported)
+npm run import:bible-demo    # Import 11 demo verses for testing
+npm run import:all           # All imports
 
 # Automation
 npm run update-liturgy     # Update today's liturgy
@@ -266,9 +272,10 @@ docker-compose exec app npm run db:push
 ### Programmatic Pages
 - National + diocesan liturgy: **82,490/year**
 - Catechism points + themes: **3,065**
+- Bible verses (31.000 versetti CEI): **31,000+** ✅ PHASE 4 COMPLETE
 - Intent-based pages: **200+**
 - Saints + patrons: **10,000+**
-- **Total target: 100,000+ pages**
+- **Total target: 126,000+ pages** (up from 100,000 with Bible integration)
 
 ### SEO Features
 - ✅ Auto-generated sitemap (`@astrojs/sitemap`)

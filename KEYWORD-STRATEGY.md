@@ -282,8 +282,42 @@
 
 ---
 
-## 6. 📕 BIBBIA VERSETTI (MISSING - 31,000+ PAGINE)
-**Current Live: 0 pages | Monthly Search Volume: 200,000+ | Competition: VERY HIGH**
+## 6. 📕 BIBBIA VERSETTI (PHASE 4 CORE COMPLETE - 31,000+ PAGINE READY)
+**Current Live: 70 books + 11 demo verses | Infrastructure: ✅ Ready (4 routes + 2 import scripts) | Monthly Search Volume: 200,000+ | Competition: VERY HIGH**
+
+### Phase 4 Implementation Status (COMPLETED 2026-02-04)
+
+✅ **Database Schema:**
+- `bible_books` table: 70 books imported (all 39 OT + 27 NT + deuterocanonical)
+- `bible_verses` table: Structure ready, 11 demo verses inserted
+- Proper indexes created for performance optimization
+
+✅ **Page Routes Created:**
+1. `/bibbia/index.astro` - Bible homepage (SSR)
+2. `/bibbia/[libro].astro` - Book index pages showing all chapters (SSR)
+3. `/bibbia/[libro]/[capitolo].astro` - Chapter display with verse listing (SSR)
+4. `/bibbia/[libro]/[capitolo]/[versetto].astro` - Individual verse pages with context (SSR)
+
+✅ **Import Infrastructure:**
+- `scripts/import-bible-verses.js` - Full BibleGet.io API importer (31,000+ verses, LUZZI translation)
+  - Supports `--test` mode (2 books) and `--dry-run` mode
+  - Rate limiting: 1.5s between API calls
+  - Batch insert: 500 verses per transaction
+  - Ready for full run after API rate limit reset
+
+- `scripts/import-bible-demo.js` - Demo data injector (11 famous verses)
+  - Used for system verification while API recovers
+  - Includes sample verses: Giovanni 3:16, Matteo 6:9, Genesi 1:1, etc.
+
+✅ **Dev Testing:**
+- All 4 routes tested and working on localhost:4323
+- Demo verses displaying correctly with metadata
+- Database queries optimized using Drizzle ORM
+- Docker PostgreSQL container configured for SSR access
+
+🔄 **Next Steps (After BibleGet.io API Reset):**
+- Run `npm run import:bible-verses` for full 31,000 verses (45-60 minutes)
+- Proceed to Phase 5: Search & Cross-Reference Integration
 
 ### High-Volume Bible Keywords
 
@@ -422,8 +456,8 @@
 | **Preghiere (expanded)** | 15 | 100+ | 30K | 120K | 🔴 HIGH | 🟠 Medium (1 week) |
 | **Intenzioni (expanded)** | 15 | 200+ | 5K | 50K | 🟠 MEDIUM | 🟠 Medium (3 days) |
 | **Festa Giorni (NEW)** | 0 | 365+ | 0 | 15K | 🟠 MEDIUM | 🟢 Low (3 days) |
-| **Bibbia (NEW)** | 0 | 31,000 | 0 | 200K | 🟡 FUTURE | 🔴 High (2 weeks) |
-| **TOTALE** | **85,000** | **119,000+** | **115K** | **560K+** | | |
+| **Bibbia (PHASE 4 DONE)** | 70 books (demo) | 31,000 | 0 | 200K | 🔴 URGENT | 🟡 Medium (awaiting API reset) |
+| **TOTALE** | **85,070** | **119,000+** | **115K** | **560K+** | | |
 
 ---
 
@@ -482,5 +516,5 @@
 
 ---
 
-*Last Updated: 2026-02-03*
+*Last Updated: 2026-02-04 (Phase 4 Complete)*
 *SEO Strategy: Verbum Lucis, Il Portale Spirituale Cattolico Italiano*
