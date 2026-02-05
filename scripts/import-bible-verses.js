@@ -4,9 +4,11 @@
  * Import Bible Verses from BibleGet.io API
  *
  * Usage:
- *   npm run import:bible-verses              # Import all 73 books (~45 min)
- *   npm run import:bible-verses -- --test    # Test with first 2 books (~2 min)
- *   npm run import:bible-verses -- --dry-run # Test without database insert
+ *   npm run import:bible-verses                    # Import all 73 books (~45 min)
+ *   npm run import:bible-verses -- --test          # Test with first 2 books (~2 min)
+ *   npm run import:bible-verses -- --dry-run       # Test without database insert
+ *   npm run import:bible-verses -- --check-only    # Check API status, don't import
+ *   npm run import:bible-verses -- --skip-check    # Skip health check, force import
  *
  * Imports 31,000+ verses from Italian Bible via BibleGet.io API
  * Using LUZZI translation (Italian traditional)
@@ -16,6 +18,12 @@
  * - Italian text, optional Latin text
  * - Reference (e.g., "Giovanni 3:16")
  * - URL slug (e.g., "giovanni/3/16")
+ *
+ * Smart Features:
+ * - Checks API health before importing (can be skipped)
+ * - Detects rate limiting (error 12) and backs off intelligently
+ * - Skips already-inserted verses (duplicate key handling)
+ * - Can be paused and resumed multiple times
  */
 
 import { db } from '../db/db-config.ts';
@@ -27,9 +35,12 @@ const API_BASE = 'https://query.bibleget.io/';
 const APP_ID = 'verbum-lucis';
 const BIBLE_VERSION = 'LUZZI'; // Italian traditional translation
 const BATCH_SIZE = 500;
-const DELAY_MS = 1500; // Rate limiting: 1.5 sec between API calls
+let DELAY_MS = 5000; // Rate limiting: 5 sec between API calls
+const MAX_DELAY_MS = 60000; // Max 60 sec if heavily rate-limited
 const TEST_MODE = process.argv.includes('--test');
 const DRY_RUN = process.argv.includes('--dry-run');
+const SKIP_RATE_LIMIT_CHECK = process.argv.includes('--skip-check');
+const CHECK_ONLY = process.argv.includes('--check-only');
 
 // Book metadata mapping (abbreviation -> book info)
 const BOOKS_TO_IMPORT = {
@@ -129,9 +140,50 @@ function formatSlug(name) {
 }
 
 /**
- * Fetch verses from BibleGet.io API
+ * Check if BibleGet.io API is available and responsive
  */
-async function fetchChapter(abbrev, chapter) {
+async function checkAPIHealth() {
+  console.log('\n🔍 Checking BibleGet.io API availability...');
+  const url = `${API_BASE}?query=Gv1,1&return=json&appid=${APP_ID}&version=${BIBLE_VERSION}`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    // Check for errors in the errors array (BibleGet.io format)
+    if (data.errors && data.errors.length > 0) {
+      const errorCode = data.errors[0].errNum;
+      const errorMsg = data.errors[0].errMessage;
+
+      if (errorCode === 12) {
+        console.log('   ⚠️  API is rate-limited (error 12)');
+        console.log(`   Message: ${errorMsg}`);
+        console.log('   ⏳ Please wait 30-60 minutes and try again');
+        console.log('   💡 Tip: Run with --skip-check to force import anyway\n');
+        return false;
+      }
+
+      console.log(`   ⚠️  API error ${errorCode}: ${errorMsg}`);
+      return false;
+    }
+
+    if (data.results && data.results.length > 0) {
+      console.log('   ✅ API is responsive and not rate-limited\n');
+      return true;
+    }
+
+    console.log('   ⚠️  API returned empty result');
+    return false;
+  } catch (error) {
+    console.error('   ❌ Could not reach BibleGet.io API:', error.message);
+    return false;
+  }
+}
+
+/**
+ * Fetch verses from BibleGet.io API with intelligent retry on rate-limit
+ */
+async function fetchChapter(abbrev, chapter, retryCount = 0) {
   try {
     const url = `${API_BASE}?query=${abbrev}${chapter}&return=json&appid=${APP_ID}&version=${BIBLE_VERSION}`;
     const response = await fetch(url);
@@ -142,6 +194,28 @@ async function fetchChapter(abbrev, chapter) {
     }
 
     const data = await response.json();
+
+    // Handle errors in the errors array (BibleGet.io format)
+    if (data.errors && data.errors.length > 0) {
+      const errorCode = data.errors[0].errNum;
+
+      // Error 12 = Rate limited - retry with backoff
+      if (errorCode === 12) {
+        if (retryCount < 2) {
+          const backoffDelay = Math.min(DELAY_MS * (retryCount + 1), MAX_DELAY_MS);
+          console.log(`   ⏸️  Rate-limited! Backing off ${backoffDelay}ms...`);
+          await sleep(backoffDelay);
+          return fetchChapter(abbrev, chapter, retryCount + 1);
+        } else {
+          console.error(`   ❌ Still rate-limited after retries for ${abbrev} ${chapter}`);
+          return null;
+        }
+      }
+
+      // Handle other API errors
+      console.error(`   ⚠️  API error (${abbrev} ${chapter}): Error ${errorCode}`);
+      return null;
+    }
 
     if (!data.results || data.results.length === 0) {
       // BibleGet.io uses "results" not "passages"
@@ -172,6 +246,23 @@ function parseReference(reference) {
  */
 async function importBibleVerses() {
   console.log('\n📖 Bible Verse Importer (LUZZI Italian)\n');
+
+  // Check API health first
+  if (!SKIP_RATE_LIMIT_CHECK) {
+    const isHealthy = await checkAPIHealth();
+    if (!isHealthy) {
+      console.log('⛔ Import aborted due to API unavailability');
+      console.log('   Use --skip-check flag to force import anyway\n');
+      process.exit(0);
+    }
+  } else {
+    console.log('⏭️  Skipping API health check (--skip-check enabled)\n');
+  }
+
+  if (CHECK_ONLY) {
+    console.log('✅ API check complete. Exiting (--check-only)\n');
+    process.exit(0);
+  }
 
   const startTime = Date.now();
   let totalVerses = 0;
@@ -238,16 +329,39 @@ async function importBibleVerses() {
 
     console.log(`  ${bookInfo.chapters}/${bookInfo.chapters} ✓ (${versesForBook.length} verses)`);
 
-    // Batch insert verses for this book
+    // Batch insert verses for this book (skip existing ones)
     if (versesForBook.length > 0 && !DRY_RUN) {
       try {
-        // Insert in batches
+        let inserted = 0;
+        let skipped = 0;
+
+        // Insert in batches, skipping duplicates
         for (let i = 0; i < versesForBook.length; i += BATCH_SIZE) {
           const batch = versesForBook.slice(i, i + BATCH_SIZE);
-          await db.insert(schema.bibleVerses).values(batch);
-          totalVerses += batch.length;
+
+          for (const verse of batch) {
+            try {
+              await db.insert(schema.bibleVerses).values(verse);
+              inserted++;
+              totalVerses++;
+            } catch (err) {
+              // Skip if duplicate key error
+              if (err.code === '23505') {
+                skipped++;
+              } else {
+                throw err;
+              }
+            }
+          }
         }
-        console.log(`   ✅ Inserted ${versesForBook.length} verses\n`);
+
+        if (inserted > 0) {
+          console.log(`   ✅ Inserted ${inserted} verses`);
+        }
+        if (skipped > 0) {
+          console.log(`   ⏭️  Skipped ${skipped} existing verses`);
+        }
+        console.log();
       } catch (error) {
         const errorMsg = error?.message || JSON.stringify(error);
         errors.push(`${bookInfo.name}: Database insert failed - ${errorMsg}`);

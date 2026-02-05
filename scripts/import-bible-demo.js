@@ -13,7 +13,7 @@
 
 import { db } from '../db/db-config.ts';
 import * as schema from '../db/schema.ts';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 const CLEAN_MODE = process.argv.includes('--clean');
 
@@ -111,31 +111,56 @@ async function importDemo() {
   } else {
     console.log('📝 Inserting sample Bible verses...\n');
     try {
-      // Insert demo verses with proper structure
-      const versesToInsert = SAMPLE_VERSES.map(v => ({
-        bookId: v.bookId,
-        capitolo: v.capitolo,
-        versetto: v.versetto,
-        testo: v.testo,
-        testoLatin: null,
-        riferimento: v.reference,
-        slug: v.slug,
-        tags: [],
-        catechismRefs: [],
-        liturgyDates: [],
-        views: 0,
-        createdAt: new Date(),
-      }));
+      // Try to insert all verses - on duplicate key, update (no-op)
+      let inserted = 0;
+      let skipped = 0;
 
-      await db.insert(schema.bibleVerses).values(versesToInsert);
+      for (const v of SAMPLE_VERSES) {
+        const verseData = {
+          bookId: v.bookId,
+          capitolo: v.capitolo,
+          versetto: v.versetto,
+          testo: v.testo,
+          testoLatin: null,
+          riferimento: v.reference,
+          slug: v.slug,
+          tags: [],
+          catechismRefs: [],
+          liturgyDates: [],
+          views: 0,
+          createdAt: new Date(),
+        };
 
-      console.log(`✅ Inserted ${versesToInsert.length} demo verses\n`);
-      console.log('📍 Sample verses added:');
-      SAMPLE_VERSES.forEach(v => {
-        console.log(`   • ${v.reference}`);
-      });
+        try {
+          await db.insert(schema.bibleVerses).values(verseData);
+          inserted++;
+        } catch (err) {
+          // Skip if duplicate key error
+          if (err.code === '23505') {
+            skipped++;
+          } else {
+            throw err;
+          }
+        }
+      }
 
-      console.log('\n✨ Demo complete!\n');
+      if (inserted > 0) {
+        console.log(`✅ Inserted ${inserted} new demo verses\n`);
+        console.log('📍 Verses added:');
+        SAMPLE_VERSES.slice(0, inserted).forEach(v => {
+          console.log(`   • ${v.reference}`);
+        });
+      }
+
+      if (skipped > 0) {
+        console.log(`\n⏭️  Skipped ${skipped} verses that already exist\n`);
+      }
+
+      if (inserted === 0 && skipped > 0) {
+        console.log('✅ All demo verses already exist in database\n');
+      }
+
+      console.log('✨ Demo complete!\n');
       console.log('You can now test:');
       console.log('  • http://localhost:4321/bibbia/giovanni/3/16 - Giovanni 3:16');
       console.log('  • http://localhost:4321/bibbia/matteo/6/9 - Matteo 6:9 (Padre Nostro)');

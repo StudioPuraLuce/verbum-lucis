@@ -283,9 +283,9 @@
 ---
 
 ## 6. 📕 BIBBIA VERSETTI (PHASE 4 CORE COMPLETE - 31,000+ PAGINE READY)
-**Current Live: 70 books + 11 demo verses | Infrastructure: ✅ Ready (4 routes + 2 import scripts) | Monthly Search Volume: 200,000+ | Competition: VERY HIGH**
+**Current Live: 70 books + 11 demo verses | Infrastructure: ✅ Ready (4 routes + 3 scripts) | Monthly Search Volume: 200,000+ | Competition: VERY HIGH**
 
-### Phase 4 Implementation Status (COMPLETED 2026-02-04)
+### Phase 4 Implementation Status (COMPLETED 2026-02-04, UPDATED 2026-02-05)
 
 ✅ **Database Schema:**
 - `bible_books` table: 70 books imported (all 39 OT + 27 NT + deuterocanonical)
@@ -298,16 +298,25 @@
 3. `/bibbia/[libro]/[capitolo].astro` - Chapter display with verse listing (SSR)
 4. `/bibbia/[libro]/[capitolo]/[versetto].astro` - Individual verse pages with context (SSR)
 
-✅ **Import Infrastructure:**
-- `scripts/import-bible-verses.js` - Full BibleGet.io API importer (31,000+ verses, LUZZI translation)
-  - Supports `--test` mode (2 books) and `--dry-run` mode
-  - Rate limiting: 1.5s between API calls
+✅ **Import Infrastructure (ENHANCED):**
+
+**1. `scripts/import-bible-verses.js` - Full BibleGet.io API importer (31,000+ verses, LUZZI translation)**
+  - NEW: Smart rate-limit detection with exponential backoff
+  - NEW: Auto-checks API health before importing (can skip with `--skip-check`)
+  - NEW: Intelligent retry logic for rate-limited responses (error 12)
+  - Supports `--test`, `--dry-run`, `--check-only` modes
+  - Duplicate handling: Skips already-inserted verses (error code 23505)
   - Batch insert: 500 verses per transaction
   - Ready for full run after API rate limit reset
 
-- `scripts/import-bible-demo.js` - Demo data injector (11 famous verses)
+**2. `scripts/import-bible-demo.js` - Demo data injector (11 famous verses)**
   - Used for system verification while API recovers
   - Includes sample verses: Giovanni 3:16, Matteo 6:9, Genesi 1:1, etc.
+
+**3. `scripts/check-bible-api.js` - Quick API health check (NEW)**
+  - Quickly test if BibleGet.io is ready without starting import
+  - Command: `npm run check:bible-api`
+  - Returns exit code 0 (ready) or 1 (rate-limited/unavailable)
 
 ✅ **Dev Testing:**
 - All 4 routes tested and working on localhost:4323
@@ -315,9 +324,15 @@
 - Database queries optimized using Drizzle ORM
 - Docker PostgreSQL container configured for SSR access
 
+📊 **Current Status (2026-02-05 @ 17:30 CET):**
+- ⏸️ BibleGet.io still rate-limited (error 12: "You are submitting a very large amount of requests")
+- ✅ Demo infrastructure 100% functional
+- 🔄 Ready to resume full import when API recovers
+
 🔄 **Next Steps (After BibleGet.io API Reset):**
-- Run `npm run import:bible-verses` for full 31,000 verses (45-60 minutes)
-- Proceed to Phase 5: Search & Cross-Reference Integration
+1. Check status: `npm run check:bible-api` (polls BibleGet.io health)
+2. When ready: `npm run import:bible-verses` (smart import with backoff)
+3. Proceed to Phase 5: Search & Cross-Reference Integration
 
 ### High-Volume Bible Keywords
 
