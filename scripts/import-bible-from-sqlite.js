@@ -28,7 +28,9 @@ import * as schema from '../db/schema.ts';
 
 const TEST_MODE = process.argv.includes('--test');
 const DRY_RUN = process.argv.includes('--dry-run');
-const SQLITE_PATH = '/home/chris/Scrivania/CEI.SQLite3';
+// Try both local and container paths
+const SQLITE_PATH = process.env.SQLITE_PATH ||
+  (require('fs').existsSync('/app/CEI.SQLite3') ? '/app/CEI.SQLite3' : '/home/chris/Scrivania/CEI.SQLite3');
 const BATCH_SIZE = 1000;
 
 // Book name mapping from SQLite to our schema
