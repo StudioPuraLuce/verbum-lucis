@@ -13,42 +13,25 @@
  */
 
 import { db, bibleBooks } from '../../../db';
+import { eq } from 'drizzle-orm';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 
 // SSR Mode: Dynamic rendering from database queries
-// NOTE: Can enable prerender=true on production VPS where DB is accessible
 export const prerender = false;
 
-// Generate static paths for all Bible chapters (for future SSG)
-export async function getStaticPaths() {
-  const allBooks = await db.select().from(bibleBooks).orderBy((b) => b.ordine);
+// Get URL parameters
+const { libro, capitolo } = Astro.params;
+const chapter = parseInt(capitolo || '0');
 
-  const paths: Array<{
-    params: { libro: string; capitolo: string };
-    props: { book: typeof bibleBooks.$inferSelect; chapter: number };
-  }> = [];
-
-  for (const book of allBooks) {
-    for (let cap = 1; cap <= book.numeroCapitoli; cap++) {
-      paths.push({
-        params: { libro: book.slug, capitolo: cap.toString() },
-        props: { book, chapter: cap },
-      });
-    }
-  }
-
-  return paths;
-}
-
-interface Props {
-  book: typeof bibleBooks.$inferSelect;
-  chapter: number;
-}
-
-const { book, chapter } = Astro.props as Props;
+// Query database for the book
+const book = await db
+  .select()
+  .from(bibleBooks)
+  .where(eq(bibleBooks.slug, libro || ''))
+  .then((books) => books[0]);
 
 // Validate book and chapter exist
-if (!book || !chapter || chapter < 1 || chapter > book.numeroCapitoli) {
+if (!book || chapter < 1 || chapter > book.numeroCapitoli) {
   return Astro.redirect('/404');
 }
 

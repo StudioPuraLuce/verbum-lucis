@@ -11,27 +11,21 @@
  */
 
 import { db, bibleBooks } from '../../db';
+import { eq } from 'drizzle-orm';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 // SSR Mode: Dynamic rendering from database queries
-// NOTE: Can enable prerender=true on production VPS where DB is accessible
 export const prerender = false;
 
-// Generate static paths for all Bible books (for future SSG)
-export async function getStaticPaths() {
-  const allBooks = await db.select().from(bibleBooks).orderBy((b) => b.ordine);
+// Get URL parameter
+const { libro } = Astro.params;
 
-  return allBooks.map((book) => ({
-    params: { libro: book.slug },
-    props: { book },
-  }));
-}
-
-interface Props {
-  book: typeof bibleBooks.$inferSelect;
-}
-
-const { book } = Astro.props as Props;
+// Query database for the book
+const book = await db
+  .select()
+  .from(bibleBooks)
+  .where(eq(bibleBooks.slug, libro || ''))
+  .then((books) => books[0]);
 
 // Validate book exists
 if (!book) {
