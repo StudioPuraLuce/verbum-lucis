@@ -27,10 +27,20 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ed25519 $SSH_USER@$SSH_HOST << 'ENDSSH'
             set -e
+
+            # Create or update repo
+            if [ ! -d /opt/verbum-lucis ]; then
+              echo "📦 Cloning repository..."
+              mkdir -p /opt
+              cd /opt
+              git clone https://github.com/soliwalker/verbum-lucis.git
+            fi
+
             cd /opt/verbum-lucis
 
             echo "📥 Pulling latest code..."
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
 
             echo "🐳 Rebuilding Docker images..."
             docker compose build
