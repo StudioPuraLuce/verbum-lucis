@@ -12,7 +12,8 @@
  * - Print/Share functionality
  */
 
-import { db, bibleBooks } from '../../../db';
+import { getDb, bibleBooks } from '../../../db';
+const db = getDb(Astro.locals);
 import { eq } from 'drizzle-orm';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 

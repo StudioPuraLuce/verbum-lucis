@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { db, schema } from '../../db';
+import { getDb, schema } from '../../db';
+const db = getDb(Astro.locals);
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { eq } from 'drizzle-orm';

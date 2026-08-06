@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { db } from '../db';
+import { getDb } from '../db';
+const db = getDb(Astro.locals);
 
 export const prerender = false;
 

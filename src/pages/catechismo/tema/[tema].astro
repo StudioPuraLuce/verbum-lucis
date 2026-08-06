@@ -11,8 +11,12 @@
  * - Related prayers, saints, intentions
  */
 
-import { db } from '../../../db';
+import { getDb, catechism, prayers, saints } from '../../../db';
+import { sql, asc } from 'drizzle-orm';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+
+export const prerender = false;
+const db = getDb(Astro.locals);
 
 // Tema mapping - keys are URL-friendly slugs, values are display names + descriptions
 const CATECHISM_THEMES = {
@@ -155,53 +159,38 @@ const CATECHISM_THEMES = {
   },
 };
 
-// Generate static paths for all themes
-export async function getStaticPaths() {
-  return Object.keys(CATECHISM_THEMES).map((tema) => ({
-    params: { tema },
-  }));
-}
-
-interface Props {
-  params: { tema: string };
-}
-
-const { tema } = Astro.props.params as { tema: string };
+const { tema } = Astro.params as { tema: string };
 
 // Validate tema parameter
-if (!CATECHISM_THEMES[tema as keyof typeof CATECHISM_THEMES]) {
+if (!tema || !CATECHISM_THEMES[tema as keyof typeof CATECHISM_THEMES]) {
   return Astro.redirect('/404');
 }
 
 const themeInfo = CATECHISM_THEMES[tema as keyof typeof CATECHISM_THEMES];
 
-// Fetch all CCC paragraphs with this theme tag
+// Termini di ricerca derivati dal tema
+const temaWords = tema.replace(/-/g, ' ');
+const nameLike = `%${themeInfo.name.toLowerCase()}%`;
+
+// Punti CCC che citano il tema (nei tag JSON o nel testo)
 const catechismPoints = await db
   .select()
-  .from(db.schema.catechism)
-  .where((t) => {
-    // PostgreSQL JSONB array contains operator
-    return db.sql`${t.tags} @> '["${tema}"]'::jsonb`;
-  })
-  .orderBy((t) => t.numero);
+  .from(catechism)
+  .where(sql`lower(${catechism.tags}) LIKE ${'%' + temaWords + '%'} OR lower(${catechism.testo}) LIKE ${nameLike}`)
+  .orderBy(asc(catechism.numero))
+  .limit(50);
 
-// Fetch related prayers (from keywords)
+// Preghiere correlate (categoria/metadata)
 const relatedPrayers = await db
   .select()
-  .from(db.schema.prayers)
-  .where((t) => {
-    const lowerTema = tema.replace(/-/g, ' ');
-    return db.sql`
-      LOWER(${t.categoria}) LIKE ${`%${lowerTema}%`}
-      OR LOWER(${t.metadata}) LIKE ${`%${lowerTema}%`}
-    `;
-  })
+  .from(prayers)
+  .where(sql`lower(${prayers.categoria}) LIKE ${nameLike} OR lower(${prayers.metadata}) LIKE ${nameLike}`)
   .limit(5);
 
-// Fetch related saints (from patronage or title)
+// Santi correlati
 const relatedSaints = await db
   .select()
-  .from(db.schema.saints)
+  .from(saints)
   .limit(3);
 
 const pageTitle = `${themeInfo.name} - Catechismo della Chiesa Cattolica`;

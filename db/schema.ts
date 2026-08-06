@@ -1,123 +1,119 @@
-import {
-  pgTable, serial, text, date, timestamp,
-  integer, boolean, jsonb, unique
-} from 'drizzle-orm/pg-core';
+import { sqliteTable, text, integer, unique } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
+
+// Schema portato da Postgres (pg-core) a SQLite/D1 (sqlite-core).
+// Mappe: serial→integer autoincrement · jsonb→text json mode · date/timestamp→text · boolean→integer boolean.
+// Nomi tabella/colonna invariati per compatibilità con le query e i dati.
 
 // ─── SANTI ────────────────────────────────────────────
-export const saints = pgTable('saints', {
-  id: serial('id').primaryKey(),
+export const saints = sqliteTable('saints', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
   nome: text('nome').notNull(),
   nomeCompleto: text('nome_completo'),
   slug: text('slug').notNull().unique(),
   dataFesta: text('data_festa').notNull(),       // MM-DD
   biografia: text('geografia'),
   biografiaBreve: text('geografia_breve'),
-  patronoDi: jsonb('patrono_di').$type<string[]>().default([]),
+  patronoDi: text('patrono_di', { mode: 'json' }).$type<string[]>().default(sql`'[]'`),
   immagineUrl: text('immagine_url'),
   titolo: text('titolo'),
   epoca: text('epoca'),
   ricorrenza: text('ricorrenza'),
   popolarita: integer('popolarita').default(0),
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 // ─── PREGHIERE ────────────────────────────────────────
-export const prayers = pgTable('prayers', {
-  id: serial('id').primaryKey(),
+export const prayers = sqliteTable('prayers', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
   titolo: text('titolo').notNull(),
   slug: text('slug').notNull().unique(),
   testo: text('testo').notNull(),
   categoria: text('categoria').notNull(),
   occasione: text('occasione'),
   saintId: integer('saint_id').references(() => saints.id),
-  fonteUfficiale: boolean('fonte_ufficiale').default(false),
+  fonteUfficiale: integer('fonte_ufficiale', { mode: 'boolean' }).default(false),
   testoLatin: text('testo_latin'),
   popolarita: integer('popolarita').default(0),
   durata: integer('durata'),
-  metadata: jsonb('metadata').$type<{
+  metadata: text('metadata', { mode: 'json' }).$type<{
     keywords?: string[];
     whenToPray?: string;
     benefits?: string[];
   }>(),
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 // ─── DIOCESI ──────────────────────────────────────────
-export const dioceses = pgTable('dioceses', {
-  id: serial('id').primaryKey(),
+export const dioceses = sqliteTable('dioceses', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
   nome: text('nome').notNull(),
   slug: text('slug').notNull().unique(),
   codice: text('codice').notNull().unique(),       // IT-RM, IT-MI ...
   regione: text('regione'),
   regioneEcclesiastica: text('regione_ecclesiastica'),
   tipo: text('tipo'),                              // Arcidiocesi, Diocesi, Patriarcato
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-// ─── LITURGIA (nazionale) ─────────────────────────────
-export const liturgy = pgTable('liturgy', {
-  id: serial('id').primaryKey(),
-  data: date('data').notNull(),
+// ─── LITURGIA (nazionale + diocesana) ─────────────────
+export const liturgy = sqliteTable('liturgy', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  data: text('data').notNull(),                    // ISO date YYYY-MM-DD
   anno: integer('anno').notNull(),
   diocesiId: integer('diocesi_id').references(() => dioceses.id), // NULL = nazionale
   tempoLiturgico: text('tempo_liturgico').notNull(),
   domenicaSettimana: text('domenica_settimana'),
   coloreLiturgico: text('colore_liturgico').notNull(),
-  primaLettura: jsonb('prima_lettura').$type<{ riferimento: string; testo: string }>().notNull(),
-  salmoResponsoriale: jsonb('salmo_responsoriale').$type<{ riferimento: string; ritornello: string; testo: string }>().notNull(),
-  secondaLettura: jsonb('seconda_lettura').$type<{ riferimento: string; testo: string }>(),
-  vangelo: jsonb('vangelo').$type<{ riferimento: string; testo: string }>().notNull(),
-  santiDelGiorno: jsonb('santi_del_giorno').$type<number[]>().default([]),
+  primaLettura: text('prima_lettura', { mode: 'json' }).$type<{ riferimento: string; testo: string }>().notNull(),
+  salmoResponsoriale: text('salmo_responsoriale', { mode: 'json' }).$type<{ riferimento: string; ritornello: string; testo: string }>().notNull(),
+  secondaLettura: text('seconda_lettura', { mode: 'json' }).$type<{ riferimento: string; testo: string }>(),
+  vangelo: text('vangelo', { mode: 'json' }).$type<{ riferimento: string; testo: string }>().notNull(),
+  santiDelGiorno: text('santi_del_giorno', { mode: 'json' }).$type<number[]>().default(sql`'[]'`),
   meditazione: text('meditazione'),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-// Vincolo unico: una sola liturgia per data + diocesi
-// diocesiId NULL = nazionale
-pgTable('liturgy_unique', {
-  data: date('data').notNull(),
-  diocesiId: integer('diocesi_id'),
-}, (table) => ({
-  uniqueDataDiocesi: unique().on(table.data, table.diocesiId),
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
+}, (t) => ({
+  // una sola liturgia per data + diocesi (diocesiId NULL = nazionale)
+  uniqueDataDiocesi: unique().on(t.data, t.diocesiId),
 }));
 
 // ─── NOVENE ───────────────────────────────────────────
-export const novenas = pgTable('novenas', {
-  id: serial('id').primaryKey(),
+export const novenas = sqliteTable('novenas', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
   titolo: text('titolo').notNull(),
   slug: text('slug').notNull().unique(),
   saintId: integer('saint_id').references(() => saints.id),
   descrizione: text('descrizione'),
   quandoPregare: text('quando_pregare'),
-  intenzioni: jsonb('intenzioni').$type<string[]>().default([]),
-  giorniTesti: jsonb('giorni_testi').$type<{
+  intenzioni: text('intenzioni', { mode: 'json' }).$type<string[]>().default(sql`'[]'`),
+  giorniTesti: text('giorni_testi', { mode: 'json' }).$type<{
     giorno: number;
     titolo: string;
     preghiera: string;
   }[]>().notNull(),
   preghieraFinale: text('preghiera_finale'),
   popolarita: integer('popolarita').default(0),
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 // ─── ANGELI ───────────────────────────────────────────
-export const angels = pgTable('angels', {
-  id: serial('id').primaryKey(),
+export const angels = sqliteTable('angels', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
   nome: text('nome').notNull(),
   slug: text('slug').notNull().unique(),
   nomeCompleto: text('nome_completo'),
   categoria: text('categoria').notNull(),
-  dataFesta: date('data_festa'),
+  dataFesta: text('data_festa'),
   descrizione: text('descrizione').notNull(),
   ruolo: text('ruolo'),
-  scritture: jsonb('scritture').$type<string[]>().default([]),
+  scritture: text('scritture', { mode: 'json' }).$type<string[]>().default(sql`'[]'`),
   immagineUrl: text('immagine_url'),
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 // ─── BENEDIZIONI ──────────────────────────────────────
-export const blessings = pgTable('blessings', {
-  id: serial('id').primaryKey(),
+export const blessings = sqliteTable('blessings', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
   titolo: text('titolo').notNull(),
   slug: text('slug').notNull().unique(),
   categoria: text('categoria').notNull(),
@@ -125,40 +121,40 @@ export const blessings = pgTable('blessings', {
   testo: text('testo').notNull(),
   ministro: text('ministro'),
   rituale: text('rituale'),
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 // ─── CATECHISMO (CCC) ─────────────────────────────────
-export const catechism = pgTable('catechism', {
-  id: serial('id').primaryKey(),
+export const catechism = sqliteTable('catechism', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
   numero: integer('numero').notNull().unique(),   // 1-2865
   parte: text('parte'),                           // I, II, III, IV
   sezione: text('sezione'),
   capitolo: text('capitolo'),
   articolo: text('articolo'),
   testo: text('testo').notNull(),
-  riferimenti: jsonb('riferimenti').$type<string[]>().default([]),  // citazioni bibliche
-  tags: jsonb('tags').$type<string[]>().default([]),                 // temi (es. "preghiera", "sacramento")
-  createdAt: timestamp('created_at').defaultNow(),
+  riferimenti: text('riferimenti', { mode: 'json' }).$type<string[]>().default(sql`'[]'`),  // citazioni bibliche
+  tags: text('tags', { mode: 'json' }).$type<string[]>().default(sql`'[]'`),                 // temi
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 // ─── INTENZIONI (Intent-Based Pages) ──────────────────
-export const intentions = pgTable('intentions', {
-  id: serial('id').primaryKey(),
+export const intentions = sqliteTable('intentions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
   titolo: text('titolo').notNull(),               // "mia madre", "trovare lavoro"
   slug: text('slug').notNull().unique(),           // "mia-madre", "trovare-lavoro"
   categoria: text('categoria').notNull(),          // salute, famiglia, lavoro, fede
   descrizione: text('descrizione'),
-  preghiereSuggerite: jsonb('preghiere_suggerite').$type<number[]>().default([]),  // FK → prayers
-  santiIntercedenti: jsonb('santi_intercedenti').$type<number[]>().default([]),    // FK → saints
-  catechismoPunti: jsonb('catechismo_punti').$type<number[]>().default([]),        // FK → catechism
-  createdAt: timestamp('created_at').defaultNow(),
+  preghiereSuggerite: text('preghiere_suggerite', { mode: 'json' }).$type<number[]>().default(sql`'[]'`),  // FK → prayers
+  santiIntercedenti: text('santi_intercedenti', { mode: 'json' }).$type<number[]>().default(sql`'[]'`),    // FK → saints
+  catechismoPunti: text('catechismo_punti', { mode: 'json' }).$type<number[]>().default(sql`'[]'`),        // FK → catechism
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 // ─── PAGINE SACRE (Pagina Sacra Daily) ───────────────
-export const pagineSacre = pgTable('pagine_sacre', {
-  id: serial('id').primaryKey(),
-  data: date('data').notNull().unique(),
+export const pagineSacre = sqliteTable('pagine_sacre', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  data: text('data').notNull().unique(),           // ISO date
   liturgyId: integer('liturgy_id').references(() => liturgy.id),
   reOggi: text('re_oggi').notNull(),
   fuocoNelCorpo: text('fuoco_nel_corpo').notNull(),
@@ -170,12 +166,12 @@ export const pagineSacre = pgTable('pagine_sacre', {
   camminoIdentita: text('cammino_identita').notNull(),
   fraseDiario: text('frase_diario').notNull(),
   views: integer('views').default(0),
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 // ─── BIBBIA (Bible) ───────────────────────────────────
-export const bibleBooks = pgTable('bible_books', {
-  id: serial('id').primaryKey(),
+export const bibleBooks = sqliteTable('bible_books', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
   nome: text('nome').notNull(),                    // "Giovanni"
   nomeCompleto: text('nome_completo'),             // "Vangelo secondo Giovanni"
   slug: text('slug').notNull().unique(),           // "giovanni"
@@ -185,13 +181,13 @@ export const bibleBooks = pgTable('bible_books', {
   numeroCapitoli: integer('numero_capitoli').notNull(),
   autore: text('autore'),                          // "Giovanni Apostolo"
   contestoStorico: text('contesto_storico'),
-  temiPrincipali: jsonb('temi_principali').$type<string[]>().default([]),
+  temiPrincipali: text('temi_principali', { mode: 'json' }).$type<string[]>().default(sql`'[]'`),
   ordine: integer('ordine').notNull(),             // Display order (1-73)
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const bibleVerses = pgTable('bible_verses', {
-  id: serial('id').primaryKey(),
+export const bibleVerses = sqliteTable('bible_verses', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
   bookId: integer('book_id').notNull().references(() => bibleBooks.id),
   capitolo: integer('capitolo').notNull(),
   versetto: integer('versetto').notNull(),
@@ -199,18 +195,12 @@ export const bibleVerses = pgTable('bible_verses', {
   testoLatin: text('testo_latin'),                 // Latin Vulgate (optional)
   riferimento: text('riferimento').notNull(),      // "Giovanni 3:16"
   slug: text('slug').notNull().unique(),           // "giovanni/3/16"
-  tags: jsonb('tags').$type<string[]>().default([]), // ["amore", "salvezza"]
-  catechismRefs: jsonb('catechism_refs').$type<number[]>().default([]), // [214, 221]
-  liturgyDates: jsonb('liturgy_dates').$type<string[]>().default([]),   // ["2026-03-15"]
+  tags: text('tags', { mode: 'json' }).$type<string[]>().default(sql`'[]'`),
+  catechismRefs: text('catechism_refs', { mode: 'json' }).$type<number[]>().default(sql`'[]'`),
+  liturgyDates: text('liturgy_dates', { mode: 'json' }).$type<string[]>().default(sql`'[]'`),
   views: integer('views').default(0),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-// Unique constraint: one verse per book-chapter-verse
-pgTable('bible_verses_unique', {
-  bookId: integer('book_id').notNull(),
-  capitolo: integer('capitolo').notNull(),
-  versetto: integer('versetto').notNull(),
-}, (table) => ({
-  uniqueVerse: unique().on(table.bookId, table.capitolo, table.versetto),
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
+}, (t) => ({
+  // un versetto per libro-capitolo-versetto
+  uniqueVerse: unique().on(t.bookId, t.capitolo, t.versetto),
 }));

@@ -1,31 +1,26 @@
-// Load environment variables FIRST
-import * as dotenv from 'dotenv';
-dotenv.config();
-
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/d1';
 import * as schema from './schema';
 
-const connectionString = process.env.DATABASE_URL
-  || 'postgresql://verbum_user:changeme123@localhost:5432/verbum_lucis';
+export { schema };
 
-// Skip database connection during build if DATABASE_URL looks like a test/placeholder
-const shouldSkipDb = connectionString.includes('test:test') ||
-                     connectionString.includes('localhost') &&
-                     process.env.NODE_ENV === 'production';
-
-let client: any;
-let db: any;
-
-if (!shouldSkipDb) {
-  try {
-    client = postgres(connectionString);
-    db = drizzle(client, { schema });
-  } catch (err) {
-    console.warn('⚠️  Database connection failed, continuing in read-only mode');
-    // Create a dummy db object to prevent errors
-    db = null;
+/**
+ * Restituisce l'istanza Drizzle legata al binding D1 della richiesta corrente.
+ * Su Cloudflare i binding vivono in `Astro.locals.runtime.env` (in dev via platformProxy).
+ *
+ * Uso in una pagina .astro:
+ *   import { getDb } from '../db';
+ *   const db = getDb(Astro.locals);
+ *   const santo = await db.query.saints.findFirst({ ... });
+ */
+export function getDb(locals: App.Locals) {
+  const DB = locals?.runtime?.env?.DB;
+  if (!DB) {
+    throw new Error(
+      'Binding D1 "DB" mancante in locals.runtime.env. ' +
+      'Verifica wrangler.toml e platformProxy in astro.config.mjs.'
+    );
   }
+  return drizzle(DB, { schema });
 }
 
-export { client, db };
+export type Db = ReturnType<typeof getDb>;
