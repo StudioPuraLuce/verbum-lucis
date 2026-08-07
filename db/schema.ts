@@ -160,9 +160,12 @@ export const pagineSacre = sqliteTable('pagine_sacre', {
   fuocoNelCorpo: text('fuoco_nel_corpo').notNull(),
   presenzaNelGiorno: text('presenza_nel_giorno').notNull(),
   regnoNellaCarne: text('regno_nella_carne').notNull(),
-  rosarioInteriore: text('rosario_interiore').notNull(),
-  gestoReale: text('gesto_reale').notNull(),
-  avversario: text('avversario').notNull(),
+  rosarioInteriore: text('rosario_interiore', { mode: 'json' }).notNull()
+    .$type<{ misteroIspirato: string; misteroProgressivo: string; preghiera: string }>(),
+  gestoReale: text('gesto_reale', { mode: 'json' }).notNull()
+    .$type<{ titolo: string; spiegazione: string; esempi: string[]; fraseDaDire: string }>(),
+  avversario: text('avversario', { mode: 'json' }).notNull()
+    .$type<{ tentazioni: string[]; antidoto: string }>(),
   camminoIdentita: text('cammino_identita').notNull(),
   fraseDiario: text('frase_diario').notNull(),
   views: integer('views').default(0),

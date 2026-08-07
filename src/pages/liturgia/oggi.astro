@@ -4,6 +4,7 @@ import { getDb } from '../../db';
 const db = getDb(Astro.locals);
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { getLiturgicalInfo } from '../../lib/liturgy';
 
 export const prerender = false;
 
@@ -26,6 +27,18 @@ const meseGiorno = format(new Date(), 'MM-dd');
 const santiPerFesta = await db.query.saints.findMany({
   where: (t, { eq }) => eq(t.dataFesta, meseGiorno),
 });
+
+// Giorno liturgico calcolato dal motore calendario (sempre disponibile, senza AI né API)
+const info = getLiturgicalInfo(new Date());
+const COLORI: Record<string, { bg: string; fg: string }> = {
+  Verde: { bg: '#dcfce7', fg: '#166534' },
+  Viola: { bg: '#ede9fe', fg: '#5b21b6' },
+  Bianco: { bg: '#f1f5f9', fg: '#334155' },
+  Rosso: { bg: '#fee2e2', fg: '#991b1b' },
+  Oro: { bg: '#fef9c3', fg: '#854d0e' },
+  Nero: { bg: '#e5e7eb', fg: '#111827' },
+};
+const col = COLORI[info.color] ?? COLORI.Verde;
 ---
 
 <BaseLayout
@@ -38,19 +51,17 @@ const santiPerFesta = await db.query.saints.findMany({
       <p class="text-xl text-muted-foreground capitalize">{oggiFormat}</p>
     </header>
 
+    <!-- Giorno liturgico (motore calendario — sempre disponibile) -->
+    <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
+      <span class="px-4 py-2 rounded-full text-sm font-semibold" style={`background:${col.bg};color:${col.fg}`}>
+        {info.color}
+      </span>
+      <span class="text-sm text-muted-foreground">Tempo di {info.season}</span>
+      {info.title && <span class="text-sm font-semibold">{info.title}</span>}
+    </div>
+
     {liturgia ? (
       <article>
-        <!-- Info liturgica -->
-        <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
-          <span class={`px-4 py-2 rounded-full text-sm font-semibold liturgical-color-${liturgia.coloreLiturgico}`}>
-            {liturgia.coloreLiturgico.charAt(0).toUpperCase() + liturgia.coloreLiturgico.slice(1)}
-          </span>
-          <span class="text-sm text-muted-foreground">{liturgia.tempoLiturgico}</span>
-          {liturgia.domenicaSettimana && (
-            <span class="text-sm font-semibold">{liturgia.domenicaSettimana}</span>
-          )}
-        </div>
-
         <!-- Prima Lettura -->
         <section class="mb-8">
           <div class="rounded-lg border bg-card p-6">
@@ -96,10 +107,10 @@ const santiPerFesta = await db.query.saints.findMany({
       <div class="text-center py-12">
         <p class="text-4xl mb-4">📖</p>
         <p class="text-lg text-muted-foreground mb-4">
-          La liturgia di oggi non è ancora disponibile.
+          Le letture complete di oggi saranno disponibili a breve.
         </p>
         <p class="text-sm text-muted-foreground">
-          Le letture vengono aggiornate quotidianamente.
+          Intanto trovi qui sopra il giorno liturgico e i santi di oggi.
         </p>
       </div>
     )}

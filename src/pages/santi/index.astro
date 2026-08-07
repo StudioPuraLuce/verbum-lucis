@@ -5,18 +5,31 @@ const db = getDb(Astro.locals);
 
 export const prerender = false;
 
-const santi = await db.query.saints.findMany({
-  orderBy: (saints, { asc }) => [asc(saints.nome)],
-});
+const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+function festaLabel(mmdd: string | null): string {
+  if (!mmdd) return '';
+  const [mm, dd] = mmdd.split('-').map(Number);
+  return mm && dd ? `${dd} ${MESI[mm - 1] ?? ''}`.trim() : mmdd;
+}
+// Nome senza onorifico (San/Santa/Sant'/Beato…), per indice e ordinamento
+function nomeChiave(nome: string): string {
+  return nome
+    .replace(/^(santissim[ao]\s+|sant['’]\s*|santa\s+|santo\s+|san\s+|beat[ao]\s+|beati\s+|ss\.?\s+|s\.\s+)/i, '')
+    .trim();
+}
 
-// Raggruppa per lettera iniziale
+const santiRaw = await db.query.saints.findMany();
+const santi = santiRaw
+  .map((s) => ({ ...s, chiave: nomeChiave(s.nome), festa: festaLabel(s.dataFesta) }))
+  .sort((a, b) => a.chiave.localeCompare(b.chiave, 'it'));
+
+// Raggruppa per lettera iniziale del nome distintivo
 const grouped: Record<string, typeof santi> = {};
 for (const santo of santi) {
-  const letter = santo.nome.charAt(0).toUpperCase();
-  if (!grouped[letter]) grouped[letter] = [];
-  grouped[letter].push(santo);
+  const letter = (santo.chiave.charAt(0) || santo.nome.charAt(0)).toUpperCase();
+  (grouped[letter] ??= []).push(santo);
 }
-const letters = Object.keys(grouped).sort();
+const letters = Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'it'));
 ---
 
 <BaseLayout
@@ -57,7 +70,7 @@ const letters = Object.keys(grouped).sort();
               <div>
                 <h3 class="font-bold">{santo.nome}</h3>
                 {santo.titolo && <p class="text-sm text-muted-foreground">{santo.titolo}</p>}
-                <p class="text-xs text-muted-foreground mt-1">Festa: {santo.dataFesta}</p>
+                <p class="text-xs text-muted-foreground mt-1">Festa: {santo.festa}</p>
               </div>
             </a>
           ))}
