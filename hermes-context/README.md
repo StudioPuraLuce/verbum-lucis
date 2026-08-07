@@ -25,6 +25,8 @@ Il materiale è depositato qui perché **Verbum Lucis è il progetto spirituale-
 | `04-QUARTA-VIA-UOMO-ASTUTO.md` | Nota sulla Via dell'Uomo Astuto della Quarta Via — cornice teorica di Hermes come *metis* digitale. |
 | `05-CONVERSATION-2026-05-14.md` | Trascrizione integrale della sessione del 14 maggio 2026, formattata leggibile. |
 | `06-TRANSCRIPT-PRIOR-2026-05-13.md` | Trascrizione della sessione precedente (compact al mattino del 14/5), da cui la sessione parte. |
+| `07-CORPUS-DRIVE-CENSITO.md` | Censimento dei documenti Drive letti (Lectio Alchemiche, Ottagono, Dodici, Sposa Alchemica, Beatitudini, Playbook, La Forgia, ecc.) con contenuti chiave riportati. |
+| `08-STRUTTURE-TEOLOGICHE.md` | Griglie ricorrenti che appaiono trasversalmente in tutto il corpus: [G][R][C], Idrogeni, Ione, Tampone, Nigredo/Albedo, Ottagono, Dodici, Correlazioni Quarta Via ↔ Cristianesimo, ecc. Riferimento rapido per nuove sessioni. |
 
 ## Come usare questi file
 
@@ -34,6 +36,8 @@ Quando apri una nuova conversazione con Claude (o altro AI) su questi temi:
 2. **Se stai configurando Hermes:** usa `01-HERMES-SOUL.md`.
 3. **Se stai lavorando al vault Obsidian:** usa `02-VAULT-THEOSIS-PLAN.md` + `03-NUMBERS.md`.
 4. **Se serve la storia diagnostica completa** (nodo Wayne, μικροψυχία, ecc.): `05-CONVERSATION-2026-05-14.md` + `06-TRANSCRIPT-PRIOR-2026-05-13.md`.
+5. **Se serve accesso al contenuto del corpus spirituale letto** (Lectio, Ottagono, Dodici, ecc.): `07-CORPUS-DRIVE-CENSITO.md`.
+6. **Se stai riprendendo il lavoro su strutture teologico-operative** (Idrogeni, Nigredo/Albedo, tampone, correlazioni Quarta Via ↔ Cristianesimo): `08-STRUTTURE-TEOLOGICHE.md`.
 
 ## Regole permanenti (non negoziabili)
 
