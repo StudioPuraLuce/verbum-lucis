@@ -77,7 +77,7 @@ export async function fetchNationalCalendar(year: number): Promise<LitCalRespons
  * Fetch calendario diocesano per un anno
  * @param diocesiCode — es. "IT-RM", "IT-MI"
  */
-export async function fetchDiocesan Calendar(diocesiCode: string, year: number): Promise<LitCalResponse> {
+export async function fetchDiocesanCalendar(diocesiCode: string, year: number): Promise<LitCalResponse> {
   const url = `${BASE_URL}/calendar/diocese/${diocesiCode}/${year}?returntype=json`;
   const res = await fetch(url);
 
@@ -100,7 +100,7 @@ export async function fetchDayLiturgy(date: string): Promise<LitCalCelebration |
  */
 export async function fetchDiocesanDay(diocesiCode: string, date: string): Promise<LitCalCelebration | null> {
   const year = new Date(date).getFullYear();
-  const calendar = await fetchDiocesan Calendar(diocesiCode, year);
+  const calendar = await fetchDiocesanCalendar(diocesiCode, year);
 
   return calendar.celebrations.find(c => c.date === date) || null;
 }

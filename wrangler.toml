@@ -27,10 +27,13 @@ id = "00000000000000000000000000000001"
 binding = "CACHE"
 id = "00000000000000000000000000000002"
 
-# ─── R2 / AI (fase 1D) ────────────────────────────────
+# ─── AI (fase 1D — generatore Pagina Sacra) ───────────
+# Binding Workers AI. Instradato sul gateway "verbum-lucis"
+# (Fatturazione unificata) direttamente nel codice del generatore.
+[ai]
+binding = "AI"
+
+# ─── R2 (fase 1D — media generati) ────────────────────
 # [[r2_buckets]]
 # binding = "MEDIA"
 # bucket_name = "verbum-lucis-media"
-#
-# [ai]
-# binding = "AI"

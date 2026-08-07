@@ -75,3 +75,6 @@ data/*.csv.processed
 # Test coverage
 coverage/
 .nyc_output/
+
+# Secret locali Cloudflare (token gateway, ecc.) — MAI committare
+.dev.vars

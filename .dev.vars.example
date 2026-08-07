@@ -1,0 +1,18 @@
+# ─── Template variabili locali per il generatore Pagina Sacra ───
+# Copia questo file in `.dev.vars` (già gitignorato) e riempi i valori.
+# NON committare `.dev.vars`.
+
+# Bearer che protegge l'endpoint /api/genera-pagina-sacra.
+# Genera un valore casuale, es: openssl rand -hex 24
+GEN_SECRET="metti-qui-un-valore-casuale-lungo"
+
+# Token del gateway AI autenticato "verbum-lucis" (dashboard: AI Gateway ->
+# verbum-lucis -> Crea token di autenticazione). Serve al DEV LOCALE per
+# autenticare le chiamate al gateway. In produzione dal Worker e' automatico.
+CF_AIG_TOKEN="metti-qui-il-token-del-gateway"
+
+# (Opzionale) override del modello. Default nel codice: anthropic/claude-sonnet-4.6
+# GEN_MODEL="anthropic/claude-opus-4.8"
+
+# (Opzionale) slug gateway. Default nel codice: verbum-lucis
+# AI_GATEWAY_NAME="verbum-lucis"
