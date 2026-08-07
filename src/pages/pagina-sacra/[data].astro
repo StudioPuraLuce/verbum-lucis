@@ -1,0 +1,91 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PaginaSacraArticle from '../../components/PaginaSacraArticle.astro';
+import { getDb, schema } from '../../db';
+import { getLiturgicalInfo } from '../../lib/liturgy';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
+import { eq } from 'drizzle-orm';
+
+export const prerender = false;
+
+const { data: dataParam } = Astro.params;
+const oggi = new Date().toISOString().split('T')[0];
+
+// Data odierna: canonicalizza su /oggi
+if (dataParam === oggi) return Astro.redirect('/pagina-sacra/oggi');
+if (!dataParam || !/^\d{4}-\d{2}-\d{2}$/.test(dataParam)) return Astro.redirect('/pagina-sacra/oggi');
+
+const db = getDb(Astro.locals);
+let paginaSacra = null;
+try {
+  paginaSacra = await db.query.pagineSacre.findFirst({
+    where: (t, { eq }) => eq(t.data, dataParam),
+  });
+} catch { paginaSacra = null; }
+
+const dObj = new Date(dataParam + 'T00:00:00');
+const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+const dataUmana = cap(format(dObj, 'EEEE d MMMM yyyy', { locale: it }));
+
+const prev = new Date(dObj); prev.setDate(dObj.getDate() - 1);
+const next = new Date(dObj); next.setDate(dObj.getDate() + 1);
+const fmt = (x: Date) => x.toISOString().split('T')[0];
+
+let liturgia = null;
+let accent = '#a6792f';
+let coloreLabel: string | null = null;
+let tempoLabel: string | null = null;
+if (paginaSacra) {
+  liturgia = paginaSacra.liturgyId
+    ? await db.query.liturgy.findFirst({ where: (t, { eq }) => eq(t.id, paginaSacra.liturgyId!) })
+    : null;
+  try {
+    await db.update(schema.pagineSacre)
+      .set({ views: (paginaSacra.views || 0) + 1 })
+      .where(eq(schema.pagineSacre.id, paginaSacra.id));
+  } catch {}
+  const info = getLiturgicalInfo(dObj);
+  const ACCENT: Record<string, string> = {
+    Verde: '#3f7a4e', Viola: '#6a4a94', Bianco: '#a6792f', Oro: '#a6792f',
+    Rosso: '#9a2f2a', Rosa: '#b96b86', Nero: '#3a3a3a',
+  };
+  accent = ACCENT[info.color] ?? '#a6792f';
+  coloreLabel = info.color;
+  tempoLabel = info.season === 'Ordinario' ? 'Tempo Ordinario' : `Tempo di ${info.season}`;
+}
+---
+
+<BaseLayout
+  title={`Pagina Sacra — ${dataUmana}`}
+  description={`La Pagina Sacra di ${dataUmana}: Vangelo incarnato, Fuoco nel corpo, Regno nella carne.`}
+>
+  {paginaSacra ? (
+    <PaginaSacraArticle
+      reOggi={paginaSacra.reOggi}
+      fuocoNelCorpo={paginaSacra.fuocoNelCorpo}
+      presenzaNelGiorno={paginaSacra.presenzaNelGiorno}
+      regnoNellaCarne={paginaSacra.regnoNellaCarne}
+      rosarioInteriore={paginaSacra.rosarioInteriore}
+      gestoReale={paginaSacra.gestoReale}
+      avversario={paginaSacra.avversario}
+      camminoIdentita={paginaSacra.camminoIdentita}
+      fraseDiario={paginaSacra.fraseDiario}
+      dataUmana={dataUmana}
+      tempoLabel={tempoLabel}
+      coloreLabel={coloreLabel}
+      accent={accent}
+      vangeloRif={liturgia?.vangelo?.riferimento ?? null}
+      vangeloTesto={liturgia?.vangelo?.testo ?? null}
+      prevHref={`/pagina-sacra/${fmt(prev)}`}
+      nextHref={`/pagina-sacra/${fmt(next)}`}
+    />
+  ) : (
+    <div class="max-w-xl mx-auto text-center py-20">
+      <div class="text-5xl mb-6" style="color:#a6792f">☩</div>
+      <h1 class="text-3xl font-serif mb-3">Nessuna Pagina Sacra per {dataUmana}</h1>
+      <p class="text-muted-foreground mb-8">Questo giorno non è ancora stato scritto.</p>
+      <a href="/pagina-sacra/oggi" class="text-primary hover:underline">→ Vai alla Pagina Sacra di oggi</a>
+    </div>
+  )}
+</BaseLayout>

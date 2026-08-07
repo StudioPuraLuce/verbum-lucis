@@ -1,0 +1,372 @@
+---
+/**
+ * Pagina Sacra — trattamento "Breviario Reale".
+ * Dispositivo firma: rubricazione (etichette in rosso liturgico, come le
+ * rubriche dei messali) + colore liturgico del giorno come accento variabile
+ * + capolettera miniato. Colonna unica contemplativa, tipografia garalde.
+ *
+ * Riusabile da pagina-sacra/oggi.astro e dalla futura [data].astro.
+ */
+interface RosarioInteriore { misteroIspirato: string; misteroProgressivo: string; preghiera: string }
+interface GestoReale { titolo: string; spiegazione: string; esempi: string[]; fraseDaDire: string }
+interface Avversario { tentazioni: string[]; antidoto: string }
+
+interface Props {
+  reOggi: string;
+  fuocoNelCorpo: string;
+  presenzaNelGiorno: string;
+  regnoNellaCarne: string;
+  rosarioInteriore: RosarioInteriore;
+  gestoReale: GestoReale;
+  avversario: Avversario;
+  camminoIdentita: string;
+  fraseDiario: string;
+  dataUmana: string;                 // "Venerdì 7 Agosto 2026"
+  tempoLabel?: string | null;        // "Tempo Ordinario · Anno C"
+  coloreLabel?: string | null;       // "Verde"
+  accent?: string;                   // hex del colore liturgico del giorno
+  vangeloRif?: string | null;
+  vangeloTesto?: string | null;
+  prevHref?: string | null;
+  nextHref?: string | null;
+}
+
+const {
+  reOggi, fuocoNelCorpo, presenzaNelGiorno, regnoNellaCarne,
+  rosarioInteriore, gestoReale, avversario, camminoIdentita, fraseDiario,
+  dataUmana, tempoLabel, coloreLabel, accent = '#a6792f',
+  vangeloRif, vangeloTesto, prevHref, nextHref,
+} = Astro.props;
+---
+
+<article class="sacra" style={`--accent:${accent}`}>
+
+  <!-- ─── Masthead (intestazione del giorno, stile breviario) ─── -->
+  <header class="masthead">
+    <div class="seal" aria-hidden="true">☩</div>
+    <p class="rubrica rubrica--kicker">Pagina Sacra</p>
+    <h1 class="masthead-day">{dataUmana}</h1>
+    {(tempoLabel || coloreLabel) && (
+      <p class="masthead-meta">
+        {tempoLabel}
+        {tempoLabel && coloreLabel && <span class="dot" aria-hidden="true">·</span>}
+        {coloreLabel && <span class="colore-tag"><span class="colore-dot" aria-hidden="true"></span>{coloreLabel}</span>}
+      </p>
+    )}
+    <p class="motto">Fuoco nel corpo &middot; Presenza nel giorno &middot; Regno nella carne</p>
+  </header>
+
+  <!-- ─── I. Il Re oggi (capolettera miniato) ─── -->
+  <section class="movimento">
+    <p class="rubrica">Il Re oggi</p>
+    <div class="prosa prosa--lead" set:html={reOggi} />
+  </section>
+
+  <!-- ─── Il Vangelo del giorno (se disponibile) ─── -->
+  {vangeloRif && vangeloTesto && (
+    <section class="movimento vangelo">
+      <p class="rubrica">Il Vangelo &mdash; <span class="rif">{vangeloRif}</span></p>
+      <blockquote class="scriptura">{vangeloTesto}</blockquote>
+    </section>
+  )}
+
+  <div class="ornamento" aria-hidden="true">✦</div>
+
+  <!-- ─── Fuoco nel corpo ─── -->
+  <section class="movimento">
+    <p class="rubrica">Fuoco nel corpo</p>
+    <div class="prosa" set:html={fuocoNelCorpo} />
+  </section>
+
+  <!-- ─── Presenza nel giorno ─── -->
+  <section class="movimento">
+    <p class="rubrica">Presenza nel giorno</p>
+    <div class="prosa" set:html={presenzaNelGiorno} />
+  </section>
+
+  <!-- ─── Regno nella carne ─── -->
+  <section class="movimento">
+    <p class="rubrica">Regno nella carne</p>
+    <div class="prosa" set:html={regnoNellaCarne} />
+  </section>
+
+  <div class="ornamento" aria-hidden="true">✦</div>
+
+  <!-- ─── Rosario Interiore ─── -->
+  <section class="movimento">
+    <p class="rubrica">Rosario interiore</p>
+    <div class="inserto">
+      <dl class="misteri">
+        <dt>Mistero ispirato</dt>
+        <dd>{rosarioInteriore.misteroIspirato}</dd>
+        <dt>Mistero progressivo</dt>
+        <dd>{rosarioInteriore.misteroProgressivo}</dd>
+      </dl>
+      <blockquote class="oratio">{rosarioInteriore.preghiera}</blockquote>
+    </div>
+  </section>
+
+  <!-- ─── Gesto Reale del Giorno ─── -->
+  <section class="movimento">
+    <p class="rubrica">Gesto reale del giorno</p>
+    <div class="inserto inserto--gesto">
+      <h3 class="gesto-titolo">{gestoReale.titolo}</h3>
+      <p class="gesto-spieg">{gestoReale.spiegazione}</p>
+      <ul class="esempi">
+        {gestoReale.esempi.map((e) => <li>{e}</li>)}
+      </ul>
+      <p class="sussurro"><span class="rubrica rubrica--inline">Poi sussurra</span>&laquo;{gestoReale.fraseDaDire}&raquo;</p>
+    </div>
+  </section>
+
+  <!-- ─── L'Avversario oggi potrebbe… ─── -->
+  <section class="movimento">
+    <p class="rubrica">L&rsquo;avversario oggi potrebbe</p>
+    <ul class="tentazioni">
+      {avversario.tentazioni.map((t) => <li>{t}</li>)}
+    </ul>
+    <p class="antidoto"><span class="rubrica rubrica--inline">Antidoto</span>&laquo;{avversario.antidoto}&raquo;</p>
+  </section>
+
+  <div class="ornamento" aria-hidden="true">✦</div>
+
+  <!-- ─── Oggi cammino come chi… ─── -->
+  <section class="movimento cammino">
+    <p class="rubrica">Oggi cammino come chi</p>
+    <p class="cammino-testo">{camminoIdentita}</p>
+  </section>
+
+  <!-- ─── Frase da incidere nel Diario (firma) ─── -->
+  <section class="diario">
+    <p class="rubrica rubrica--center">Da incidere nel diario</p>
+    <blockquote class="frase-diario">&laquo;{fraseDiario}&raquo;</blockquote>
+  </section>
+
+  <!-- ─── Navigazione ─── -->
+  <nav class="sacra-nav">
+    <a href={prevHref || '#'} class:list={["nav-link", { disabled: !prevHref }]}>&larr; Ieri</a>
+    <a href="/liturgia/oggi" class="nav-center">Liturgia completa</a>
+    <a href={nextHref || '#'} class:list={["nav-link", { disabled: !nextHref }]}>Domani &rarr;</a>
+  </nav>
+
+  <footer class="sacra-foot">
+    <span class="seal-sm" aria-hidden="true">☩</span>
+    <p>Verbum Lucis &middot; Studio Pura Luce</p>
+  </footer>
+
+</article>
+
+<style>
+  .sacra {
+    /* ─── Tokens "Breviario Reale" ─── */
+    --vellum:      #f4efe3;   /* pergamena calda (non crema fredda) */
+    --vellum-deep: #ece4d3;   /* inserto */
+    --ink:         #24201b;   /* inchiostro caldo */
+    --ink-soft:    #6a5f50;   /* seppia */
+    --rubric:      #8a2b22;   /* rosso rubrica (oxblood) */
+    --gold:        #a6792f;   /* oro antico — filetti/ornamenti */
+    --hair:        #d8ccb2;   /* filetto */
+    /* --accent = colore liturgico del giorno (inline) */
+
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 4rem) clamp(1.1rem, 4vw, 2rem) 4rem;
+    background: var(--vellum);
+    color: var(--ink);
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: clamp(1.12rem, 0.6rem + 1vw, 1.28rem);
+    line-height: 1.72;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+  }
+
+  /* ─── Masthead ─── */
+  .masthead { text-align: center; margin-bottom: clamp(2.5rem, 6vw, 3.5rem); }
+  .seal {
+    font-size: 2.2rem; line-height: 1; color: var(--accent);
+    margin-bottom: 1.1rem; text-shadow: 0 1px 0 rgba(0,0,0,0.05);
+  }
+  .masthead-day {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600; font-size: clamp(2.1rem, 1rem + 4vw, 3.1rem);
+    line-height: 1.05; letter-spacing: 0.01em; color: var(--ink);
+    margin: 0.15em 0 0.35em; text-transform: capitalize;
+  }
+  .masthead-meta {
+    font-family: 'Inter', sans-serif; font-size: 0.74rem; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft);
+    display: inline-flex; align-items: center; gap: 0.55rem; margin: 0;
+  }
+  .colore-tag { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .colore-dot {
+    width: 0.62rem; height: 0.62rem; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 0 1px rgba(0,0,0,0.12) inset;
+  }
+  .masthead-meta .dot { color: var(--hair); }
+  .motto {
+    font-style: italic; color: var(--ink-soft); font-size: 0.98rem;
+    margin: 1.4rem 0 0; letter-spacing: 0.01em;
+  }
+  .motto::before, .motto::after {
+    content: ""; display: block; width: 2.4rem; height: 1px;
+    background: var(--gold); opacity: 0.5; margin: 0.9rem auto;
+  }
+  .motto::after { display: none; }
+
+  /* ─── Rubrica (dispositivo firma) ─── */
+  .rubrica {
+    font-family: 'Inter', sans-serif; font-weight: 600;
+    font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--rubric); margin: 0 0 1rem;
+    display: flex; align-items: center; gap: 0.85rem;
+  }
+  .rubrica::after {
+    content: ""; flex: 1; height: 1px;
+    background: linear-gradient(to right, var(--gold), transparent);
+    opacity: 0.6;
+  }
+  .rubrica .rif { color: var(--ink-soft); letter-spacing: 0.08em; }
+  .rubrica--kicker {
+    justify-content: center; color: var(--rubric); margin-bottom: 0.6rem;
+  }
+  .rubrica--kicker::after, .rubrica--center::after { display: none; }
+  .rubrica--center { justify-content: center; }
+  .rubrica--inline {
+    display: inline-flex; margin: 0 0.6rem 0 0; font-size: 0.64rem;
+  }
+  .rubrica--inline::after { display: none; }
+
+  /* ─── Movimenti / prosa sacra ─── */
+  .movimento { margin: 0 0 clamp(2.2rem, 5vw, 3rem); }
+  .prosa { color: var(--ink); }
+  .prosa :global(p) { margin: 0 0 1.15rem; }
+  .prosa :global(p:last-child) { margin-bottom: 0; }
+  .prosa :global(strong) {
+    font-weight: 600; color: var(--ink);
+    box-shadow: inset 0 -0.42em 0 rgba(166,121,47,0.16);
+  }
+  .prosa :global(em) { font-style: italic; }
+
+  /* Preghiere dentro le sezioni = orazioni rientrate */
+  .prosa :global(blockquote) {
+    margin: 1.5rem 0 0; padding: 0.2rem 0 0.2rem 1.4rem;
+    border-left: 2px solid var(--gold);
+    font-style: italic; color: var(--ink-soft); font-size: 1.02em;
+    line-height: 1.6;
+  }
+
+  /* Capolettera miniato sul primo paragrafo del Re */
+  .prosa--lead :global(p:first-of-type::first-letter) {
+    font-family: 'Cormorant Garamond', serif; font-weight: 700;
+    float: left; font-size: 3.4em; line-height: 0.74;
+    padding: 0.06em 0.12em 0 0; color: var(--accent);
+  }
+
+  /* ─── Vangelo (scriptura) ─── */
+  .scriptura {
+    margin: 0; padding: 1.4rem 1.6rem; background: var(--vellum-deep);
+    border-radius: 2px; font-size: 1.05em; line-height: 1.66;
+    position: relative; color: var(--ink);
+  }
+  .scriptura::before {
+    content: "\201C"; position: absolute; top: -0.35rem; left: 0.4rem;
+    font-family: 'Cormorant Garamond', serif; font-size: 3rem;
+    color: var(--gold); opacity: 0.35; line-height: 1;
+  }
+
+  /* ─── Inserti (rosario / gesto) ─── */
+  .inserto {
+    background: var(--vellum-deep); border: 1px solid var(--hair);
+    border-radius: 2px; padding: clamp(1.3rem, 4vw, 1.8rem);
+  }
+  .misteri { margin: 0 0 1.2rem; display: grid; gap: 0.15rem; }
+  .misteri dt {
+    font-family: 'Inter', sans-serif; font-size: 0.66rem; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft);
+    margin-top: 0.7rem;
+  }
+  .misteri dt:first-child { margin-top: 0; }
+  .misteri dd { margin: 0; font-style: italic; color: var(--ink); }
+  .oratio {
+    margin: 1.2rem 0 0; padding-top: 1.2rem; border-top: 1px solid var(--hair);
+    font-style: italic; color: var(--ink-soft); line-height: 1.6;
+  }
+  .gesto-titolo {
+    font-family: 'Cormorant Garamond', serif; font-weight: 600;
+    font-size: 1.55rem; line-height: 1.15; margin: 0 0 0.5rem; color: var(--ink);
+  }
+  .gesto-spieg { margin: 0 0 1rem; }
+  .esempi { list-style: none; margin: 0 0 1.2rem; padding: 0; display: grid; gap: 0.5rem; }
+  .esempi li { position: relative; padding-left: 1.4rem; }
+  .esempi li::before {
+    content: "\271A"; position: absolute; left: 0; top: 0.05em;
+    color: var(--gold); font-size: 0.85em;
+  }
+  .sussurro { margin: 0; font-style: italic; }
+
+  /* ─── Avversario ─── */
+  .tentazioni { list-style: none; margin: 0 0 1.2rem; padding: 0; display: grid; gap: 0.55rem; }
+  .tentazioni li { position: relative; padding-left: 1.4rem; color: var(--ink); }
+  .tentazioni li::before {
+    content: "\2020"; position: absolute; left: 0.15rem; top: 0.02em;
+    color: var(--rubric); font-weight: 700;
+  }
+  .antidoto {
+    margin: 0; padding: 0.9rem 1.2rem; background: var(--vellum-deep);
+    border-left: 2px solid var(--rubric); font-style: italic; color: var(--ink);
+  }
+
+  /* ─── Ornamenti tra i movimenti ─── */
+  .ornamento {
+    text-align: center; color: var(--gold); opacity: 0.7;
+    margin: clamp(2rem, 5vw, 3rem) 0; font-size: 0.9rem; letter-spacing: 0.6em;
+  }
+
+  /* ─── Cammino / identità ─── */
+  .cammino { text-align: center; }
+  .cammino .rubrica { justify-content: center; }
+  .cammino .rubrica::after { display: none; }
+  .cammino-testo {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: clamp(1.4rem, 0.8rem + 2vw, 1.75rem); line-height: 1.4;
+    color: var(--ink); margin: 0; max-width: 30rem; margin-inline: auto;
+  }
+
+  /* ─── Frase Diario (firma) ─── */
+  .diario {
+    margin-top: clamp(2.5rem, 6vw, 3.5rem); padding: clamp(2rem, 6vw, 3rem) 1.5rem;
+    background:
+      linear-gradient(var(--vellum-deep), var(--vellum-deep)) 0 0 / 100% 100% no-repeat;
+    border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair);
+    text-align: center;
+  }
+  .frase-diario {
+    font-family: 'Cormorant Garamond', serif; font-weight: 500; font-style: italic;
+    font-size: clamp(1.5rem, 0.9rem + 2.4vw, 2rem); line-height: 1.34;
+    color: var(--ink); margin: 0; max-width: 32rem; margin-inline: auto;
+    letter-spacing: 0.005em;
+  }
+
+  /* ─── Navigazione / footer ─── */
+  .sacra-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; margin-top: 3rem; padding-top: 1.4rem;
+    border-top: 1px solid var(--hair);
+    font-family: 'Inter', sans-serif; font-size: 0.82rem;
+  }
+  .nav-link { color: var(--rubric); text-decoration: none; font-weight: 500; }
+  .nav-link:hover { text-decoration: underline; }
+  .nav-link.disabled { color: var(--hair); pointer-events: none; }
+  .nav-center { color: var(--ink-soft); text-decoration: none; font-size: 0.76rem; letter-spacing: 0.04em; }
+  .nav-center:hover { color: var(--rubric); }
+  .sacra-foot {
+    text-align: center; margin-top: 2.5rem; color: var(--ink-soft);
+    font-family: 'Inter', sans-serif; font-size: 0.76rem;
+  }
+  .sacra-foot .seal-sm { display: block; color: var(--gold); font-size: 1.1rem; margin-bottom: 0.4rem; }
+  .sacra-foot p { margin: 0; letter-spacing: 0.06em; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .movimento { animation: rise 0.6s ease both; }
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
