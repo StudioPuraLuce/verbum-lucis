@@ -28,10 +28,12 @@ binding = "CACHE"
 id = "00000000000000000000000000000002"
 
 # ─── AI (fase 1D — generatore Pagina Sacra) ───────────
-# Binding Workers AI. Instradato sul gateway "verbum-lucis"
-# (Fatturazione unificata) direttamente nel codice del generatore.
-[ai]
-binding = "AI"
+# Binding Workers AI. Instradato sul gateway "verbum-lucis" (Fatturazione unificata).
+# NOTA: in `astro dev` locale l'AI forza una sessione remota Cloudflare che
+# richiede autenticazione (`wrangler login`). Per lavorare sul FRONT-END lo
+# teniamo commentato; riattivalo per generare le Pagine Sacre (o usa `wrangler dev`).
+# [ai]
+# binding = "AI"
 
 # ─── R2 (fase 1D — media generati) ────────────────────
 # [[r2_buckets]]

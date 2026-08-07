@@ -45,6 +45,11 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Accento di marca: oro liturgico
+        gold: {
+          DEFAULT: "hsl(var(--gold))",
+          foreground: "hsl(var(--gold-foreground))",
+        },
         // Colori liturgici
         liturgical: {
           verde: "#2d5016",
