@@ -1,32 +1,37 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PhotoSlot from '../components/PhotoSlot.astro';
+import SpiraleMini from '../components/SpiraleMini.astro';
 import { getDb } from '../db';
-const db = getDb(Astro.locals);
+import { liturgicalCoordinate } from '../lib/liturgical-spiral';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 
-const oggi = format(new Date(), 'yyyy-MM-dd');
-const oggiFormat = format(new Date(), 'dd MMMM yyyy', { locale: it });
+const db = getDb(Astro.locals);
 
-// Fetch liturgia di oggi
+const oggi = format(new Date(), 'yyyy-MM-dd');
+const oggiEsteso = format(new Date(), "EEEE d MMMM yyyy", { locale: it });
+const coord = liturgicalCoordinate(oggi);
+
+// Liturgia di oggi
 const liturgiaOggi = await db.query.liturgy.findFirst({
   where: (liturgy, { eq }) => eq(liturgy.data, oggi),
 });
 
-// Fetch santi di oggi
+// Santi di oggi
 const santiOggi = liturgiaOggi?.santiDelGiorno?.length
   ? await db.query.saints.findMany({
       where: (saints, { inArray }) => inArray(saints.id, liturgiaOggi.santiDelGiorno),
     })
   : [];
 
-// Fetch preghiere popolari
-const preghierepopolari = await db.query.prayers.findMany({
+// Preghiere popolari
+const preghierePopolari = await db.query.prayers.findMany({
   orderBy: (prayers, { desc }) => [desc(prayers.popolarita)],
   limit: 6,
 });
 
-// Fetch pagina sacra di oggi (if exists)
+// Pagina Sacra di oggi (se esiste)
 let paginaSacraPreview = null;
 try {
   if (db.query.pagineSacre) {
@@ -35,128 +40,151 @@ try {
     });
   }
 } catch { paginaSacraPreview = null; }
+
+// Colore liturgico → pallino
+const coloreHex: Record<string, string> = {
+  verde: '#2d5016', rosso: '#8b0000', bianco: '#d9c9a3', viola: '#5d3a8f', rosa: '#c85c8e',
+};
+const colore = liturgiaOggi?.coloreLiturgico ?? 'verde';
+
+// Estratto testuale pulito dal "Re Oggi" per il pull-quote
+const reOggiTesto = paginaSacraPreview?.reOggi
+  ? String(paginaSacraPreview.reOggi).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240)
+  : null;
 ---
 
-<BaseLayout 
-  title="Homepage" 
-  description="Verbum Lucis — Liturgia cattolica quotidiana, preghiere, santi e novene. Il tuo compagno spirituale online."
+<BaseLayout
+  title="Homepage"
+  description="Verbum Lucis — Liturgia cattolica quotidiana, la Pagina Sacra, preghiere, santi e novene. Il Vangelo incarnato, ogni giorno."
 >
-  <!-- NUOVO HERO - PAGINA SACRA -->
-  <section class="bg-gradient-to-br from-primary/10 via-background to-primary/5 py-16 mb-12 border-b">
-    <div class="container max-w-6xl mx-auto px-4">
-      
-      <div class="text-center mb-10">
-        <div class="text-6xl mb-4">☩</div>
-        <h2 class="text-4xl md:text-5xl font-bold font-serif mb-4">
-          Pagina Sacra di Oggi
-        </h2>
-        <p class="text-muted-foreground text-lg max-w-2xl mx-auto">
-          Vangelo incarnato · Fuoco nel corpo · Regno nella carne
-        </p>
-      </div>
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <section class="bg-paper -mx-4 px-4 border-b border-gold/15">
+    <div class="mx-auto grid max-w-6xl items-center gap-10 py-16 md:grid-cols-[1.1fr_0.9fr] md:py-24">
 
-      <!-- Preview "Il Re Oggi" - fetch dalla pagina sacra di oggi -->
-      {paginaSacraPreview && (
-        <div class="rounded-lg border-2 border-primary/30 bg-card p-8 mb-8 max-w-4xl mx-auto">
-          <h3 class="text-2xl font-bold mb-4 flex items-center gap-3">
-            <span>👑</span> Il Re Oggi...
-          </h3>
-          <div class="prose prose-lg max-w-none line-clamp-6" set:html={paginaSacraPreview.reOggi?.substring(0, 400) + '...'} />
+      <!-- Colonna testo -->
+      <div class="reveal">
+        <div class="mb-6 flex items-center gap-3">
+          <span class="inline-block h-2 w-2 rounded-full ring-2 ring-white/60" style={`background:${coloreHex[coord.colore]}`}></span>
+          <span class="kicker text-muted-foreground capitalize">{oggiEsteso}</span>
         </div>
-      )}
 
-      <div class="text-center">
-        <a href="/pagina-sacra/oggi" class="inline-flex items-center justify-center rounded-md text-lg font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-14 px-10 shadow-lg hover:shadow-xl transition">
-          Leggi la Pagina Sacra Completa →
-        </a>
-        <p class="text-sm text-muted-foreground mt-4">
-          Generata ogni giorno con le letture liturgiche del Lezionario
+        <h1 class="font-display text-5xl leading-[1.02] text-foreground sm:text-6xl md:text-7xl">
+          Il Verbo si fa<br /><span class="italic text-gold">luce</span> nel giorno.
+        </h1>
+
+        <p class="mt-5 text-sm text-muted-foreground">
+          <a href="/spirale" class="inline-flex items-center gap-2 rounded-full border border-gold/30 px-4 py-1.5 transition hover:bg-accent">
+            <span>🌀</span>
+            <span>{coord.tempoLabel}{coord.settimanaRomana ? ` · ${coord.settimanaRomana}` : ''} · Anno {coord.cicloDomenicale}{coord.centro ? ` · ${coord.centro}` : ''}</span>
+          </a>
         </p>
+
+        <p class="mt-6 max-w-md text-lg leading-relaxed text-muted-foreground">
+          Ogni mattina, la <strong class="font-medium text-foreground">Pagina Sacra</strong>:
+          il Vangelo di oggi incarnato nella carne, nel fuoco e nel Regno.
+          Non da leggere soltanto — da <em>abitare</em>.
+        </p>
+
+        <div class="mt-9 flex flex-wrap items-center gap-4">
+          <a
+            href="/pagina-sacra/oggi"
+            class="inline-flex h-12 items-center justify-center rounded-lg bg-primary px-7 text-base font-medium text-primary-foreground shadow-sm transition hover:shadow-md hover:brightness-110"
+          >
+            Leggi la Pagina Sacra
+            <span class="ml-2">→</span>
+          </a>
+          <a
+            href="/liturgia/oggi"
+            class="inline-flex h-12 items-center justify-center rounded-lg border border-gold/40 px-7 text-base font-medium text-foreground transition hover:bg-accent"
+          >
+            Liturgia di oggi
+          </a>
+        </div>
       </div>
 
+      <!-- Colonna: la spirale dell'anno (l'anima della home) -->
+      <div class="reveal" style="--reveal-delay:140ms">
+        <SpiraleMini class="mx-auto w-full max-w-sm md:ml-auto md:mr-0" />
+      </div>
     </div>
   </section>
 
-  <!-- Hero Section originale -->
-  <section class="text-center py-12 mb-12">
-    <h1 class="text-4xl md:text-6xl font-bold mb-4 font-serif">
-      Verbum Lucis
-    </h1>
-    <p class="text-xl text-muted-foreground mb-8">
-      La tua guida quotidiana alla vita spirituale
-    </p>
-    <div class="flex flex-wrap justify-center gap-4">
-      <a href="/liturgia/oggi" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6 py-2">
-        Liturgia di Oggi
+  <!-- ═══════════════ IL RE OGGI (pull-quote) ═══════════════ -->
+  {reOggiTesto && (
+    <section class="reveal mx-auto max-w-4xl py-16 text-center md:py-20">
+      <span class="kicker text-gold">Il Re, oggi</span>
+      <hr class="rule-gold mx-auto my-6 w-24" />
+      <blockquote class="font-display text-3xl leading-snug text-foreground sm:text-4xl md:text-[2.75rem]">
+        “{reOggiTesto}…”
+      </blockquote>
+      <a href="/pagina-sacra/oggi" class="mt-8 inline-flex items-center text-gold transition hover:brightness-90">
+        Continua a leggere <span class="ml-1.5">→</span>
       </a>
-      <a href="/santi/oggi" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6 py-2">
-        Santo del Giorno
-      </a>
-    </div>
-  </section>
+    </section>
+  )}
 
-  <!-- Liturgia di Oggi -->
+  <!-- ═══════════════ LITURGIA DI OGGI ═══════════════ -->
   {liturgiaOggi && (
-    <section class="mb-12">
-      <div class="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-bold font-serif">Liturgia di Oggi</h2>
-          <span class={`px-3 py-1 rounded-full text-sm font-medium liturgical-color-${liturgiaOggi.coloreLiturgico}`}>
-            {liturgiaOggi.coloreLiturgico.charAt(0).toUpperCase() + liturgiaOggi.coloreLiturgico.slice(1)}
+    <section class="reveal mx-auto max-w-5xl py-12">
+      <div class="overflow-hidden rounded-2xl border border-gold/20 bg-card shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gold/15 px-7 py-5">
+          <div>
+            <span class="kicker text-muted-foreground">Liturgia del giorno</span>
+            <h2 class="font-display text-2xl text-foreground">
+              {liturgiaOggi.domenicaSettimana || 'Feria'}
+            </h2>
+          </div>
+          <span class="inline-flex items-center gap-2 rounded-full border border-gold/30 px-4 py-1.5 text-sm font-medium capitalize">
+            <span class="h-2.5 w-2.5 rounded-full" style={`background:${coloreHex[colore]}`}></span>
+            {colore}
           </span>
         </div>
-        
-        <p class="text-muted-foreground mb-4">{oggiFormat}</p>
-        
-        {liturgiaOggi.domenicaSettimana && (
-          <p class="font-semibold mb-4">{liturgiaOggi.domenicaSettimana}</p>
-        )}
-        
-        <div class="space-y-4">
-          <div>
-            <h3 class="font-semibold mb-2">Prima Lettura</h3>
-            <p class="text-sm text-muted-foreground">{liturgiaOggi.primaLettura.riferimento}</p>
+
+        <div class="grid gap-px bg-gold/10 sm:grid-cols-3">
+          <div class="bg-card p-6">
+            <span class="kicker text-gold">Prima Lettura</span>
+            <p class="mt-2 font-serif text-lg text-foreground">{liturgiaOggi.primaLettura.riferimento}</p>
           </div>
-          
-          <div>
-            <h3 class="font-semibold mb-2">Salmo Responsoriale</h3>
-            <p class="text-sm text-muted-foreground">{liturgiaOggi.salmoResponsoriale.riferimento}</p>
-            <p class="text-sm italic mt-1">{liturgiaOggi.salmoResponsoriale.ritornello}</p>
+          <div class="bg-card p-6">
+            <span class="kicker text-gold">Salmo</span>
+            <p class="mt-2 font-serif text-lg text-foreground">{liturgiaOggi.salmoResponsoriale.riferimento}</p>
+            <p class="mt-1 text-sm italic text-muted-foreground">{liturgiaOggi.salmoResponsoriale.ritornello}</p>
           </div>
-          
-          <div>
-            <h3 class="font-semibold mb-2">Vangelo</h3>
-            <p class="text-sm text-muted-foreground">{liturgiaOggi.vangelo.riferimento}</p>
+          <div class="bg-card p-6">
+            <span class="kicker text-gold">Vangelo</span>
+            <p class="mt-2 font-serif text-lg text-foreground">{liturgiaOggi.vangelo.riferimento}</p>
           </div>
         </div>
-        
-        <a href="/liturgia/oggi" class="inline-flex items-center mt-6 text-primary hover:underline">
-          Leggi la liturgia completa →
-        </a>
+
+        <div class="px-7 py-4">
+          <a href="/liturgia/oggi" class="inline-flex items-center text-sm font-medium text-gold transition hover:brightness-90">
+            Liturgia completa <span class="ml-1.5">→</span>
+          </a>
+        </div>
       </div>
     </section>
   )}
 
-  <!-- Santi di Oggi -->
+  <!-- ═══════════════ SANTI DI OGGI ═══════════════ -->
   {santiOggi.length > 0 && (
-    <section class="mb-12">
-      <h2 class="text-2xl font-bold mb-6 font-serif">Santi di Oggi</h2>
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {santiOggi.map(santo => (
-          <a href={`/santi/${santo.slug}`} class="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition p-6">
-            <div class="flex items-start gap-4">
-              {santo.immagineUrl && (
-                <img src={santo.immagineUrl} alt={santo.nome} class="w-16 h-16 rounded-full object-cover" />
-              )}
-              <div>
-                <h3 class="font-bold mb-1">{santo.nome}</h3>
-                {santo.titolo && (
-                  <p class="text-sm text-muted-foreground mb-2">{santo.titolo}</p>
-                )}
-                {santo.biografiaBreve && (
-                  <p class="text-sm line-clamp-2">{santo.biografiaBreve}</p>
-                )}
-              </div>
+    <section class="reveal mx-auto max-w-6xl py-12">
+      <div class="mb-8 flex items-end justify-between">
+        <div>
+          <span class="kicker text-gold">Nel cielo, oggi</span>
+          <h2 class="font-display text-3xl text-foreground md:text-4xl">Santi del giorno</h2>
+        </div>
+        <a href="/santi" class="hidden text-sm font-medium text-gold transition hover:brightness-90 sm:inline">Tutti i santi →</a>
+      </div>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {santiOggi.map((santo) => (
+          <a href={`/santi/${santo.slug}`} class="group flex gap-4 rounded-xl border border-gold/15 bg-card p-4 transition hover:border-gold/40 hover:shadow-md">
+            <div class="w-20 shrink-0">
+              <PhotoSlot src={santo.immagineUrl ?? undefined} alt={santo.nome} label="santo" ratio="1/1" class="!rounded-lg" />
+            </div>
+            <div class="min-w-0">
+              <h3 class="font-display text-xl leading-tight text-foreground">{santo.nome}</h3>
+              {santo.titolo && <p class="mt-0.5 text-sm text-gold">{santo.titolo}</p>}
+              {santo.biografiaBreve && <p class="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{santo.biografiaBreve}</p>}
             </div>
           </a>
         ))}
@@ -164,45 +192,45 @@ try {
     </section>
   )}
 
-  <!-- Preghiere Popolari -->
-  <section class="mb-12">
-    <h2 class="text-2xl font-bold mb-6 font-serif">Preghiere Popolari</h2>
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {preghierepopolari.map(preghiera => (
-        <a href={`/preghiere/${preghiera.slug}`} class="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition p-6">
-          <h3 class="font-bold mb-2">{preghiera.titolo}</h3>
-          <p class="text-sm text-muted-foreground mb-3 capitalize">{preghiera.categoria}</p>
-          {preghiera.durata && (
-            <p class="text-xs text-muted-foreground">~{preghiera.durata} minuti</p>
-          )}
+  <!-- ═══════════════ PREGHIERE POPOLARI ═══════════════ -->
+  <section class="reveal mx-auto max-w-6xl py-12">
+    <div class="mb-8 flex items-end justify-between">
+      <div>
+        <span class="kicker text-gold">Dalla bocca del popolo</span>
+        <h2 class="font-display text-3xl text-foreground md:text-4xl">Preghiere</h2>
+      </div>
+      <a href="/preghiere" class="hidden text-sm font-medium text-gold transition hover:brightness-90 sm:inline">Tutte le preghiere →</a>
+    </div>
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {preghierePopolari.map((preghiera) => (
+        <a href={`/preghiere/${preghiera.slug}`} class="group rounded-xl border border-gold/15 bg-card p-6 transition hover:border-gold/40 hover:shadow-md">
+          <div class="mb-3 flex items-center justify-between">
+            <span class="kicker text-gold capitalize">{preghiera.categoria}</span>
+            {preghiera.durata && <span class="text-xs text-muted-foreground">~{preghiera.durata} min</span>}
+          </div>
+          <h3 class="font-display text-2xl leading-tight text-foreground transition group-hover:text-gold">{preghiera.titolo}</h3>
         </a>
       ))}
     </div>
-    <div class="text-center mt-8">
-      <a href="/preghiere" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-6 py-2">
-        Vedi tutte le preghiere
-      </a>
-    </div>
   </section>
 
-  <!-- Quick Links -->
-  <section class="grid md:grid-cols-3 gap-6">
-    <a href="/rosario" class="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition p-6 text-center">
-      <div class="text-4xl mb-3">📿</div>
-      <h3 class="font-bold mb-2">Rosario</h3>
-      <p class="text-sm text-muted-foreground">Prega il Santo Rosario con i misteri di oggi</p>
-    </a>
-    
-    <a href="/novene" class="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition p-6 text-center">
-      <div class="text-4xl mb-3">🙏</div>
-      <h3 class="font-bold mb-2">Novene</h3>
-      <p class="text-sm text-muted-foreground">Novene ai santi più popolari</p>
-    </a>
-    
-    <a href="/calendario" class="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition p-6 text-center">
-      <div class="text-4xl mb-3">📅</div>
-      <h3 class="font-bold mb-2">Calendario Liturgico</h3>
-      <p class="text-sm text-muted-foreground">Scopri le feste e i tempi liturgici</p>
-    </a>
+  <!-- ═══════════════ ACCESSI RAPIDI ═══════════════ -->
+  <section class="reveal mx-auto max-w-6xl py-12 pb-20">
+    <div class="grid gap-6 md:grid-cols-3">
+      {[
+        { href: '/rosario', t: 'Rosario', d: 'I misteri di oggi, decina dopo decina.' },
+        { href: '/novene', t: 'Novene', d: 'Nove giorni con i santi più cari.' },
+        { href: '/calendario', t: 'Calendario', d: 'Feste, tempi e colori dell’anno liturgico.' },
+      ].map((item) => (
+        <a href={item.href} class="group relative overflow-hidden rounded-2xl border border-gold/20 bg-card p-8 transition hover:border-gold/45 hover:shadow-md">
+          <hr class="rule-gold mb-5 w-10" />
+          <h3 class="font-display text-2xl text-foreground">{item.t}</h3>
+          <p class="mt-2 text-sm text-muted-foreground">{item.d}</p>
+          <span class="mt-5 inline-flex items-center text-sm font-medium text-gold">
+            Entra <span class="ml-1.5 transition group-hover:translate-x-1">→</span>
+          </span>
+        </a>
+      ))}
+    </div>
   </section>
 </BaseLayout>

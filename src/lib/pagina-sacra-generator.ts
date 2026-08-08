@@ -12,7 +12,8 @@ import { it } from 'date-fns/locale';
 import { eq } from 'drizzle-orm';
 import type { Db } from '../../db/db-config';
 import { schema } from '../../db/db-config';
-import { fetchDayLiturgy, mapCelebrationToLiturgy, getLiturgicalCycle } from './litcal';
+import { fetchDayLiturgy, mapCelebrationToLiturgy } from './litcal';
+import { liturgicalCoordinate } from './liturgical-spiral';
 import {
   SYSTEM_PROMPT,
   buildUserPrompt,
@@ -22,15 +23,6 @@ import {
 
 const DEFAULT_MODEL = 'anthropic/claude-sonnet-4.6';
 const DEFAULT_GATEWAY = 'verbum-lucis';
-
-const COLOR_LABEL: Record<string, string> = {
-  green: 'Verde', verde: 'Verde',
-  violet: 'Viola', purple: 'Viola', viola: 'Viola',
-  white: 'Bianco', bianco: 'Bianco',
-  red: 'Rosso', rosso: 'Rosso',
-  rose: 'Rosa', rosa: 'Rosa',
-  gold: 'Oro', oro: 'Oro',
-};
 
 function cap(s: string): string {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
@@ -49,27 +41,32 @@ export async function resolveLiturgyContext(
   override?: LiturgyOverride,
 ): Promise<{ ctx: LiturgyContext; liturgyId: number | null }> {
   const d = new Date(dataISO + 'T00:00:00');
+  // Coordinata liturgica deterministica (offline-first): tempo, ciclo, settimana, Vangelo.
+  const coord = liturgicalCoordinate(dataISO);
   const base: LiturgyContext = {
     dataISO,
     dataUmana: cap(format(d, 'EEEE d MMMM yyyy', { locale: it })),
     giornoSettimana: cap(format(d, 'EEEE', { locale: it })),
-    tempoLiturgico: 'Tempo Ordinario',
-    cicloAnno: getLiturgicalCycle(d.getFullYear()).cycle,
+    tempoLiturgico: coord.tempoLabel,
+    cicloAnno: coord.cicloDomenicale,
+    cicloFeriale: coord.cicloFeriale,
+    settimana: coord.settimanaRomana ?? undefined,
+    evangelista: coord.vangeloTonalita.evangelista,
+    coloreLiturgico: cap(coord.colore),
+    memoria: coord.festa ?? null,
     vangeloRif: '',
-    isDomenica: d.getDay() === 0,
+    isDomenica: coord.isDomenica,
   };
   let liturgyId: number | null = null;
 
-  // 1) DB
+  // 1) DB — fornisce le LETTURE (la coordinata resta quella deterministica).
   try {
     const row = await db.query.liturgy.findFirst({
       where: (t, { eq }) => eq(t.data, dataISO),
     });
     if (row) {
       liturgyId = row.id;
-      base.tempoLiturgico = row.tempoLiturgico || base.tempoLiturgico;
-      base.coloreLiturgico = COLOR_LABEL[(row.coloreLiturgico || '').toLowerCase()] || row.coloreLiturgico || undefined;
-      base.memoria = row.domenicaSettimana || null;
+      if (row.domenicaSettimana) base.memoria = row.domenicaSettimana;
       base.vangeloRif = row.vangelo?.riferimento || base.vangeloRif;
       base.vangeloTesto = row.vangelo?.testo;
       base.primaLetturaRif = row.primaLettura?.riferimento;
@@ -87,9 +84,7 @@ export async function resolveLiturgyContext(
       const cel = await fetchDayLiturgy(dataISO);
       if (cel) {
         const m = mapCelebrationToLiturgy(cel);
-        base.tempoLiturgico = m.tempoLiturgico || base.tempoLiturgico;
-        base.coloreLiturgico = COLOR_LABEL[(m.coloreLiturgico || '').toLowerCase()] || base.coloreLiturgico;
-        base.memoria = m.domenicaSettimana || base.memoria || null;
+        base.memoria = base.memoria || m.domenicaSettimana || null;
         base.vangeloRif = m.vangelo.riferimento;
         if (m.vangelo.testo && !/messale diocesano/i.test(m.vangelo.testo)) base.vangeloTesto = m.vangelo.testo;
         base.primaLetturaRif = m.primaLettura.riferimento;

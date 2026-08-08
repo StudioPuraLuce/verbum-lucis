@@ -29,6 +29,8 @@ lerna-debug.log*
 backups/
 *.db
 *.sqlite
+*.sqlite-shm
+*.sqlite-wal
 *.SQLite3
 
 # Secrets

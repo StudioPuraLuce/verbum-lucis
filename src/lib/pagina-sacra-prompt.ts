@@ -46,7 +46,9 @@ export interface LiturgyContext {
   tempoLiturgico: string;         // "Tempo Ordinario" / "Avvento" ...
   coloreLiturgico?: string;       // "Verde" ...
   cicloAnno?: string;             // "A" | "B" | "C"
+  cicloFeriale?: string;          // "I" | "II"
   settimana?: string;             // "XIX"
+  evangelista?: string;           // "Matteo" — Vangelo dominante dell'anno
   memoria?: string | null;        // festa/memoria del giorno, se presente
   vangeloRif: string;             // "Lc 12,32-48"
   vangeloTesto?: string;          // testo CEI, se disponibile
@@ -110,6 +112,7 @@ export function buildUserPrompt(ctx: LiturgyContext): string {
   const righe: string[] = [];
   righe.push(`Genera la Pagina Sacra per: ${ctx.dataUmana} (${ctx.giornoSettimana}).`);
   righe.push(`Tempo liturgico: ${ctx.tempoLiturgico}${ctx.settimana ? `, settimana ${ctx.settimana}` : ''}${ctx.cicloAnno ? `, Anno ${ctx.cicloAnno}` : ''}.`);
+  if (ctx.evangelista) righe.push(`Anno del Vangelo di ${ctx.evangelista}: lascia che la sua sensibilità dia la tonalità di fondo.`);
   if (ctx.coloreLiturgico) righe.push(`Colore liturgico: ${ctx.coloreLiturgico}.`);
   if (ctx.memoria) righe.push(`Memoria/Festa: ${ctx.memoria}.`);
   righe.push('');

@@ -1,0 +1,44 @@
+---
+/**
+ * SpiraleMini — render compatto della spirale liturgica dell'anno corrente,
+ * con marker "sei qui". È l'anima della home: cliccandola si entra in /spirale.
+ * Nessuna immagine inventata: pura geometria del tempo liturgico.
+ */
+import {
+  liturgicalCoordinate,
+  spiralArcs,
+  spiralXY,
+  type Colore,
+} from '../lib/liturgical-spiral';
+
+interface Props {
+  class?: string;
+  href?: string;
+}
+const { class: klass = '', href = '/spirale' } = Astro.props;
+
+const oggiISO = new Date().toISOString().slice(0, 10);
+const oggi = liturgicalCoordinate(oggiISO);
+const seiQui = spiralXY(oggi.fractionOfYear);
+
+const COLOR_HEX: Record<Colore, string> = {
+  viola: '#7c3aed', bianco: '#c08a1e', verde: '#2f7d4f', rosso: '#b3261e', rosa: '#c85c8e',
+};
+const segs = spiralArcs(oggiISO, 200).map((s) => ({ color: COLOR_HEX[s.colore], d: s.d }));
+---
+
+<a href={href} class={`group block ${klass}`} aria-label="Apri la spirale liturgica">
+  <svg viewBox="95 85 410 430" class="w-full h-auto" role="img" aria-label="Spirale dell'anno liturgico, sei qui">
+    {segs.map((s) => (
+      <path d={s.d} fill="none" stroke={s.color} stroke-width="7" stroke-linecap="round" opacity="0.9" />
+    ))}
+    <circle cx={seiQui.x} cy={seiQui.y} r="9" fill="none" stroke="#b3261e" stroke-width="2">
+      <animate attributeName="r" values="7;14;7" dur="2.6s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.9;0.1;0.9" dur="2.6s" repeatCount="indefinite" />
+    </circle>
+    <circle cx={seiQui.x} cy={seiQui.y} r="5" fill="#b3261e" />
+  </svg>
+  <p class="mt-3 text-center text-xs text-muted-foreground/80 transition group-hover:text-gold">
+    La spirale dell'anno · sei qui, {oggi.tempoLabel}{oggi.settimanaRomana ? ` ${oggi.settimanaRomana}` : ''} →
+  </p>
+</a>

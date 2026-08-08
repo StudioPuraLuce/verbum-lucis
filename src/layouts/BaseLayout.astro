@@ -59,22 +59,27 @@ const siteUrl = import.meta.env.SITE_URL || 'https://verbumlucis.it';
         font-family: 'Crimson Text', serif;
       }
     </style>
+    <slot name="head" />
   </head>
   <body class="min-h-screen bg-background">
     <header class="border-b sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
       <nav class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
-          <a href="/" class="text-2xl font-bold flex items-center gap-2">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <a href="/" class="flex items-center gap-2.5">
+            <svg class="w-7 h-7 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
-            <span>Verbum Lucis</span>
+            <span class="font-display text-2xl font-semibold tracking-tight">Verbum Lucis</span>
           </a>
           
           <div class="hidden md:flex gap-6">
             <a href="/pagina-sacra/oggi" class="hover:text-primary transition font-semibold flex items-center gap-1">
               <span>☩</span>
               <span>Pagina Sacra</span>
+            </a>
+            <a href="/spirale" class="hover:text-primary transition flex items-center gap-1">
+              <span>🌀</span>
+              <span>La Spirale</span>
             </a>
             <a href="/liturgia/oggi" class="hover:text-primary transition">Liturgia Oggi</a>
             <a href="/santi" class="hover:text-primary transition">Santi</a>
@@ -95,6 +100,7 @@ const siteUrl = import.meta.env.SITE_URL || 'https://verbumlucis.it';
           <a href="/pagina-sacra/oggi" class="block py-2 hover:text-primary transition font-semibold">
             ☩ Pagina Sacra
           </a>
+          <a href="/spirale" class="block py-2 hover:text-primary transition">🌀 La Spirale</a>
           <a href="/liturgia/oggi" class="block py-2 hover:text-primary transition">Liturgia Oggi</a>
           <a href="/santi" class="block py-2 hover:text-primary transition">Santi</a>
           <a href="/preghiere" class="block py-2 hover:text-primary transition">Preghiere</a>
@@ -152,10 +158,24 @@ const siteUrl = import.meta.env.SITE_URL || 'https://verbumlucis.it';
     <script>
       const menuToggle = document.getElementById('menu-toggle');
       const mobileMenu = document.getElementById('mobile-menu');
-      
+
       menuToggle?.addEventListener('click', () => {
         mobileMenu?.classList.toggle('hidden');
       });
+
+      // Reveal on scroll — svela gli elementi .reveal quando entrano in viewport
+      const revealEls = document.querySelectorAll('.reveal');
+      if (revealEls.length) {
+        const io = new IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              io.unobserve(entry.target);
+            }
+          }
+        }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 });
+        revealEls.forEach((el) => io.observe(el));
+      }
     </script>
   </body>
 </html>

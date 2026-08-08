@@ -65,6 +65,66 @@
   }
 }
 
+/* ─── Tipografia display: Cormorant Garamond (titoli regali) ─── */
+.font-display {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Etichetta piccola maiuscoletta tracciata (stile editoriale) */
+.kicker {
+  font-family: 'Inter', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+/* Accento oro */
+.text-gold { color: hsl(var(--gold)); }
+
+/* Filetto oro sottile */
+.rule-gold {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, hsl(var(--gold) / 0.55), transparent);
+}
+
+/* ─── Texture "carta" calda (nessuna immagine inventata: solo grana CSS) ─── */
+.bg-paper {
+  background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(60% 55% at 50% 0%, hsl(var(--gold) / 0.07), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+}
+
+/* ─── Slot-foto: segnaposto neutro, cornice oro, pronto per foto reali ─── */
+.photo-slot {
+  background-color: hsl(var(--muted));
+  background-image:
+    linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--muted)) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-blend-mode: normal, multiply;
+}
+
+/* ─── Reveal on scroll (CSS + IntersectionObserver, niente FOUC) ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+}
+
 /* Stili personalizzati per contenuti religiosi */
 .prayer-text {
   @apply leading-relaxed text-lg;

@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PaginaSacraArticle from '../../components/PaginaSacraArticle.astro';
 import { getDb, schema } from '../../db';
-import { getLiturgicalInfo } from '../../lib/liturgy';
+import { liturgicalCoordinate, type Colore } from '../../lib/liturgical-spiral';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { eq } from 'drizzle-orm';
@@ -37,14 +37,13 @@ try {
 const dObj = new Date(oggi + 'T00:00:00');
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const dataUmana = cap(format(dObj, 'EEEE d MMMM yyyy', { locale: it }));
-const info = getLiturgicalInfo(dObj);
-const ACCENT: Record<string, string> = {
-  Verde: '#3f7a4e', Viola: '#6a4a94', Bianco: '#a6792f', Oro: '#a6792f',
-  Rosso: '#9a2f2a', Rosa: '#b96b86', Nero: '#3a3a3a',
+const coord = liturgicalCoordinate(oggi);
+const ACCENT: Record<Colore, string> = {
+  verde: '#3f7a4e', viola: '#6a4a94', bianco: '#a6792f', rosso: '#9a2f2a', rosa: '#b96b86',
 };
-const accent = ACCENT[info.color] ?? '#a6792f';
-const coloreLabel = info.color;
-const tempoLabel = info.season === 'Ordinario' ? 'Tempo Ordinario' : `Tempo di ${info.season}`;
+const accent = ACCENT[coord.colore];
+const coloreLabel = cap(coord.colore);
+const tempoLabel = `${coord.tempoLabel}${coord.settimanaRomana ? ` · ${coord.settimanaRomana}` : ''}`;
 
 const prev = new Date(dObj); prev.setDate(dObj.getDate() - 1);
 const next = new Date(dObj); next.setDate(dObj.getDate() + 1);

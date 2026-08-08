@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PaginaSacraArticle from '../../components/PaginaSacraArticle.astro';
 import { getDb, schema } from '../../db';
-import { getLiturgicalInfo } from '../../lib/liturgy';
+import { liturgicalCoordinate, type Colore } from '../../lib/liturgical-spiral';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { eq } from 'drizzle-orm';
@@ -32,10 +32,16 @@ const prev = new Date(dObj); prev.setDate(dObj.getDate() - 1);
 const next = new Date(dObj); next.setDate(dObj.getDate() + 1);
 const fmt = (x: Date) => x.toISOString().split('T')[0];
 
+// ─── Coordinata liturgica (motore self-contained, sempre disponibile) ───
+const coord = liturgicalCoordinate(dataParam);
+const ACCENT: Record<Colore, string> = {
+  verde: '#3f7a4e', viola: '#6a4a94', bianco: '#a6792f', rosso: '#9a2f2a', rosa: '#b96b86',
+};
+const accent = ACCENT[coord.colore];
+const coloreLabel = cap(coord.colore);
+const tempoLabel = `${coord.tempoLabel}${coord.settimanaRomana ? ` · ${coord.settimanaRomana}` : ''}`;
+
 let liturgia = null;
-let accent = '#a6792f';
-let coloreLabel: string | null = null;
-let tempoLabel: string | null = null;
 if (paginaSacra) {
   liturgia = paginaSacra.liturgyId
     ? await db.query.liturgy.findFirst({ where: (t, { eq }) => eq(t.id, paginaSacra.liturgyId!) })
@@ -45,14 +51,6 @@ if (paginaSacra) {
       .set({ views: (paginaSacra.views || 0) + 1 })
       .where(eq(schema.pagineSacre.id, paginaSacra.id));
   } catch {}
-  const info = getLiturgicalInfo(dObj);
-  const ACCENT: Record<string, string> = {
-    Verde: '#3f7a4e', Viola: '#6a4a94', Bianco: '#a6792f', Oro: '#a6792f',
-    Rosso: '#9a2f2a', Rosa: '#b96b86', Nero: '#3a3a3a',
-  };
-  accent = ACCENT[info.color] ?? '#a6792f';
-  coloreLabel = info.color;
-  tempoLabel = info.season === 'Ordinario' ? 'Tempo Ordinario' : `Tempo di ${info.season}`;
 }
 ---
 
@@ -81,11 +79,29 @@ if (paginaSacra) {
       nextHref={`/pagina-sacra/${fmt(next)}`}
     />
   ) : (
-    <div class="max-w-xl mx-auto text-center py-20">
-      <div class="text-5xl mb-6" style="color:#a6792f">☩</div>
-      <h1 class="text-3xl font-serif mb-3">Nessuna Pagina Sacra per {dataUmana}</h1>
-      <p class="text-muted-foreground mb-8">Questo giorno non è ancora stato scritto.</p>
-      <a href="/pagina-sacra/oggi" class="text-primary hover:underline">→ Vai alla Pagina Sacra di oggi</a>
+    <div class="max-w-xl mx-auto py-16">
+      <div class="rounded-2xl border border-gold/25 bg-card p-8 text-center shadow-sm">
+        <div class="text-4xl mb-4" style={`color:${accent}`}>☩</div>
+        <span class="kicker text-gold">Sulla spirale</span>
+        <h1 class="font-display text-3xl mt-1 mb-1 capitalize">{dataUmana}</h1>
+        <p class="text-sm text-muted-foreground">
+          {tempoLabel} · <span class="capitalize">{coloreLabel}</span> · Anno {coord.cicloDomenicale} · {coord.vangeloTonalita.evangelista}
+        </p>
+
+        {coord.centro && (
+          <div class="mt-5 rounded-lg bg-accent/60 p-4">
+            <span class="kicker text-gold">Centro risvegliato</span>
+            <p class="mt-1 font-display text-xl">{coord.centro}</p>
+            {coord.lavoro && <p class="text-sm text-muted-foreground italic">il lavoro: {coord.lavoro}</p>}
+          </div>
+        )}
+
+        <p class="text-muted-foreground mt-6 mb-5 text-sm">Questo giorno non è ancora stato scritto.</p>
+        <div class="flex flex-wrap justify-center gap-3">
+          <a href="/spirale" class="inline-flex h-10 items-center rounded-lg border border-gold/40 px-5 text-sm font-medium transition hover:bg-accent">← La Spirale</a>
+          <a href="/pagina-sacra/oggi" class="inline-flex h-10 items-center rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:brightness-110">Pagina Sacra di oggi →</a>
+        </div>
+      </div>
     </div>
   )}
 </BaseLayout>

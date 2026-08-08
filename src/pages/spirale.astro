@@ -1,0 +1,129 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import {
+  liturgicalCoordinate,
+  spiralSundays,
+  spiralArcs,
+  spiralXY,
+  type Colore,
+} from '../lib/liturgical-spiral';
+
+export const prerender = false;
+
+const oggiISO = new Date().toISOString().slice(0, 10);
+const oggi = liturgicalCoordinate(oggiISO);
+const nodi = spiralSundays(oggiISO);
+const seiQui = spiralXY(oggi.fractionOfYear);
+
+const COLOR_HEX: Record<Colore, string> = {
+  viola: '#7c3aed',
+  bianco: '#c08a1e',
+  verde: '#2f7d4f',
+  rosso: '#b3261e',
+  rosa: '#c85c8e',
+};
+
+const segs = spiralArcs(oggiISO).map((s) => ({ color: COLOR_HEX[s.colore], d: s.d }));
+
+const dataUmana = new Intl.DateTimeFormat('it-IT', {
+  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+}).format(new Date(oggiISO + 'T00:00:00Z'));
+---
+
+<BaseLayout
+  title="La Spirale Liturgica"
+  description="La spirale liturgica di Verbum Lucis: il tempo che gira e sale. Naviga l'anno, trova dove sei, entra nella Pagina Sacra di ogni giorno."
+>
+  <section class="bg-paper -mx-4 px-4 py-12 border-b border-gold/15">
+    <div class="mx-auto max-w-3xl text-center">
+      <span class="kicker text-gold">Il tempo che gira e sale</span>
+      <h1 class="font-display text-4xl md:text-6xl mt-2">La Spirale Liturgica</h1>
+      <p class="mt-4 text-muted-foreground">
+        Ogni giro è un anno; ogni anno risale di un'ottava. La data è solo la coordinata di dove sei.
+      </p>
+    </div>
+  </section>
+
+  <div class="mx-auto max-w-5xl grid md:grid-cols-[1.3fr_0.7fr] gap-10 items-center py-12">
+
+    <!-- La spirale -->
+    <div class="reveal">
+      <svg viewBox="80 70 440 460" class="w-full h-auto" role="img" aria-label="Spirale dell'anno liturgico">
+        {segs.map(s => (
+          <path d={s.d} fill="none" stroke={s.color} stroke-width="8" stroke-linecap="round" opacity="0.9" />
+        ))}
+
+        {nodi.map(n => (
+          <a href={`/pagina-sacra/${n.dataISO}`}>
+            <circle cx={n.x} cy={n.y} r={n.festa ? 5 : 3} fill="white" stroke="#78716c" stroke-width="1.5" class="transition-all hover:r-6">
+              <title>{n.festa ? `${n.festa} — ` : ''}{n.settimanaRomana ? `${n.settimanaRomana} · ` : ''}{n.dataISO}</title>
+            </circle>
+          </a>
+        ))}
+
+        <!-- sei qui -->
+        <circle cx={seiQui.x} cy={seiQui.y} r="9" fill="none" stroke="#b3261e" stroke-width="2">
+          <animate attributeName="r" values="7;14;7" dur="2.4s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.9;0.1;0.9" dur="2.4s" repeatCount="indefinite" />
+        </circle>
+        <circle cx={seiQui.x} cy={seiQui.y} r="5" fill="#b3261e" />
+        <text x={seiQui.x - 14} y={seiQui.y + 4} text-anchor="end" font-size="12" font-weight="500" fill="currentColor" class="text-foreground">sei qui</text>
+      </svg>
+
+      <!-- legenda -->
+      <div class="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full" style="background:#7c3aed"></span> viola · attesa</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full" style="background:#c08a1e"></span> oro · luce</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full" style="background:#2f7d4f"></span> verde · cammino</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full" style="background:#b3261e"></span> rosso · fuoco</span>
+      </div>
+    </div>
+
+    <!-- Coordinata di oggi -->
+    <aside class="reveal" style="--reveal-delay:120ms">
+      <div class="rounded-2xl border border-gold/25 bg-card p-7 shadow-sm">
+        <span class="kicker text-gold">Dove sei, oggi</span>
+        <p class="mt-1 font-display text-2xl capitalize leading-tight">{dataUmana}</p>
+        <hr class="rule-gold my-5 w-16 mx-0" />
+        <dl class="space-y-3 text-sm">
+          <div class="flex justify-between gap-4">
+            <dt class="text-muted-foreground">Tempo</dt>
+            <dd class="text-right font-medium">{oggi.tempoLabel}{oggi.settimanaRomana ? ` · ${oggi.settimanaRomana}` : ''}</dd>
+          </div>
+          <div class="flex justify-between gap-4">
+            <dt class="text-muted-foreground">Colore</dt>
+            <dd class="text-right font-medium capitalize inline-flex items-center gap-2 justify-end">
+              <span class="h-2.5 w-2.5 rounded-full" style={`background:${COLOR_HEX[oggi.colore]}`}></span>{oggi.colore}
+            </dd>
+          </div>
+          <div class="flex justify-between gap-4">
+            <dt class="text-muted-foreground">Ciclo</dt>
+            <dd class="text-right font-medium">Anno {oggi.cicloDomenicale} · feriale {oggi.cicloFeriale}</dd>
+          </div>
+          <div class="flex justify-between gap-4">
+            <dt class="text-muted-foreground">Vangelo</dt>
+            <dd class="text-right font-medium">{oggi.vangeloTonalita.evangelista} · {oggi.vangeloTonalita.centro}</dd>
+          </div>
+          {oggi.festa && (
+            <div class="flex justify-between gap-4">
+              <dt class="text-muted-foreground">Festa</dt>
+              <dd class="text-right font-medium text-gold">{oggi.festa}</dd>
+            </div>
+          )}
+        </dl>
+
+        {oggi.centro && (
+          <div class="mt-5 rounded-lg bg-accent/60 p-4">
+            <span class="kicker text-gold">Centro risvegliato</span>
+            <p class="mt-1 font-display text-xl">{oggi.centro}</p>
+            {oggi.lavoro && <p class="text-sm text-muted-foreground italic">il lavoro: {oggi.lavoro}</p>}
+          </div>
+        )}
+
+        <a href={`/pagina-sacra/${oggiISO}`} class="mt-6 inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary px-6 font-medium text-primary-foreground transition hover:brightness-110">
+          Entra nella Pagina Sacra <span class="ml-2">→</span>
+        </a>
+      </div>
+    </aside>
+  </div>
+</BaseLayout>
