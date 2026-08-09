@@ -4,6 +4,13 @@ Formato: voci in ordine cronologico inverso. Le date sono `Europe/Rome`.
 
 ## 2026-08-09
 
+### Fase 1 — Il Componitore Giornaliero (keystone)
+- `src/lib/componitore.ts`: data → coordinata (`liturgicalCoordinate`) → selezione atomi da
+  `atomi_corpus` con ranking di aderenza (centro +4, tempo +2, tonalità Vangelo +1), `concetto`
+  esoterici esclusi, dedup + quote per tipo → `GiornataComposta`. Deterministico e offline.
+- Anteprima interna `/admin/componitore` (`?data=`), verificata nel browser: per oggi compone
+  meditazioni/preghiere/gesti/frasi/simboli reali e coerenti con la coordinata; log puliti.
+
 ### Fase 0 — Governance + Corpo completo
 - **Governance istituita**: `docs/00-governance/STELLA-POLARE.md`, `AGENTS.md`, `ROADMAP.md`,
   `STATUS.md`, `NEXT.md`, `DECISIONS.md` (ADR-001…008), questo `CHANGELOG.md`. Metodo estratto dai

@@ -37,8 +37,12 @@
 - `docs/00-governance/STELLA-POLARE.md`, `AGENTS.md`, `ROADMAP.md`, `DECISIONS.md`, `STATUS.md`,
   `NEXT.md`, `CHANGELOG.md` — istituiti in questa sessione.
 
-## In corso
-- Fase 0 chiusa. Si apre la **Fase 1**: il Componitore Giornaliero (vedi `NEXT.md`).
+## Fase 1 (in corso)
+- **Componitore Giornaliero** (`src/lib/componitore.ts`) — FATTO e verificato: data → coordinata →
+  seleziona atomi (ranking: centro +4, tempo +2, tonalità Vangelo +1; `concetto` esclusi) → compone
+  per tipo. Anteprima interna `/admin/componitore` (verificata nel browser, log puliti): per oggi
+  compone meditazioni/preghiere/gesti/frasi/simboli reali, coerenti con la coordinata.
+- Prossimo: RAG (atomi come "voce dell'autore" nel generatore) + coerenza del sito. Vedi `NEXT.md`.
 
 ## Prossimo
 Vedi `NEXT.md`.
