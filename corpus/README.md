@@ -13,14 +13,18 @@ Il contenuto estratto è **testimonianza privata**. Tutto ciò che contiene test
 entrano solo il **codice della pipeline** e i **documenti di schema** (questo README,
 `GRAFO-SCHEMA.md`). Il seed curato entrerà nel DB solo deliberatamente, in Sessione 3.
 
-## Pipeline (Sessione 1: ingest → segment → coordinata)
+## Pipeline
 
 ```bash
-# dalla root di verbum-lucis
+# dalla root di verbum-lucis — Sessione 1: ingest → segment → coordinata
 python3 corpus/pipeline/ingest.py            # 1. export → corpus/raw/fragments.jsonl
 python3 corpus/pipeline/segment.py           # 2. frammenti → corpus/pagine.jsonl (le Pagine)
 node --import tsx corpus/pipeline/enrich.mjs # 3. + coordinata liturgica → pagine.enriched.jsonl
 python3 corpus/pipeline/report.py            # 4. → CRONISTORIA.md + INVENTARIO.md
+
+# Sessione 2: grafo di conoscenza + vista
+python3 corpus/pipeline/build_graph.py       # 5. → graph.sqlite + nodi.jsonl + archi.jsonl
+python3 corpus/pipeline/build_view.py        # 6. → graph.html (cronistoria+grafo navigabile)
 ```
 
 ### Cosa produce
@@ -31,6 +35,9 @@ python3 corpus/pipeline/report.py            # 4. → CRONISTORIA.md + INVENTARI
 | `pagine.enriched.jsonl` | Le Pagine + `coord` (coordinata liturgica dalla spina). **La node table.** |
 | `CRONISTORIA.md` | La linea del cammino, giorno per giorno, con coordinata e Pagine trovate. |
 | `INVENTARIO.md` | Copertura per Vangelo / tempo / ciclo A·B·C / tipo; Top Pagine; gap. |
+| `graph.sqlite` | Il **grafo di conoscenza**: tabelle `nodi`/`archi` (schema in `GRAFO-SCHEMA.md`). |
+| `nodi.jsonl` / `archi.jsonl` | Export portabile del grafo. |
+| `graph.html` | Vista self-contained: cronistoria filtrabile + statistiche del grafo. |
 
 ### Fonti (in `~/Work/_archive/` e `~/Note/`)
 - **ChatGPT** (`DatiGPT_exported/conversations-*.json`): miniera per-giorno; l'oro è nei thread lunghi.
@@ -42,9 +49,9 @@ python3 corpus/pipeline/report.py            # 4. → CRONISTORIA.md + INVENTARI
 (orbite/settimane/ottava) · `dottrina` (idrogeni/Quarta Via/Tetramorfo) · `diario` · `nota`.
 
 ## Piano multi-sessione
-- **S1 — questa** ✅ ingest + segment + coordinata → node table + cronistoria + inventario + schema grafo.
-- **S2** — grafo di conoscenza: popola `graph.sqlite` (nodi/archi da `GRAFO-SCHEMA.md`) + vista timeline/grafo.
-- **S3** — curatela: deduplica semantica (`evolve_da`), selezione qualità, **semina `pagineSacre` D1**
+- **S1** ✅ ingest + segment + coordinata → node table + cronistoria + inventario + schema grafo.
+- **S2** ✅ grafo di conoscenza: `graph.sqlite` (1485 nodi, 5315 archi) + `graph.html` (vista).
+- **S3 — prossima** — curatela: deduplica semantica (`evolve_da`), selezione qualità, **semina `pagineSacre` D1**
   (mapping campo→campo), e colmatura dei buchi centro/lavoro della spina (Quaresima, Natale, TO I)
   dai contenuti curati.
 

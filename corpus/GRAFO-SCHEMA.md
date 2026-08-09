@@ -1,7 +1,12 @@
 # 🕸️ Grafo di Conoscenza del Corpus — schema
 
-> Schema dei nodi e degli archi. **Definito in Sessione 1, popolato in Sessione 2.**
-> Persistenza prevista: `corpus/graph.sqlite` (tabelle `nodi`, `archi`) + export JSONL.
+> Schema dei nodi e degli archi. **Definito in S1, popolato in S2** da
+> `pipeline/build_graph.py`. Persistenza: `corpus/graph.sqlite` (tabelle `nodi`, `archi`)
+> + export `nodi.jsonl` / `archi.jsonl`.
+>
+> **Stato (ultima build):** 1485 nodi (pagina 1085 · vangelo 214 · giorno 136 · centro 21 ·
+> concetto 15 · tempo 6 · cammino 4 · festa 4) · 5315 archi (appartiene_a 1956 · letta_il 1082 ·
+> risveglia 800 · cita 441 · tonalità 441 · sottende 327 · parte_di 134 · evolve_da 134).
 
 Il grafo ricostruisce il **cammino** e la sua **dottrina**: non un elenco di testi, ma una
 rete in cui ogni Pagina è legata al giorno liturgico che l'ha generata, al Vangelo che medita,
