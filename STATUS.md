@@ -38,6 +38,11 @@
   `NEXT.md`, `CHANGELOG.md` — istituiti in questa sessione.
 
 ## Fase 1 (in corso)
+- **Liturgia normale (letture del giorno)** — ACCESA e verificata: `src/lib/evangelizo.ts` (refs)
+  + `src/lib/bibleget.ts` (testo CEI, endpoint `/v3/index.php`) + `src/lib/litcal.ts` (calendario,
+  `/api/dev`) → `scripts/seed-liturgia.mjs` popola la tabella `liturgy` (D1). `/liturgia/oggi`
+  mostra 1ª/salmo/2ª/Vangelo col testo CEI (8 giorni seminati). Testo CEI copyright →
+  seed/cache gitignorati; produzione = gate utente. Fonte-oro futura: PDF ufficiali (seed offline).
 - **Componitore Giornaliero** (`src/lib/componitore.ts`) — FATTO e verificato: data → coordinata →
   seleziona atomi (ranking: centro +4, tempo +2, tonalità Vangelo +1; `concetto` esclusi) → compone
   per tipo. Anteprima interna `/admin/componitore` (verificata nel browser, log puliti): per oggi

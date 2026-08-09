@@ -4,6 +4,21 @@ Formato: voci in ordine cronologico inverso. Le date sono `Europe/Rome`.
 
 ## 2026-08-09
 
+### Fase 1 — La liturgia normale (letture del giorno) ACCESA
+- Diagnosi: tabella `liturgy` vuota; BibleGet e LitCal wired su endpoint morti/sbagliati.
+- Riparati `src/lib/litcal.ts` (endpoint `/api/dev`) e `src/lib/bibleget.ts` (`/v3/index.php`,
+  testo CEI 2008) — commit `1a4a872`.
+- **Lezionario**: `src/lib/evangelizo.ts` (`lettureDelGiorno`/`ruoliLetture`) →
+  `publication.evangelizo.ws` dà i riferimenti del giorno (domeniche ordinarie + ferie), con
+  normalizzazione sigle (libri numerati `1_R`→`1Re`, suffissi versetto `9a`→`9`).
+- **Pipeline**: `scripts/seed-liturgia.mjs` → evangelizo(refs) → BibleGet(testo CEI, cache
+  `.liturgia-cache/`) → coordinata spirale → popola `liturgy` (D1). Script `liturgia:seed:gen` +
+  `db:liturgia:seed:*`. Seminati 8 giorni: `/liturgia/oggi` ora mostra 1ª/salmo/2ª/Vangelo col
+  testo CEI (verificato nel browser, log puliti). Copertura 8/8 Vangeli e 1ª letture, 7/8 salmi.
+- Privacy/copyright: testo CEI (copyright Fondazione) resta in `drizzle/seed-liturgia.sql` +
+  `.liturgia-cache/` **gitignorati**; produzione = scelta/gate utente. Fonte-oro futura: i PDF
+  ufficiali dei lezionari (seed offline).
+
 ### Fase 1 — Il Componitore Giornaliero (keystone)
 - `src/lib/componitore.ts`: data → coordinata (`liturgicalCoordinate`) → selezione atomi da
   `atomi_corpus` con ranking di aderenza (centro +4, tempo +2, tonalità Vangelo +1), `concetto`

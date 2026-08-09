@@ -23,7 +23,10 @@
     "db:atomi:schema:local": "wrangler d1 execute verbum-lucis --local --file=./drizzle/0002_atomi_corpus.sql",
     "db:atomi:seed:local": "wrangler d1 execute verbum-lucis --local --file=./drizzle/seed-atomi.sql",
     "db:atomi:schema:remote": "wrangler d1 execute verbum-lucis --remote --file=./drizzle/0002_atomi_corpus.sql",
-    "db:atomi:seed:remote": "wrangler d1 execute verbum-lucis --remote --file=./drizzle/seed-atomi.sql"
+    "db:atomi:seed:remote": "wrangler d1 execute verbum-lucis --remote --file=./drizzle/seed-atomi.sql",
+    "liturgia:seed:gen": "node --import tsx scripts/seed-liturgia.mjs",
+    "db:liturgia:seed:local": "wrangler d1 execute verbum-lucis --local --file=./drizzle/seed-liturgia.sql",
+    "db:liturgia:seed:remote": "wrangler d1 execute verbum-lucis --remote --file=./drizzle/seed-liturgia.sql"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.0",

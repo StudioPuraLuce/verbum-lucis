@@ -86,6 +86,7 @@ coverage/
 corpus/raw/
 corpus/atoms-cache/
 corpus/doctrine-cache/
+.liturgia-cache/
 corpus/*.jsonl
 corpus/*.sqlite
 corpus/*.html
