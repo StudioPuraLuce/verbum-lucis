@@ -80,3 +80,11 @@ coverage/
 
 # Secret locali Cloudflare (token gateway, ecc.) — MAI committare
 .dev.vars
+
+# Corpus — testimonianza privata grezza estratta dagli export (MAI committare).
+# Solo il seed curato scelto deliberatamente entrerà nel repo/DB (Sessione 3).
+corpus/raw/
+corpus/*.jsonl
+corpus/*.sqlite
+corpus/CRONISTORIA.md
+corpus/INVENTARIO.md

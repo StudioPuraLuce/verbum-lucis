@@ -144,6 +144,19 @@ export const CENTRI_ORDINARIO: Record<number, { centro: string; lavoro: string }
   31: { centro: 'Centro della vanità', lavoro: 'inchinarsi realmente' },
 };
 
+// ─── Cammino Pasquale Vivente (7 settimane, Pasqua → Pentecoste) ───
+// Fonte: «☩ Cammino Pasquale Vivente» + i «Tema profondo» settimanali.
+// Chiave = settimana del Tempo di Pasqua (1 = ottava di Pasqua). La 8ª = Pentecoste (in CENTRI_FESTE).
+export const CENTRI_PASQUA: Record<number, { centro: string; lavoro: string }> = {
+  1: { centro: 'La Presenza che cammina accanto', lavoro: 'riconoscere il calore del cuore, aprire i sensi' },
+  2: { centro: 'Il soffio nascosto', lavoro: 'lavorare nel nascosto, fedeltà senza gloria' },
+  3: { centro: 'La dimora', lavoro: 'restare nel ritmo, anche senza emozione' },
+  4: { centro: 'Il nutrimento che discende', lavoro: 'smettere di cercare altrove, ricevere il Pane' },
+  5: { centro: "Lasciar salire (l'Ascensione)", lavoro: 'non trattenere, consegnare al Padre' },
+  6: { centro: 'Accogliere il Fuoco', lavoro: "liberare lo spazio, preparare l'Altare" },
+  7: { centro: 'La veglia per il Fuoco', lavoro: 'vigilare, custodire lo spazio per lo Spirito' },
+};
+
 // Le prime settimane dopo Pentecoste (feste che sostituiscono le domeniche del TO).
 const CENTRI_FESTE: Record<string, { centro: string; lavoro: string }> = {
   pentecoste: { centro: 'Intellettuale superiore', lavoro: 'ricevere la visione' },
@@ -241,6 +254,8 @@ export function liturgicalCoordinate(input: string | Date): LiturgicalCoordinate
     settimana = 1 + Math.floor(daysBetween(easter, sundayOf(d)) / 7);
     if (sundayOf(d).getTime() === sundayOf(pentecost).getTime()) {
       festa = 'Pentecoste'; ({ centro, lavoro } = CENTRI_FESTE.pentecoste);
+    } else if (settimana != null && CENTRI_PASQUA[settimana]) {
+      ({ centro, lavoro } = CENTRI_PASQUA[settimana]);
     }
   } else if (tempo === 'quaresima') {
     settimana = Math.max(1, Math.ceil(daysBetween(ashWed, d) / 7));
