@@ -85,6 +85,7 @@ coverage/
 # Solo il seed curato scelto deliberatamente entrerà nel repo/DB (Sessione 3).
 corpus/raw/
 corpus/atoms-cache/
+corpus/doctrine-cache/
 corpus/*.jsonl
 corpus/*.sqlite
 corpus/*.html
