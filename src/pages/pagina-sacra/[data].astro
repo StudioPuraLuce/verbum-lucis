@@ -24,6 +24,10 @@ try {
   });
 } catch { paginaSacra = null; }
 
+// NB: le Pagine REALI del corpus (testimonianza privata) NON si mostrano qui, sul portale
+// pubblico. Restano private: alimentano il generatore come contesto e/o si leggono in una
+// futura vista privata protetta. Vedi corpus/README.md.
+
 const dObj = new Date(dataParam + 'T00:00:00');
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const dataUmana = cap(format(dObj, 'EEEE d MMMM yyyy', { locale: it }));

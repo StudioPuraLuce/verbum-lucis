@@ -1,0 +1,96 @@
+---
+/**
+ * PaginaCorpusReale — rende una Pagina REALE del corpus (testimonianza dell'utente),
+ * fedele al testo scritto a mano. Nessuna riscrittura: solo formattazione leggera.
+ */
+import { mdLite } from '../lib/md-lite';
+
+interface Props {
+  titolo?: string | null;
+  testo: string;
+  tipo: string;
+  vangelo?: string | null;
+  fonte?: string | null;
+  qualita?: number | null;
+  centro?: string | null;
+  lavoro?: string | null;
+  accent: string;
+  compact?: boolean;
+}
+
+const { titolo, testo, tipo, vangelo, fonte, centro, lavoro, accent, compact = false } = Astro.props;
+const html = mdLite(testo);
+const tipoLabel: Record<string, string> = {
+  'pagina-sacra': 'Pagina Sacra', lectio: 'Lectio', preghiera: 'Preghiera',
+  cammino: 'Cammino', dottrina: 'Meditazione', diario: 'Diario', nota: 'Nota',
+};
+---
+
+<article class={`corpus-page ${compact ? 'is-compact' : ''}`} style={`--accent:${accent}`}>
+  <header class="cp-head">
+    <span class="cp-kicker">{tipoLabel[tipo] ?? tipo}{vangelo ? ` · ${vangelo}` : ''}</span>
+    {titolo && <h2 class="cp-title">{titolo}</h2>}
+  </header>
+
+  {!compact && centro && (
+    <div class="cp-centro">
+      <span class="cp-kicker">Centro risvegliato</span>
+      <p class="cp-centro-name">{centro}</p>
+      {lavoro && <p class="cp-centro-work">il lavoro: {lavoro}</p>}
+    </div>
+  )}
+
+  <div class="cp-prose" set:html={html} />
+
+  {fonte && (
+    <footer class="cp-foot">Dal tuo archivio · <span class="cp-src">{fonte}</span></footer>
+  )}
+</article>
+
+<style>
+  .corpus-page {
+    max-width: 42rem;
+    margin: 0 auto;
+    padding: 1.5rem 0;
+  }
+  .cp-head { border-left: 4px solid var(--accent); padding-left: 1rem; margin-bottom: 1.25rem; }
+  .cp-kicker {
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--accent); font-weight: 600;
+  }
+  .cp-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 1.9rem; line-height: 1.15;
+    margin: .25rem 0 0; color: var(--foreground, #292524);
+  }
+  .cp-centro {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border-radius: .6rem; padding: .85rem 1rem; margin-bottom: 1.25rem;
+  }
+  .cp-centro-name { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; margin: .15rem 0 0; }
+  .cp-centro-work { font-size: .85rem; font-style: italic; color: var(--muted-foreground, #78716c); margin: 0; }
+
+  .cp-prose { font-family: 'EB Garamond', 'Crimson Text', serif; font-size: 1.12rem; line-height: 1.72; }
+  .cp-prose :global(p) { margin: 0 0 1rem; }
+  .cp-prose :global(strong) { font-weight: 600; color: var(--foreground, #1c1917); }
+  .cp-prose :global(em) { font-style: italic; }
+  .cp-prose :global(h3) {
+    font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 600;
+    margin: 1.6rem 0 .6rem; color: var(--accent);
+  }
+  .cp-prose :global(h4) {
+    font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; font-weight: 600;
+    margin: 1.3rem 0 .4rem;
+  }
+  .cp-prose :global(blockquote) {
+    border-left: 3px solid var(--accent); padding: .1rem 0 .1rem 1.1rem; margin: 1rem 0;
+    font-style: italic; color: var(--muted-foreground, #57534e);
+  }
+  .cp-prose :global(hr) { border: 0; border-top: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); margin: 1.6rem auto; width: 5rem; }
+
+  .cp-foot { margin-top: 1.5rem; font-size: .78rem; color: var(--muted-foreground, #a8a29e); }
+  .cp-src { text-transform: capitalize; }
+
+  .is-compact { padding: .5rem 0; }
+  .is-compact .cp-prose { font-size: 1.02rem; line-height: 1.62; }
+  .is-compact .cp-title { font-size: 1.4rem; }
+</style>

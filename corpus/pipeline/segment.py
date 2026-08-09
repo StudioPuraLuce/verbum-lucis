@@ -56,6 +56,35 @@ def sha(*p):
     return hashlib.sha1("\x1f".join(str(x) for x in p).encode()).hexdigest()[:16]
 
 
+# Coda conversazionale di ChatGPT da rimuovere (offerte di follow-up, non testimonianza)
+TAIL = re.compile(r"^\s*(men[uù]\s*:?$|vuoi\b|fammi sapere|se vuoi[,\s]|dimmi (tu|se|quale|pure)|"
+    r"posso (ora |anche |subito |gi[àa] )?(prepararti|offrirti|generare|creare|darti|mostrarti|comporre)|"
+    r"ti va (se|di)|procediamo|vuoi che|desideri (che|un|una)|preferisci)", re.I)
+
+
+def strip_tail(text):
+    """Taglia il blocco-offerta finale (Menu / «Vuoi…» numerati) tipico degli export ChatGPT."""
+    lines = text.rstrip().split("\n")
+    n = len(lines)
+    cut = None
+    for i in range(n - 1, max(0, n - 14) - 1, -1):
+        if TAIL.match(lines[i].strip()):
+            cut = i
+    if cut is None:
+        return text
+    k = cut
+    while k - 1 >= 0:
+        s = lines[k - 1].strip()
+        if s == "" or s in ("---", "—", "–") or re.match(r"^\d+[\.\)]", s) or TAIL.match(s):
+            k -= 1
+        else:
+            break
+    while k > 0 and lines[k - 1].strip() in ("", "---", "—", "–"):
+        k -= 1
+    cleaned = "\n".join(lines[:k]).rstrip()
+    return cleaned if len(cleaned) >= 200 else text
+
+
 def parse_date(text):
     """Ritorna (iso, confidence) cercando una data esplicita nel testo (prime righe pesano di più)."""
     head = text[:500]
@@ -151,7 +180,7 @@ def main():
             # Obsidian/Gemini doc = già un'unità; ChatGPT assistant = potenzialmente multi-giorno
             chunks = split_pages(text) if frag["fonte"] == "chatgpt" else [text]
             for chunk in chunks:
-                chunk = chunk.strip()
+                chunk = strip_tail(chunk.strip())
                 nchar = len(chunk)
                 if nchar < 300:
                     continue
