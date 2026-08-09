@@ -36,6 +36,16 @@ npm run corpus:seed:gen                       # 9. pagine.curate.jsonl → drizz
 npm run db:corpus:schema:local                # 10. crea la tabella pagine_corpus (D1 locale)
 npm run db:corpus:seed:local                  # 11. carica le 923 Pagine (D1 locale)
 # in produzione (gate utente): db:corpus:schema:remote + db:corpus:seed:remote
+
+# Sessione 5: IL CORPO DI CONOSCENZA — scomposizione AI in atomi verbatim
+node --env-file=.dev.vars corpus/pipeline/extract_atoms.mjs --limit 8   # validazione (8 pagine)
+node --env-file=.dev.vars corpus/pipeline/extract_atoms.mjs --min-quality 8 --concurrency 6
+#   → corpus/atomi.jsonl (+ atoms-cache/ per-pagina, idempotente). Se restano pagine "vuote"
+#     (JSON troncato): riesegui con --retry-empty. Modello: claude-sonnet-4-6 via Gateway.
+python3 corpus/pipeline/report_atomi.py       # conteggi per tipo/tempo/tag
+python3 corpus/pipeline/build_atomi_view.py   # → corpus/atomi.html (privata, filtrabile+ricerca)
+npm run atomi:seed:gen                         # atomi.jsonl → drizzle/seed-atomi.sql (privato)
+npm run db:atomi:schema:local && npm run db:atomi:seed:local   # tabella + carico (D1 locale)
 ```
 
 ### Cosa produce
@@ -69,8 +79,14 @@ npm run db:corpus:seed:local                  # 11. carica le 923 Pagine (D1 loc
   locale (923 righe). `pagine_sacre` a riquadri resta per le pagine generate. Migrazione in
   `drizzle/0001_pagine_corpus.sql` (locale, come `0000_init.sql`: `drizzle/` è gitignorato per
   convenzione — `db/schema.ts` è la fonte di verità). Seed `drizzle/seed-corpus.sql` gitignorato (privato).
-- **S5 — prossima** — portale: mostrare la Pagina reale nel suo giorno + usarla come contesto del
-  generatore; poi semina remota (produzione, gate utente) e colmatura buchi centro/lavoro.
+- **S5** ✅ **Il Corpo di Conoscenza**: scomposizione AI estrattiva (verbatim) delle Pagine in
+  **atomi** tipizzati. `atom-prompt.mjs` + `extract_atoms.mjs` (via Gateway, cache, guardia
+  anti-allucinazione + salvataggio JSON troncato) → **4.164 atomi** da 402 Pagine
+  (insegnamento 1383 · frase 762 · gesto 639 · preghiera 450 · meditazione 446 · simbolo 360 ·
+  concetto 68 · testimonianza 56). Tabella `atomi_corpus` (D1 locale). Vista `atomi.html`.
+- **S6 — prossima** — sopra gli atomi: (A) RAG nel generatore (voce dell'autore; `concetto`
+  esoterici fuori dal mainstream), (B) stanza privata, (C) composizione (libri/preghiere/stampe/
+  post/cammini/la sua storia). Poi semina remota (gate utente).
 
 ## Stato Sessione 1 (ultima esecuzione)
 - **10.962 frammenti** (ChatGPT 10.797 · Obsidian 150 · Gemini 15).

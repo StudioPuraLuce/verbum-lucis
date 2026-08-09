@@ -201,6 +201,28 @@ export const pagineCorpus = sqliteTable('pagine_corpus', {
   createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
 });
 
+// ─── CORPO DI CONOSCENZA — gli ATOMI estratti dalle Pagine reali ───────────
+// Unità di conoscenza VERBATIM (le parole dell'utente, ritagliate e tipizzate dall'estrazione
+// AI), con provenienza alla Pagina e coordinata liturgica ereditata. Da qui si ricompone tutto:
+// libri, preghiere, stampe, post, cammini, la sua storia. Privato come `pagine_corpus`.
+export const atomiCorpus = sqliteTable('atomi_corpus', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  atomId: text('atom_id').notNull().unique(),        // hash stabile dall'estrattore
+  corpusId: text('corpus_id').notNull(),             // Pagina d'origine (pagine_corpus.corpus_id)
+  tipo: text('tipo').notNull(),                      // insegnamento·preghiera·gesto·simbolo·meditazione·testimonianza·frase·concetto
+  testo: text('testo').notNull(),                    // citazione VERBATIM
+  titolo: text('titolo'),                            // etichetta breve
+  tags: text('tags', { mode: 'json' }).$type<string[]>().default(sql`'[]'`),
+  data: text('data'),                                // data del giorno (ereditata)
+  tempo: text('tempo'),
+  colore: text('colore'),
+  cicloDomenicale: text('ciclo_domenicale'),
+  centro: text('centro'),
+  vangelo: text('vangelo'),
+  qualita: real('qualita'),                          // qualità ereditata dalla Pagina
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
+});
+
 // ─── BIBBIA (Bible) ───────────────────────────────────
 export const bibleBooks = sqliteTable('bible_books', {
   id: integer('id').primaryKey({ autoIncrement: true }),

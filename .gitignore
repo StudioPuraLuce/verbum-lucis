@@ -84,6 +84,7 @@ coverage/
 # Corpus — testimonianza privata grezza estratta dagli export (MAI committare).
 # Solo il seed curato scelto deliberatamente entrerà nel repo/DB (Sessione 3).
 corpus/raw/
+corpus/atoms-cache/
 corpus/*.jsonl
 corpus/*.sqlite
 corpus/*.html
@@ -93,3 +94,4 @@ corpus/DIARIO-RICOSTRUITO.md
 
 # Seed del corpus = testimonianza privata (MAI committare). Lo schema/migrazione sì.
 drizzle/seed-corpus.sql
+drizzle/seed-atomi.sql

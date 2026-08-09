@@ -18,7 +18,12 @@
     "db:corpus:schema:local": "wrangler d1 execute verbum-lucis --local --file=./drizzle/0001_pagine_corpus.sql",
     "db:corpus:seed:local": "wrangler d1 execute verbum-lucis --local --file=./drizzle/seed-corpus.sql",
     "db:corpus:schema:remote": "wrangler d1 execute verbum-lucis --remote --file=./drizzle/0001_pagine_corpus.sql",
-    "db:corpus:seed:remote": "wrangler d1 execute verbum-lucis --remote --file=./drizzle/seed-corpus.sql"
+    "db:corpus:seed:remote": "wrangler d1 execute verbum-lucis --remote --file=./drizzle/seed-corpus.sql",
+    "atomi:seed:gen": "python3 corpus/pipeline/gen_seed_atomi.py",
+    "db:atomi:schema:local": "wrangler d1 execute verbum-lucis --local --file=./drizzle/0002_atomi_corpus.sql",
+    "db:atomi:seed:local": "wrangler d1 execute verbum-lucis --local --file=./drizzle/seed-atomi.sql",
+    "db:atomi:schema:remote": "wrangler d1 execute verbum-lucis --remote --file=./drizzle/0002_atomi_corpus.sql",
+    "db:atomi:seed:remote": "wrangler d1 execute verbum-lucis --remote --file=./drizzle/seed-atomi.sql"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.0",
