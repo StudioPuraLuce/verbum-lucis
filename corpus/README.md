@@ -25,6 +25,10 @@ python3 corpus/pipeline/report.py            # 4. → CRONISTORIA.md + INVENTARI
 # Sessione 2: grafo di conoscenza + vista
 python3 corpus/pipeline/build_graph.py       # 5. → graph.sqlite + nodi.jsonl + archi.jsonl
 python3 corpus/pipeline/build_view.py        # 6. → graph.html (cronistoria+grafo navigabile)
+
+# Sessione 3: curatela (dedup + qualità) + vista leggibile
+python3 corpus/pipeline/curate.py            # 7. → pagine.curate.jsonl (dedup + punteggio qualità)
+python3 corpus/pipeline/build_curato_view.py # 8. → curato.html (Pagine apribili a testo integrale)
 ```
 
 ### Cosa produce
@@ -38,6 +42,8 @@ python3 corpus/pipeline/build_view.py        # 6. → graph.html (cronistoria+gr
 | `graph.sqlite` | Il **grafo di conoscenza**: tabelle `nodi`/`archi` (schema in `GRAFO-SCHEMA.md`). |
 | `nodi.jsonl` / `archi.jsonl` | Export portabile del grafo. |
 | `graph.html` | Vista self-contained: cronistoria filtrabile + statistiche del grafo. |
+| `pagine.curate.jsonl` | L'insieme **curato**: 1 Pagina migliore per cluster + `qualita` + `varianti`. |
+| `curato.html` | Vista leggibile: ogni Pagina apribile a **testo integrale**, filtri qualità/tipo. |
 
 ### Fonti (in `~/Work/_archive/` e `~/Note/`)
 - **ChatGPT** (`DatiGPT_exported/conversations-*.json`): miniera per-giorno; l'oro è nei thread lunghi.
@@ -51,9 +57,10 @@ python3 corpus/pipeline/build_view.py        # 6. → graph.html (cronistoria+gr
 ## Piano multi-sessione
 - **S1** ✅ ingest + segment + coordinata → node table + cronistoria + inventario + schema grafo.
 - **S2** ✅ grafo di conoscenza: `graph.sqlite` (1485 nodi, 5315 archi) + `graph.html` (vista).
-- **S3 — prossima** — curatela: deduplica semantica (`evolve_da`), selezione qualità, **semina `pagineSacre` D1**
-  (mapping campo→campo), e colmatura dei buchi centro/lavoro della spina (Quaresima, Natale, TO I)
-  dai contenuti curati.
+- **S3** ✅ curatela: `curate.py` (dedup 1085→923, qualità alta 509/media 251/bassa 163) + `curato.html`.
+  **Semina DB: in attesa di decisione** su come le Pagine reali entrano nel modello (tabella corpus
+  fedele + contesto RAG per il generatore, oppure strutturazione nei 12 campi `pagineSacre`).
+- **S4 — prossima** — semina secondo la decisione + colmatura buchi centro/lavoro (Quaresima, Natale, TO I).
 
 ## Stato Sessione 1 (ultima esecuzione)
 - **10.962 frammenti** (ChatGPT 10.797 · Obsidian 150 · Gemini 15).
