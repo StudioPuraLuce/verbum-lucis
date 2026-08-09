@@ -26,9 +26,16 @@ python3 corpus/pipeline/report.py            # 4. → CRONISTORIA.md + INVENTARI
 python3 corpus/pipeline/build_graph.py       # 5. → graph.sqlite + nodi.jsonl + archi.jsonl
 python3 corpus/pipeline/build_view.py        # 6. → graph.html (cronistoria+grafo navigabile)
 
-# Sessione 3: curatela (dedup + qualità) + vista leggibile
+# Sessione 3: curatela (dedup + qualità) + viste leggibili
 python3 corpus/pipeline/curate.py            # 7. → pagine.curate.jsonl (dedup + punteggio qualità)
 python3 corpus/pipeline/build_curato_view.py # 8. → curato.html (Pagine apribili a testo integrale)
+python3 corpus/pipeline/build_diario.py      # 8b. → DIARIO-RICOSTRUITO.md (leggibile in Markdown)
+
+# Sessione 4: semina DB — le Pagine reali intere in pagine_corpus (Strada 1)
+npm run corpus:seed:gen                       # 9. pagine.curate.jsonl → drizzle/seed-corpus.sql (privato)
+npm run db:corpus:schema:local                # 10. crea la tabella pagine_corpus (D1 locale)
+npm run db:corpus:seed:local                  # 11. carica le 923 Pagine (D1 locale)
+# in produzione (gate utente): db:corpus:schema:remote + db:corpus:seed:remote
 ```
 
 ### Cosa produce
@@ -58,9 +65,12 @@ python3 corpus/pipeline/build_curato_view.py # 8. → curato.html (Pagine apribi
 - **S1** ✅ ingest + segment + coordinata → node table + cronistoria + inventario + schema grafo.
 - **S2** ✅ grafo di conoscenza: `graph.sqlite` (1485 nodi, 5315 archi) + `graph.html` (vista).
 - **S3** ✅ curatela: `curate.py` (dedup 1085→923, qualità alta 509/media 251/bassa 163) + `curato.html`.
-  **Semina DB: in attesa di decisione** su come le Pagine reali entrano nel modello (tabella corpus
-  fedele + contesto RAG per il generatore, oppure strutturazione nei 12 campi `pagineSacre`).
-- **S4 — prossima** — semina secondo la decisione + colmatura buchi centro/lavoro (Quaresima, Natale, TO I).
+- **S4** ✅ **Strada 1**: tabella `pagine_corpus` (le Pagine reali INTERE + coordinata) seminata in D1
+  locale (923 righe). `pagine_sacre` a riquadri resta per le pagine generate. Migrazione in
+  `drizzle/0001_pagine_corpus.sql` (locale, come `0000_init.sql`: `drizzle/` è gitignorato per
+  convenzione — `db/schema.ts` è la fonte di verità). Seed `drizzle/seed-corpus.sql` gitignorato (privato).
+- **S5 — prossima** — portale: mostrare la Pagina reale nel suo giorno + usarla come contesto del
+  generatore; poi semina remota (produzione, gate utente) e colmatura buchi centro/lavoro.
 
 ## Stato Sessione 1 (ultima esecuzione)
 - **10.962 frammenti** (ChatGPT 10.797 · Obsidian 150 · Gemini 15).

@@ -89,3 +89,7 @@ corpus/*.sqlite
 corpus/*.html
 corpus/CRONISTORIA.md
 corpus/INVENTARIO.md
+corpus/DIARIO-RICOSTRUITO.md
+
+# Seed del corpus = testimonianza privata (MAI committare). Lo schema/migrazione sì.
+drizzle/seed-corpus.sql

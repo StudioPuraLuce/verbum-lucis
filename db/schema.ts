@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, unique } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, unique } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 // Schema portato da Postgres (pg-core) a SQLite/D1 (sqlite-core).
@@ -169,6 +169,35 @@ export const pagineSacre = sqliteTable('pagine_sacre', {
   camminoIdentita: text('cammino_identita').notNull(),
   fraseDiario: text('frase_diario').notNull(),
   views: integer('views').default(0),
+  createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+// ─── CORPUS — le Pagine REALI dell'utente (testimonianza) ───────────
+// Strato fedele: il testo integrale delle pagine scritte a mano negli anni, estratte
+// dagli export e ancorate alla coordinata liturgica (spina). NON generate con AI, NON
+// spezzettate: si conservano intatte. Alimentano il portale (mostrate nel loro giorno) e
+// fanno da contesto al generatore. Distinte da `pagine_sacre` (le pagine generate a riquadri).
+export const pagineCorpus = sqliteTable('pagine_corpus', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  corpusId: text('corpus_id').notNull().unique(),   // hash stabile dalla pipeline di lavorazione
+  data: text('data'),                                // ISO date del giorno liturgico (può mancare)
+  dataConfidence: text('data_confidence'),           // alta | media | bassa
+  tempo: text('tempo'),                              // avvento · natale · ordinario · quaresima · triduo · pasqua
+  colore: text('colore'),                            // viola · bianco · verde · rosso · rosa
+  cicloDomenicale: text('ciclo_domenicale'),         // A | B | C
+  settimana: text('settimana'),                      // romana (es. "XVIII")
+  centro: text('centro'),                            // centro interiore risvegliato (se mappato)
+  festa: text('festa'),                              // Pentecoste, Cristo Re, …
+  fractionOfYear: real('fraction_of_year'),          // 0..1 posizione sulla spirale
+  vangelo: text('vangelo'),                          // riferimento (es. "Lc 24,13-35")
+  tipo: text('tipo').notNull(),                      // pagina-sacra · cammino · preghiera · dottrina · diario · lectio · nota
+  titolo: text('titolo'),
+  testo: text('testo').notNull(),                    // TESTO INTEGRALE, intatto
+  fonte: text('fonte'),                              // chatgpt · obsidian · gemini-doc
+  thread: text('thread'),                            // conversazione/documento d'origine
+  qualita: real('qualita'),                          // punteggio di curatela
+  nVarianti: integer('n_varianti').default(0),       // versioni dedotte collassate
+  nChar: integer('n_char'),
   createdAt: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
 });
 

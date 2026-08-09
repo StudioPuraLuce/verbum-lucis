@@ -13,7 +13,12 @@
     "db:seed:local": "wrangler d1 execute verbum-lucis --local --file=./drizzle/seed.sql",
     "db:schema:remote": "wrangler d1 execute verbum-lucis --remote --file=./drizzle/0000_init.sql",
     "db:seed:remote": "wrangler d1 execute verbum-lucis --remote --file=./drizzle/seed.sql",
-    "seed:gen": "tsx scripts/gen-seed-sql.ts"
+    "seed:gen": "tsx scripts/gen-seed-sql.ts",
+    "corpus:seed:gen": "python3 corpus/pipeline/gen_seed_corpus.py",
+    "db:corpus:schema:local": "wrangler d1 execute verbum-lucis --local --file=./drizzle/0001_pagine_corpus.sql",
+    "db:corpus:seed:local": "wrangler d1 execute verbum-lucis --local --file=./drizzle/seed-corpus.sql",
+    "db:corpus:schema:remote": "wrangler d1 execute verbum-lucis --remote --file=./drizzle/0001_pagine_corpus.sql",
+    "db:corpus:seed:remote": "wrangler d1 execute verbum-lucis --remote --file=./drizzle/seed-corpus.sql"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.0",
