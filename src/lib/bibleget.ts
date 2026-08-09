@@ -48,38 +48,45 @@ export async function fetchVerses(
   query: string,
   version: string = 'CEI2008'
 ): Promise<BibleVerse[]> {
-  const url = `${BASE_URL}/?query=${encodeURIComponent(query)}&version=${version}&return=json&appid=${APP_ID}`;
+  // Endpoint attivo: /v3/index.php (la rotta /v3/quote del README non è ancora deployata).
+  // `results` è un ARRAY di versetti (non un oggetto per-versione). CEI 2008 = copyright della
+  // Fondazione; BibleGet è pensato per inserire citazioni con cache → NON martellare l'API.
+  const url = `${BASE_URL}/v3/index.php?query=${encodeURIComponent(query)}&version=${version}&return=json&appid=${APP_ID}`;
 
   try {
     const res = await fetch(url);
+    if (!res.ok) throw new Error(`BibleGet error: ${res.status} ${res.statusText}`);
 
-    if (!res.ok) {
-      throw new Error(`BibleGet error: ${res.status} ${res.statusText}`);
-    }
-
-    const data: BibleGetResponse = await res.json();
-    const verses: BibleVerse[] = [];
-
-    for (const [ver, bookData] of Object.entries(data.results || {})) {
-      if (bookData && bookData.verses) {
-        for (const verse of bookData.verses) {
-          verses.push({
-            riferimento: `${bookData.bookAbbreviation} ${bookData.chapter},${verse.verseNumber}`,
-            libro: bookData.bookName,
-            capitolo: bookData.chapter,
-            versetto: verse.verseNumber,
-            testo: cleanVerseText(verse.verseText),
-            versione: ver,
-          });
-        }
-      }
-    }
-
-    return verses;
+    const data: any = await res.json();
+    const rows: any[] = Array.isArray(data.results) ? data.results : [];
+    return rows.map((v) => {
+      const abbr = v.bookabbrev || v.book || '';
+      const cap = Number(v.chapter);
+      const num = Number(v.verse);
+      return {
+        riferimento: `${abbr} ${cap},${num}`,
+        libro: v.book || abbr,
+        capitolo: cap,
+        versetto: num,
+        testo: cleanVerseText(v.text || ''),
+        versione: v.version || version,
+      } as BibleVerse;
+    });
   } catch (error) {
     console.error('BibleGet fetch error:', error);
     return [];
   }
+}
+
+/**
+ * Testo pieno di un riferimento liturgico (es. "Luca 2,16-21") come stringa unica, CEI 2008.
+ * Ritorna '' se il riferimento non è risolvibile. Da cachare a monte (in D1), non ri-chiamare.
+ */
+export async function fetchTestoRiferimento(reference: string, version = 'CEI2008'): Promise<string> {
+  const normalized = reference.replace(/\s+/g, '');
+  if (!normalized) return '';
+  const verses = await fetchVerses(normalized, version);
+  return verses.map((v) => v.testo).join(' ').replace(/\s+/g, ' ').trim();
 }
 
 /**
