@@ -14,11 +14,19 @@ verificato delle fonti (2026-08-09):
 - **BUCO** ❌ — manca la mappa **giorno → riferimenti letture** per domeniche A/B/C e ferie I/II
   (il *lezionario*). LitCal non ha endpoint letture (`/readings` 404).
 
-**Risultato da ottenere:** una fonte del lezionario (riferimenti; i riferimenti sono fatti, non
-copyright) → cache in D1 → BibleGet risolve il testo CEI (cache) → `liturgy` si popola →
-`/liturgia/oggi` si accende e il generatore ottiene `vangeloRif`. Candidati fonte: evangelizo.org
-(API multilingua con calendario, refs usabili) · dataset lezionario open · scraping ufficiale
-(solo refs). **Decisione fonte = gate utente.**
+**✅ Lezionario TROVATO e catena PROVATA:** `publication.evangelizo.ws/IT/days/{YYYY-MM-DD}` →
+`data.readings[]` con `reading_code` (es. "Mt 15,21-28"), copre domeniche ORDINARIE + ferie.
+End-to-end verificato: evangelizo(ref) → BibleGet CEI(testo) → versetti reali.
+
+**Risultato da costruire:**
+1. `src/lib/evangelizo.ts` — `letturenDelGiorno(dataISO)` → { titolo, letture: [{tipo, riferimento, libro}] }
+   (parse di `reading_code`, `#` = segmenti).
+2. Pipeline/seed che popola `liturgy` (D1): per una finestra di date → evangelizo(refs) →
+   BibleGet(`fetchTestoRiferimento`, testo CEI) → upsert con cache. Rispettare il rate di BibleGet.
+3. Accendere `/liturgia/oggi` (già legge da `liturgy`) + sbloccare `vangeloRif` nel generatore.
+- **Fonte-oro futura**: i PDF ufficiali dei lezionari (l'utente li ha) → seed offline robusto (via 2).
+- Copyright: refs = fatti (ok); testo CEI via BibleGet con cache (scelta informata); commento
+  evangelizo NON si ripubblica.
 
 ## Poi: RAG nel generatore (la "voce dell'autore")
 
