@@ -61,46 +61,42 @@ const col = COLORI[info.color] ?? COLORI.Verde;
     </div>
 
     {liturgia ? (
-      <article>
+      <article class="space-y-12">
         <!-- Prima Lettura -->
-        <section class="mb-8">
-          <div class="rounded-lg border bg-card p-6">
-            <h2 class="text-xl font-bold mb-3 font-serif">Prima Lettura</h2>
-            <p class="text-sm text-primary font-semibold mb-3">{liturgia.primaLettura.riferimento}</p>
-            <p class="leading-relaxed whitespace-pre-line">{liturgia.primaLettura.testo}</p>
-          </div>
+        <section>
+          <span class="block text-xs font-semibold uppercase tracking-[0.18em] text-gold">Prima Lettura</span>
+          <p class="mt-1 font-serif text-lg italic text-muted-foreground">{liturgia.primaLettura.riferimento}</p>
+          <hr class="mt-3 mb-5 w-12 border-t-2 border-gold/40" />
+          <p class="font-serif text-[1.15rem] leading-9 text-foreground/90 whitespace-pre-line">{liturgia.primaLettura.testo}</p>
         </section>
 
         <!-- Salmo -->
-        <section class="mb-8">
-          <div class="rounded-lg border bg-card p-6">
-            <h2 class="text-xl font-bold mb-3 font-serif">Salmo Responsoriale</h2>
-            <p class="text-sm text-primary font-semibold mb-2">{liturgia.salmoResponsoriale.riferimento}</p>
-            {liturgia.salmoResponsoriale.ritornello && (
-              <p class="italic text-muted-foreground mb-3">Rit: {liturgia.salmoResponsoriale.ritornello}</p>
-            )}
-            <p class="leading-relaxed whitespace-pre-line">{liturgia.salmoResponsoriale.testo}</p>
-          </div>
+        <section>
+          <span class="block text-xs font-semibold uppercase tracking-[0.18em] text-gold">Salmo Responsoriale</span>
+          <p class="mt-1 font-serif text-lg italic text-muted-foreground">{liturgia.salmoResponsoriale.riferimento}</p>
+          {liturgia.salmoResponsoriale.ritornello && (
+            <p class="mt-2 font-serif text-lg italic text-foreground">℟ {liturgia.salmoResponsoriale.ritornello}</p>
+          )}
+          <hr class="mt-3 mb-5 w-12 border-t-2 border-gold/40" />
+          <p class="font-serif text-[1.15rem] leading-9 text-foreground/90 whitespace-pre-line">{liturgia.salmoResponsoriale.testo}</p>
         </section>
 
         <!-- Seconda Lettura -->
         {liturgia.secondaLettura && (
-          <section class="mb-8">
-            <div class="rounded-lg border bg-card p-6">
-              <h2 class="text-xl font-bold mb-3 font-serif">Seconda Lettura</h2>
-              <p class="text-sm text-primary font-semibold mb-3">{liturgia.secondaLettura.riferimento}</p>
-              <p class="leading-relaxed whitespace-pre-line">{liturgia.secondaLettura.testo}</p>
-            </div>
+          <section>
+            <span class="block text-xs font-semibold uppercase tracking-[0.18em] text-gold">Seconda Lettura</span>
+            <p class="mt-1 font-serif text-lg italic text-muted-foreground">{liturgia.secondaLettura.riferimento}</p>
+            <hr class="mt-3 mb-5 w-12 border-t-2 border-gold/40" />
+            <p class="font-serif text-[1.15rem] leading-9 text-foreground/90 whitespace-pre-line">{liturgia.secondaLettura.testo}</p>
           </section>
         )}
 
         <!-- Vangelo -->
-        <section class="mb-8">
-          <div class="rounded-lg border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5 p-6">
-            <h2 class="text-xl font-bold mb-3 font-serif">Vangelo</h2>
-            <p class="text-sm text-primary font-semibold mb-3">{liturgia.vangelo.riferimento}</p>
-            <p class="text-lg leading-relaxed whitespace-pre-line">{liturgia.vangelo.testo}</p>
-          </div>
+        <section class="rounded-2xl border border-gold/25 bg-gradient-to-br from-background to-gold/5 p-7 md:p-9">
+          <span class="block text-xs font-semibold uppercase tracking-[0.18em] text-gold">✠ Vangelo</span>
+          <p class="mt-1 font-serif text-lg italic text-muted-foreground">{liturgia.vangelo.riferimento}</p>
+          <hr class="mt-3 mb-5 w-12 border-t-2 border-gold/40" />
+          <p class="font-serif text-[1.28rem] leading-[1.85] text-foreground whitespace-pre-line">{liturgia.vangelo.testo}</p>
         </section>
       </article>
     ) : (

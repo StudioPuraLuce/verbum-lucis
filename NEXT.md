@@ -24,7 +24,12 @@ End-to-end verificato: evangelizo(ref) → BibleGet CEI(testo) → versetti real
 2. Pipeline/seed che popola `liturgy` (D1): per una finestra di date → evangelizo(refs) →
    BibleGet(`fetchTestoRiferimento`, testo CEI) → upsert con cache. Rispettare il rate di BibleGet.
 3. Accendere `/liturgia/oggi` (già legge da `liturgy`) + sbloccare `vangeloRif` nel generatore.
-- **Fonte-oro futura**: i PDF ufficiali dei lezionari (l'utente li ha) → seed offline robusto (via 2).
+- **⚠️ Rate-limit BibleGet (errNum 12):** i seed di finestre AMPIE lo superano (90×4 richieste →
+  blocco per IP). Perciò: **il testo di massa NON si prende da BibleGet.** BibleGet resta per il
+  **giornaliero** (1 giorno = 4 richieste, ok, es. cron). Il **backfill di massa va dai PDF ufficiali**
+  dei lezionari (offline, nessun limite) → è la via giusta per lo storico/futuro. `seed-liturgia.mjs`
+  ora si ferma con grazia sul rate-limit (tiene i riferimenti, conserva i testi già in cache).
+- **Fonte-oro / bulk**: i PDF ufficiali dei lezionari (l'utente li ha) → seed offline robusto.
 - Copyright: refs = fatti (ok); testo CEI via BibleGet con cache (scelta informata); commento
   evangelizo NON si ripubblica.
 

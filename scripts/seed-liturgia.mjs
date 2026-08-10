@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { lettureDelGiorno, ruoliLetture } from '../src/lib/evangelizo.ts';
-import { fetchTestoRiferimento } from '../src/lib/bibleget.ts';
+import { fetchTestoRiferimento, BibleGetRateLimitError } from '../src/lib/bibleget.ts';
 import { liturgicalCoordinate } from '../src/lib/liturgical-spiral.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -42,14 +42,23 @@ function dateRange(startISO, n) {
 }
 
 // Testo CEI con cache per-riferimento (idempotente, gentile con l'API BibleGet).
+// ⚠️ BibleGet limita i volumi grandi per IP (errNum 12). Il seed di finestre AMPIE va fatto a
+// piccoli blocchi nel tempo (la cache conserva i successi) — o, meglio, dai PDF ufficiali (offline).
+let rateLimited = false;
 async function testoCached(rif) {
   if (!rif) return '';
   const p = join(CACHE, `bg-${sha(rif)}.json`);
   if (existsSync(p)) return JSON.parse(readFileSync(p, 'utf-8')).testo || '';
-  const testo = await fetchTestoRiferimento(rif);
-  if (testo) writeFileSync(p, JSON.stringify({ rif, testo })); // non cachare i vuoti (500 transitori → ritenta)
-  await sleep(350); // rate-limit cortese
-  return testo;
+  if (rateLimited) return ''; // già bloccati: non insistere
+  try {
+    const testo = await fetchTestoRiferimento(rif);
+    if (testo) writeFileSync(p, JSON.stringify({ rif, testo })); // non cachare i vuoti → ritenta
+    await sleep(400); // cortesia
+    return testo;
+  } catch (e) {
+    if (e instanceof BibleGetRateLimitError) { rateLimited = true; console.warn('  ⚠️ BibleGet rate-limit: mi fermo sui testi, tengo i riferimenti.'); }
+    return '';
+  }
 }
 
 async function evangelizoCached(dataISO) {
@@ -71,10 +80,11 @@ async function main() {
     const { primaLettura, salmo, secondaLettura, vangelo } = ruoliLetture(g);
     const coord = liturgicalCoordinate(data);
 
-    const [t1, tS, t2, tV] = await Promise.all([
-      testoCached(primaLettura?.riferimento), testoCached(salmo?.riferimento),
-      testoCached(secondaLettura?.riferimento), testoCached(vangelo?.riferimento),
-    ]);
+    // Sequenziale (gentile con l'API): il Vangelo per primo, è il più importante.
+    const tV = await testoCached(vangelo?.riferimento);
+    const t1 = await testoCached(primaLettura?.riferimento);
+    const tS = await testoCached(salmo?.riferimento);
+    const t2 = await testoCached(secondaLettura?.riferimento);
 
     rows.push({
       data,

@@ -58,6 +58,11 @@ export async function fetchVerses(
     if (!res.ok) throw new Error(`BibleGet error: ${res.status} ${res.statusText}`);
 
     const data: any = await res.json();
+    // BibleGet risponde 200 anche quando rifiuta: errore nel corpo. errNum 12 = rate-limit per IP.
+    const errs = Array.isArray(data.errors) ? data.errors : [];
+    const rate = errs.find((e: any) => Number(e?.errNum) === 12 || /large amount of request/i.test(e?.errMessage || ''));
+    if (rate) throw new BibleGetRateLimitError(rate.errMessage || 'BibleGet rate limit');
+
     const rows: any[] = Array.isArray(data.results) ? data.results : [];
     return rows.map((v) => {
       const abbr = v.bookabbrev || v.book || '';
@@ -73,9 +78,15 @@ export async function fetchVerses(
       } as BibleVerse;
     });
   } catch (error) {
+    if (error instanceof BibleGetRateLimitError) throw error; // il chiamante deve fermarsi
     console.error('BibleGet fetch error:', error);
     return [];
   }
+}
+
+/** Rate-limit di BibleGet (errNum 12): il chiamante deve fermarsi, non ritentare a raffica. */
+export class BibleGetRateLimitError extends Error {
+  constructor(message: string) { super(message); this.name = 'BibleGetRateLimitError'; }
 }
 
 /**
