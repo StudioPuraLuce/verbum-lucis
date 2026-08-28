@@ -1,53 +1,131 @@
-# STATUS — Verbum Lucis
+# STATUS — Theosis / Verbum Lucis
 
-> Stato **verificato** (non aspirazionale). Aggiornato a ogni fetta di lavoro. Data: 2026-08-09.
-> Fase corrente: **Fase 0 — Governance + Corpo completo** (vedi `ROADMAP.md`).
+> Stato **verificato**, non aspirazionale. Data: 2026-08-28.
+> Branch di rifondazione documentale: `docs/theosis-private-refoundation`.
+> Base tecnica: `claude/cloudflare-migration` @ `46d9a7b4b5db3dde933e00bebfb2af3598911cf7`.
 
-## Fatto e verificato
+## Stato strategico
 
-**Infrastruttura**
-- Astro 5 SSR + `@astrojs/cloudflare` + D1 (Drizzle sqlite-core, `getDb(Astro.locals)`) + KV.
-  Build ok; dev locale serve tutte le pagine 200 da D1. `wrangler login` fatto.
-- **Non ancora lanciato** in produzione (D1 remoto/deploy = gate umano, Fase 1.5).
+La direzione di prodotto è stata **rifondata** dopo la rilettura del corpus, dei prompt storici, di
+Fedele Messaggero e del funzionamento reale dei quaderni.
 
-**La spina (ADR-001)**
-- `src/lib/liturgical-spiral.ts` — coordinata deterministica offline (Pasqua/Avvento validati;
-  8 ago 2026 = TO XVIII, Anno A/Matteo, "Centro del cuore"). Vista `src/pages/spirale.astro`,
-  `SpiraleMini.astro` in home. Mappe centri: Pentecoste→Cristo Re, Avvento, Pasqua. **Buchi**:
-  Quaresima, Natale, TO I (1–9).
+Decisioni ora canoniche su questa branch:
 
-**Generatore Pagina Sacra**
-- `pagina-sacra-generator.ts` + `pagina-sacra-prompt.ts` (voce "Fedele Messaggero", contratto JSON,
-  upsert in `pagine_sacre`). Endpoint `api/genera-pagina-sacra.ts`. Coordinata offline-first nel
-  prompt; centro esoterico escluso dal mainstream. Modello Sonnet via Gateway.
+- **Theosis** = sistema personale e privato del cammino;
+- **Verbum Lucis** = servizio pubblico cattolico semplice, fonte-based e hands-off;
+- **Fedele Messaggero** = distribuzione dei soli artefatti pubblici;
+- la **Pagina Sacra è privata**;
+- `Oggi cammino come chi…` è un **Presence Memento** portato nel quadernino per ritornare alla
+  Presenza durante il giorno;
+- `Sei stato qui` è memoria privata con matching rigoroso;
+- nessuna pipeline automatica `corpus privato → RAG → pubblico`;
+- monetizzazione pubblica = utilità/traffico (affiliate, ads dove adatti, prodotti strumentali
+  eventuali, sostegno), non direzione spirituale.
 
-**Il corpus (privato, ADR-003/004/005)**
-- Pipeline S1–S5 in `corpus/pipeline/` (gitignorata quanto a output). 923 Pagine curate
-  (`pagine.curate.jsonl`, qualità alta 509/media 251/bassa 163). Tabella fedele `pagine_corpus`
-  (923 righe) in D1 locale. Grafo `graph.sqlite` (1485 nodi / 5315 archi).
-- **Corpo di Conoscenza**: **7.423 atomi** verbatim in `atomi_corpus` (D1 locale, verificato).
-  Estratti su qualità ≥ 5 (Haiku, ADR-008); le pagine di qualità alta restano quelle già estratte
-  con Sonnet (cache). Costo reale ~2$.
-- **Corpo della Dottrina**: **2.716 concetti** (1.842 distinti) da 162 Pagine `dottrina`, mappa
-  dei collegamenti (hub: Presenza, Ricordo di sé, Silenzio, Fuoco; scala idrogeni H768→H6 completa).
-  `extract_doctrine.mjs` reso robusto (cache + salvataggio JSON troncato); `report_dottrina.py`.
-  Output `dottrina.jsonl` (privato). Non ancora in D1 (è artefatto di lavorazione).
+Il codice non è stato ancora modificato per questa rifondazione.
 
-**Governance (ADR + questo pacchetto)**
-- `docs/00-governance/STELLA-POLARE.md`, `AGENTS.md`, `ROADMAP.md`, `DECISIONS.md`, `STATUS.md`,
-  `NEXT.md`, `CHANGELOG.md` — istituiti in questa sessione.
+## Chiarimento storico verificato dall'autore
 
-## Fase 1 (in corso)
-- **Liturgia normale (letture del giorno)** — ACCESA e verificata: `src/lib/evangelizo.ts` (refs)
-  + `src/lib/bibleget.ts` (testo CEI, endpoint `/v3/index.php`) + `src/lib/litcal.ts` (calendario,
-  `/api/dev`) → `scripts/seed-liturgia.mjs` popola la tabella `liturgy` (D1). `/liturgia/oggi`
-  mostra 1ª/salmo/2ª/Vangelo col testo CEI (8 giorni seminati). Testo CEI copyright →
-  seed/cache gitignorati; produzione = gate utente. Fonte-oro futura: PDF ufficiali (seed offline).
-- **Componitore Giornaliero** (`src/lib/componitore.ts`) — FATTO e verificato: data → coordinata →
-  seleziona atomi (ranking: centro +4, tempo +2, tonalità Vangelo +1; `concetto` esclusi) → compone
-  per tipo. Anteprima interna `/admin/componitore` (verificata nel browser, log puliti): per oggi
-  compone meditazioni/preghiere/gesti/frasi/simboli reali, coerenti con la coordinata.
-- Prossimo: RAG (atomi come "voce dell'autore" nel generatore) + coerenza del sito. Vedi `NEXT.md`.
+- I tre quaderni B5 erano principalmente **trascrizioni integrali delle Pagine Sacre**.
+- Le Pagine Sacre digitali esistono dalla prima all'ultima usata nel cammino; non è quindi
+  necessario ridigitalizzare integralmente i B5 per ricostruire il contenuto.
+- I quadernini `Oggi cammino` prendevano la sezione omonima della Pagina Sacra e venivano portati
+  con sé durante la giornata per ritornare ripetutamente alla Presenza.
 
-## Prossimo
+Questo rende la catena originaria:
+
+`Liturgia → Pagina Sacra → B5/assunzione → Oggi cammino → quadernino → Presenza`.
+
+## Stato tecnico ereditato dalla branch Claude
+
+### Infrastruttura
+
+- Astro 5 SSR + Cloudflare adapter + D1 + KV.
+- Build/dev locale già verificati nella sessione precedente.
+- Nessun deploy produzione effettuato.
+
+### Spina liturgica
+
+- `src/lib/liturgical-spiral.ts` presente e funzionante come coordinata offline.
+- viste Spirale già implementate.
+- restano gap storici di mappatura in alcuni periodi, da trattare più avanti.
+
+### Liturgia del giorno
+
+- Evangelizo fornisce riferimenti;
+- BibleGet fornisce testo CEI con rate-limit gestito;
+- LitCal fornisce calendario/celebrazioni;
+- `scripts/seed-liturgia.mjs` e `/liturgia/oggi` già funzionanti su finestra locale verificata.
+
+Questo lavoro resta utile perché costituisce il futuro **Nucleo Liturgico condiviso**.
+
+### Corpus privato
+
+Pipeline in `corpus/pipeline/` già costruita:
+
+- ingest export ChatGPT/Gemini + Obsidian;
+- segmentazione in Pagine;
+- coordinata liturgica;
+- cronistoria/inventario;
+- grafo;
+- curatela;
+- semina `pagine_corpus` in D1 locale;
+- estrazione atomi verbatim;
+- Corpo della Dottrina.
+
+Ultimi conteggi documentati dalla branch precedente:
+
+- 10.962 frammenti nella Sessione 1;
+- 1.085 Pagine prima della curatela;
+- 923 Pagine curate;
+- 7.423 atomi nella successiva estrazione ampliata;
+- 2.716 concetti nel Corpo della Dottrina.
+
+Questi numeri restano **stato storico verificato della pipeline precedente**, ma R1 dovrà produrre
+conteggi specifici e verificati delle sole Pagine Sacre / `Oggi cammino`.
+
+### Componitore e generatore
+
+- `src/lib/componitore.ts` è già capace di selezionare atomi pertinenti per coordinata;
+- esiste un generatore/renderer di Pagina Sacra orientato al pubblico sulla branch Claude.
+
+**Cambio di ruolo:**
+
+- il Componitore è candidato a diventare retriever privato di Theosis;
+- il generatore pubblico di Pagina Sacra **non va collegato al RAG** come previsto dal vecchio
+  `NEXT.md`;
+- schema e codice esistenti non si cancellano finché non viene completato R1 e deciso il riuso.
+
+## Governance aggiornata
+
+Creati/aggiornati su questa branch:
+
+- `docs/00-governance/STELLA-POLARE.md`;
+- `docs/00-governance/ORIGIN-SYSTEM.md`;
+- `docs/00-governance/PRIVATE-PUBLIC-BOUNDARY.md`;
+- `DECISIONS.md` con ADR-009…014;
+- `ROADMAP.md`;
+- `NEXT.md`;
+- `AGENTS.md`.
+
+## Fase corrente
+
+**R0 — Rifondazione e governance**: quasi chiusa.
+
+Il prossimo risultato unico è **R1-first-slice — Origin System audit**: verificare le sorgenti
+private reali, costruire la cronologia delle Pagine Sacre e il dataset verbatim `Oggi cammino` con
+provenance.
+
 Vedi `NEXT.md`.
+
+## Cose esplicitamente ferme
+
+Finché R1 non è verificata:
+
+- niente RAG nel generatore pubblico;
+- niente semina corpus remota;
+- niente deploy pubblico motivato dalla vecchia roadmap;
+- niente `Sei stato qui` costruito su embedding senza cronologia;
+- niente KDP come obiettivo obbligatorio;
+- niente attivazione social/WhatsApp;
+- nessuna cancellazione del lavoro già fatto sulla branch Claude.
