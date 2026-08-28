@@ -1,17 +1,25 @@
 # ☩ La Lavorazione del Corpus
 
-Estrazione, ricostruzione e curatela del **corpus spirituale reale** (≈2 anni di scrittura
-dell'utente negli export ChatGPT/Gemini + vault Obsidian) per seminare il portale Verbum Lucis.
+> **Governance 2026-08-28:** il corpus è ora parte di **Theosis privato**. Il precedente prossimo
+> passo `RAG → generatore pubblico` è superato da ADR-009…014. La pipeline resta preziosa per
+> ricostruzione, ricerca e memoria, ma non alimenta automaticamente Verbum Lucis pubblico.
 
-**Principio:** il corpus **non si genera con AI** — esiste già, scritto a mano. La pipeline
-*estrae* e *ordina*, non inventa. Ogni Pagina viene ancorata alla **coordinata liturgica**
-calcolata dalla spina (`src/lib/liturgical-spiral.ts`), unica fonte di verità.
+Estrazione, ricostruzione e curatela del **corpus spirituale reale** (≈2 anni di scrittura
+dell'utente negli export ChatGPT/Gemini + vault Obsidian) per costruire la memoria privata di
+Theosis.
+
+**Principio:** il corpus storico **non si riscrive con AI** — esiste già. La pipeline estrae,
+ordina, collega e indicizza; l'AI può anche comporre **nuove bozze private** in Theosis, ma queste
+restano oggetti nuovi con provenance distinta e non diventano retroattivamente testimonianza.
+Ogni Pagina storica viene ancorata alla **coordinata liturgica** calcolata dalla spina
+(`src/lib/liturgical-spiral.ts`).
 
 ## ⚠️ Privacy
 Il contenuto estratto è **testimonianza privata**. Tutto ciò che contiene testo del corpus è
 **gitignorato** (`raw/`, `*.jsonl`, `*.sqlite`, `CRONISTORIA.md`, `INVENTARIO.md`). Nel repo
-entrano solo il **codice della pipeline** e i **documenti di schema** (questo README,
-`GRAFO-SCHEMA.md`). Il seed curato entrerà nel DB solo deliberatamente, in Sessione 3.
+entrano solo il **codice della pipeline** e i **documenti di schema/report aggregati**.
+
+È vietata una pipeline automatica `corpus → RAG → pagina pubblica → publish`.
 
 ## Pipeline
 
@@ -31,21 +39,20 @@ python3 corpus/pipeline/curate.py            # 7. → pagine.curate.jsonl (dedup
 python3 corpus/pipeline/build_curato_view.py # 8. → curato.html (Pagine apribili a testo integrale)
 python3 corpus/pipeline/build_diario.py      # 8b. → DIARIO-RICOSTRUITO.md (leggibile in Markdown)
 
-# Sessione 4: semina DB — le Pagine reali intere in pagine_corpus (Strada 1)
+# Sessione 4: semina DB locale — indice privato delle Pagine reali intere
 npm run corpus:seed:gen                       # 9. pagine.curate.jsonl → drizzle/seed-corpus.sql (privato)
 npm run db:corpus:schema:local                # 10. crea la tabella pagine_corpus (D1 locale)
 npm run db:corpus:seed:local                  # 11. carica le 923 Pagine (D1 locale)
-# in produzione (gate utente): db:corpus:schema:remote + db:corpus:seed:remote
+# Nessuna semina remota finché architettura privata e firewall non sono definiti e approvati.
 
-# Sessione 5: IL CORPO DI CONOSCENZA — scomposizione AI in atomi verbatim
-node --env-file=.dev.vars corpus/pipeline/extract_atoms.mjs --limit 8   # validazione (8 pagine)
+# Sessione 5: Corpo di Conoscenza — scomposizione AI in atomi verbatim
+node --env-file=.dev.vars corpus/pipeline/extract_atoms.mjs --limit 8
 node --env-file=.dev.vars corpus/pipeline/extract_atoms.mjs --min-quality 8 --concurrency 6
-#   → corpus/atomi.jsonl (+ atoms-cache/ per-pagina, idempotente). Se restano pagine "vuote"
-#     (JSON troncato): riesegui con --retry-empty. Modello: claude-sonnet-4-6 via Gateway.
-python3 corpus/pipeline/report_atomi.py       # conteggi per tipo/tempo/tag
-python3 corpus/pipeline/build_atomi_view.py   # → corpus/atomi.html (privata, filtrabile+ricerca)
-npm run atomi:seed:gen                         # atomi.jsonl → drizzle/seed-atomi.sql (privato)
-npm run db:atomi:schema:local && npm run db:atomi:seed:local   # tabella + carico (D1 locale)
+# → corpus/atomi.jsonl (+ atoms-cache/ per-pagina, idempotente)
+python3 corpus/pipeline/report_atomi.py
+python3 corpus/pipeline/build_atomi_view.py
+npm run atomi:seed:gen
+npm run db:atomi:schema:local && npm run db:atomi:seed:local
 ```
 
 ### Cosa produce
@@ -53,43 +60,60 @@ npm run db:atomi:schema:local && npm run db:atomi:seed:local   # tabella + caric
 |---|---|
 | `raw/fragments.jsonl` | Ogni blocco di testo con provenienza (fonte, thread, data, ruolo). |
 | `pagine.jsonl` | Le **Pagine** segmentate (unità-giornata): data, vangelo, tipo, titolo, testo. |
-| `pagine.enriched.jsonl` | Le Pagine + `coord` (coordinata liturgica dalla spina). **La node table.** |
+| `pagine.enriched.jsonl` | Le Pagine + `coord` (coordinata liturgica dalla spina). |
 | `CRONISTORIA.md` | La linea del cammino, giorno per giorno, con coordinata e Pagine trovate. |
 | `INVENTARIO.md` | Copertura per Vangelo / tempo / ciclo A·B·C / tipo; Top Pagine; gap. |
-| `graph.sqlite` | Il **grafo di conoscenza**: tabelle `nodi`/`archi` (schema in `GRAFO-SCHEMA.md`). |
+| `graph.sqlite` | Il grafo di conoscenza: tabelle `nodi`/`archi`. |
 | `nodi.jsonl` / `archi.jsonl` | Export portabile del grafo. |
 | `graph.html` | Vista self-contained: cronistoria filtrabile + statistiche del grafo. |
-| `pagine.curate.jsonl` | L'insieme **curato**: 1 Pagina migliore per cluster + `qualita` + `varianti`. |
-| `curato.html` | Vista leggibile: ogni Pagina apribile a **testo integrale**, filtri qualità/tipo. |
+| `pagine.curate.jsonl` | Insieme curato: 1 Pagina migliore per cluster + `qualita` + `varianti`. |
+| `curato.html` | Vista leggibile: ogni Pagina apribile a testo integrale. |
 
-### Fonti (in `~/Work/_archive/` e `~/Note/`)
+### Fonti (private, fuori git)
+
 - **ChatGPT** (`DatiGPT_exported/conversations-*.json`): miniera per-giorno; l'oro è nei thread lunghi.
-- **Obsidian** (`~/Note/`): struttura della spina (Cammino Pasquale, Domeniche/Centri, Ottava, Idrogeni).
-- **Gemini** (`Dati_GEMINI_exported/`): pochi documenti Canvas UTF-8. `.wav`/zip/immagini **esclusi**.
+- **Obsidian** (`~/Note/`): struttura della spina e materiali del cammino.
+- **Gemini** (`Dati_GEMINI_exported/`): documenti/Canvas ed export pertinenti.
+- **Drive**: materiale di appoggio e Pagine/approfondimenti dove presente.
+
+I path qui sono documentazione storica del setup locale, non promessa che ogni macchina li abbia
+ancora: R1 deve verificarli sul filesystem reale.
 
 ## Schema `tipo` delle Pagine
-`pagina-sacra` (Vangelo + applicazione del giorno) · `lectio` · `preghiera` · `cammino`
-(orbite/settimane/ottava) · `dottrina` (idrogeni/Quarta Via/Tetramorfo) · `diario` · `nota`.
 
-## Piano multi-sessione
-- **S1** ✅ ingest + segment + coordinata → node table + cronistoria + inventario + schema grafo.
-- **S2** ✅ grafo di conoscenza: `graph.sqlite` (1485 nodi, 5315 archi) + `graph.html` (vista).
-- **S3** ✅ curatela: `curate.py` (dedup 1085→923, qualità alta 509/media 251/bassa 163) + `curato.html`.
-- **S4** ✅ **Strada 1**: tabella `pagine_corpus` (le Pagine reali INTERE + coordinata) seminata in D1
-  locale (923 righe). `pagine_sacre` a riquadri resta per le pagine generate. Migrazione in
-  `drizzle/0001_pagine_corpus.sql` (locale, come `0000_init.sql`: `drizzle/` è gitignorato per
-  convenzione — `db/schema.ts` è la fonte di verità). Seed `drizzle/seed-corpus.sql` gitignorato (privato).
-- **S5** ✅ **Il Corpo di Conoscenza**: scomposizione AI estrattiva (verbatim) delle Pagine in
-  **atomi** tipizzati. `atom-prompt.mjs` + `extract_atoms.mjs` (via Gateway, cache, guardia
-  anti-allucinazione + salvataggio JSON troncato) → **4.164 atomi** da 402 Pagine
-  (insegnamento 1383 · frase 762 · gesto 639 · preghiera 450 · meditazione 446 · simbolo 360 ·
-  concetto 68 · testimonianza 56). Tabella `atomi_corpus` (D1 locale). Vista `atomi.html`.
-- **S6 — prossima** — sopra gli atomi: (A) RAG nel generatore (voce dell'autore; `concetto`
-  esoterici fuori dal mainstream), (B) stanza privata, (C) composizione (libri/preghiere/stampe/
-  post/cammini/la sua storia). Poi semina remota (gate utente).
+`pagina-sacra` · `lectio` · `preghiera` · `cammino` · `dottrina` · `diario` · `nota`.
 
-## Stato Sessione 1 (ultima esecuzione)
-- **10.962 frammenti** (ChatGPT 10.797 · Obsidian 150 · Gemini 15).
-- **1.085 Pagine** (pagina-sacra 190 · cammino 304 · preghiera 215 · dottrina 223 · diario 60 · lectio 6 · nota 87).
-- **1.082 con coordinata liturgica**; **242 giornate a data esplicita**; arco **ago 2024 → lug 2026**.
-- Sanity: `2025-04-21` (Lunedì dell'Angelo) → Tempo di Pasqua, sett. 1, bianco, _La Presenza che cammina accanto_. ✓
+## Stato storico della pipeline
+
+- **S1** ✅ ingest + segment + coordinata → node table + cronistoria + inventario.
+- **S2** ✅ grafo di conoscenza: `graph.sqlite` (1485 nodi, 5315 archi) + vista.
+- **S3** ✅ curatela: `curate.py` (dedup 1085→923, qualità alta 509/media 251/bassa 163).
+- **S4** ✅ tabella `pagine_corpus` locale con Pagine reali intere + coordinata.
+- **S5** ✅ scomposizione in atomi verbatim; successivamente ampliata fino ai conteggi riportati in
+  `STATUS.md`/`CHANGELOG.md`.
+- **S6 precedente** ❌ **SUPERATA** — il RAG pubblico non è più il prossimo passo.
+
+## Prossimo lavoro canonico — R1 Origin System
+
+Vedi `NEXT.md`.
+
+Priorità:
+
+1. verificare le sorgenti reali ancora disponibili;
+2. ricostruire la cronologia completa delle `pagina-sacra`;
+3. estrarre verbatim `Oggi cammino come chi…` in dataset autonomo;
+4. aggiungere provenance (`generated`, `adopted`, `carried`, ecc.) senza inferire ciò che non è
+   verificato;
+5. usare i B5 come testimonianza materiale/controllo campione;
+6. usare i quadernini per verificare quali memento furono realmente **portati**.
+
+## Gerarchia di fedeltà
+
+1. sorgente originale;
+2. Pagina integrale;
+3. versione assunta/trascritta;
+4. `Oggi cammino` realmente portato;
+5. atomi;
+6. embedding/ranking/sintesi.
+
+Gli ultimi livelli sono indici ricostruibili; i primi sono memoria.

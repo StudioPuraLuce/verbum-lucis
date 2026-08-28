@@ -2,6 +2,33 @@
 
 Formato: voci in ordine cronologico inverso. Le date sono `Europe/Rome`.
 
+## 2026-08-28
+
+### Rifondazione concettuale — Theosis privato / Verbum Lucis pubblico
+
+- Ricostruito il funzionamento originario del cammino: **Liturgia → Pagina Sacra → trascrizione B5
+  → `Oggi cammino come chi…` → quadernino tascabile → ritorni ripetuti alla Presenza**.
+- Chiarito dall'autore che i B5 erano principalmente trascrizioni delle Pagine Sacre digitali e
+  che i quadernini servivano come memento portatile durante la giornata. Non serve ridigitalizzare
+  integralmente i B5 per ricostruire il testo.
+- Creata la separazione canonica in tre sistemi:
+  - **Theosis** — privato, cammino/memoria/Pagina Sacra/Praxis/`Sei stato qui`;
+  - **Verbum Lucis** — pubblico, cattolico, fonte-based, semplice e hands-off;
+  - **Fedele Messaggero** — distribuzione dei soli artefatti pubblici.
+- Creato `docs/00-governance/ORIGIN-SYSTEM.md`: ciclo `Ricevi → Porta → Ritorna → Ricorda`,
+  provenance personale, regole rigorose di `Sei stato qui`, Messa/Praxis private.
+- Creato `docs/00-governance/PRIVATE-PUBLIC-BOUNDARY.md`: firewall strutturale; vietata la pipeline
+  automatica `corpus privato → RAG → publish`.
+- Riscritta la Stella Polare sulla nuova identità.
+- Aggiunte ADR-009…014 in `DECISIONS.md`, che superano il RAG pubblico del corpus, la Pagina Sacra
+  customer-facing e KDP come primo prodotto obbligatorio.
+- Riscritta `ROADMAP.md`: R0 governance → R1 Origin System → R2 Theosis Oggi → R3 `Sei stato qui`
+  → R4 Messa/Praxis → P1 pubblico → P2 distribuzione → P3 SEO → M monetizzazione.
+- `NEXT.md`: unico prossimo risultato = ricostruzione verificabile delle Pagine Sacre e dataset
+  verbatim `Oggi cammino` con provenance.
+- `AGENTS.md` riallineato: AI strumento, non autorità; separazione privato/pubblico fail-closed.
+- **Nessuna modifica al codice applicativo** in questa rifondazione documentale.
+
 ## 2026-08-09
 
 ### Fase 1 — La liturgia normale (letture del giorno) ACCESA

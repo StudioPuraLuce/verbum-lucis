@@ -1,56 +1,192 @@
 # NEXT — il prossimo risultato unico
 
-> Un solo risultato alla volta, con criteri d'accettazione e gate. Quando è fatto e verificato, si
-> aggiorna `STATUS.md` + `CHANGELOG.md` e si sceglie il prossimo da `ROADMAP.md`.
+> Un solo risultato alla volta, con criteri d'accettazione e gate. Quando è fatto e verificato, si aggiorna `STATUS.md` + `CHANGELOG.md` e si sceglie il prossimo da `ROADMAP.md`.
 
-## Ora: Fase 1 — Il LEZIONARIO (la radice del motore)
+# Ora: R1 — ricostruire l'Origin System dalla prima all'ultima Pagina Sacra
 
-La Pagina Sacra è **derivata dalle letture del giorno** → le letture sono a monte di tutto. Stato
-verificato delle fonti (2026-08-09):
-- **BibleGet** ✅ FUNZIONA — endpoint `/v3/index.php` (NON `/v3/quote`, non ancora deployato) →
-  testo **CEI 2008** da riferimento. Vedi `src/lib/bibleget.ts` (`fetchTestoRiferimento`).
-- **LitCal** ✅ endpoint `/api/dev/` → calendario per ogni giorno (celebrazione/colore/ciclo), **ma
-  letture solo per ~80 solennità/feste, ZERO domeniche ordinarie / ferie**. Vedi `src/lib/litcal.ts`.
-- **BUCO** ❌ — manca la mappa **giorno → riferimenti letture** per domeniche A/B/C e ferie I/II
-  (il *lezionario*). LitCal non ha endpoint letture (`/readings` 404).
+## Perché questo viene prima del codice
 
-**✅ Lezionario TROVATO e catena PROVATA:** `publication.evangelizo.ws/IT/days/{YYYY-MM-DD}` →
-`data.readings[]` con `reading_code` (es. "Mt 15,21-28"), copre domeniche ORDINARIE + ferie.
-End-to-end verificato: evangelizo(ref) → BibleGet CEI(testo) → versetti reali.
+Il codice attuale ha già costruito molto valore: spina liturgica, letture, D1, corpus, atomi, grafo,
+Componitore e generatore.
 
-**Risultato da costruire:**
-1. `src/lib/evangelizo.ts` — `letturenDelGiorno(dataISO)` → { titolo, letture: [{tipo, riferimento, libro}] }
-   (parse di `reading_code`, `#` = segmenti).
-2. Pipeline/seed che popola `liturgy` (D1): per una finestra di date → evangelizo(refs) →
-   BibleGet(`fetchTestoRiferimento`, testo CEI) → upsert con cache. Rispettare il rate di BibleGet.
-3. Accendere `/liturgia/oggi` (già legge da `liturgy`) + sbloccare `vangeloRif` nel generatore.
-- **⚠️ Rate-limit BibleGet (errNum 12):** i seed di finestre AMPIE lo superano (90×4 richieste →
-  blocco per IP). Perciò: **il testo di massa NON si prende da BibleGet.** BibleGet resta per il
-  **giornaliero** (1 giorno = 4 richieste, ok, es. cron). Il **backfill di massa va dai PDF ufficiali**
-  dei lezionari (offline, nessun limite) → è la via giusta per lo storico/futuro. `seed-liturgia.mjs`
-  ora si ferma con grazia sul rate-limit (tiene i riferimenti, conserva i testi già in cache).
-- **Fonte-oro / bulk**: i PDF ufficiali dei lezionari (l'utente li ha) → seed offline robusto.
-- Copyright: refs = fatti (ok); testo CEI via BibleGet con cache (scelta informata); commento
-  evangelizo NON si ripubblica.
+Ma la direzione di prodotto è cambiata:
 
-## Poi: RAG nel generatore (la "voce dell'autore")
+- la **Pagina Sacra è privata**;
+- «Oggi cammino come chi…» è un **Presence Memento**, non una chiusa editoriale;
+- `Sei stato qui` è memoria privata;
+- il corpus non deve più alimentare automaticamente pagine pubbliche;
+- Verbum Lucis pubblico deve poter vivere soltanto di Nucleo Liturgico + fonti pubbliche.
 
-Il Componitore c'è (`src/lib/componitore.ts`, verificato su `/admin/componitore`). Usarlo per
-**nutrire il generatore Pagina Sacra** con gli atomi reali dell'autore.
+Prima di riusare il codice dobbiamo conoscere esattamente il sistema che stiamo continuando.
 
-**Risultato:** in `resolveLiturgyContext`/`buildUserPrompt` (`pagina-sacra-generator.ts` /
-`pagina-sacra-prompt.ts`) iniettare gli atomi selezionati dal Componitore come contesto "voce
-dell'autore", così la Pagina Sacra generata suona come lui e attinge al suo cammino.
+---
 
-**Criteri d'accettazione:**
-- Il prompt include un blocco di atomi pertinenti (meditazione/preghiera/gesto/frase) per la
-  coordinata del giorno; **nessun atomo `concetto`** esoterico entra nel prompt mainstream.
-- Una Pagina Sacra generata per una data nota riflette temi/gesti degli atomi reali.
-- Nessuna regressione: `/pagina-sacra/oggi`, `/spirale`, `/admin/componitore` restano 200, log puliti.
+## Risultato unico
 
-**Gate:** nessuno (locale). Riattivare `[ai]` in `wrangler.toml` + `wrangler dev` per generare.
-Il primo gate umano è la **Fase 1.5** (semina D1 remota + deploy prod).
+Produrre una **cronologia verificabile delle Pagine Sacre** e il primo dataset canonico degli
+`Oggi cammino`, con provenance.
 
-## Poi (coerenza del sito)
-Striscia-coordinata + cross-link "oggi nella spirale" su santi/preghiere/novene/rosario (non più
-silos). Design-language unico propagato.
+Il lavoro parte dalle sorgenti digitali già esistenti — export ChatGPT/Gemini, Obsidian e output
+della pipeline del corpus — non dalla ridigitalizzazione integrale dei B5, che sono principalmente
+trascrizioni manoscritte delle Pagine Sacre.
+
+---
+
+## Passo 1 — verificare le sorgenti reali
+
+La pipeline corrente dichiara sorgenti locali in:
+
+- export ChatGPT;
+- vault Obsidian;
+- export Gemini;
+- output privati `corpus/*.jsonl`, cronistoria/curato/diario;
+- D1 locale `pagine_corpus`.
+
+Verificare sul filesystem reale quali sono ancora presenti e produrre un manifest **senza copiare
+contenuto privato in git**.
+
+Campi manifest:
+
+```text
+source_id
+kind
+local_path_or_private_ref
+date_range
+record_count
+complete/partial/unknown
+original/derived
+notes
+```
+
+In git entra soltanto il manifest **senza testo privato né path/segreti sensibili**, oppure uno
+schema/report aggregato se i path stessi sono da trattare come privati.
+
+---
+
+## Passo 2 — costruire la cronologia Pagina Sacra
+
+Dagli output privati esistenti ricostruire ogni `pagina-sacra` con:
+
+```text
+pagina_id
+data
+coord_liturgica
+letture/vangelo
+source_ref
+testo_integrale
+sezioni_presenti
+gesto_reale
+oggi_cammino_verbatim
+sintesi
+provenance
+```
+
+Regole:
+
+- nessun testo inventato per riempire buchi;
+- nessuna parafrasi al posto della sezione originale;
+- se data/letture sono ambigue, marcare `unknown/ambiguous`;
+- preservare varianti quando la stessa giornata ha più versioni;
+- distinguere la Pagina completa dagli atomi derivati.
+
+Output privato suggerito:
+
+`corpus/origin/pagine-sacre-origin.jsonl`
+
+(gitignored).
+
+---
+
+## Passo 3 — estrarre il corpus «Oggi cammino»
+
+Estrarre **verbatim** la formula da ogni Pagina Sacra che la contiene.
+
+Schema minimo:
+
+```text
+memento_id
+pagina_id
+data
+coord_liturgica
+testo_verbatim
+source_ref
+provenance_origin
+adoption_state
+carried_state
+quadernino_ref
+```
+
+Stati iniziali consentiti:
+
+- `adoption_state`: `unknown | generated | adopted | modified`;
+- `carried_state`: `unknown | yes | no`.
+
+Non inferire `carried=yes` dal semplice fatto che la Pagina esista. Verrà verificato più avanti
+contro i quadernini tascabili.
+
+Output privato suggerito:
+
+`corpus/origin/oggi-cammino.jsonl`
+
+(gitignored).
+
+---
+
+## Passo 4 — ricostruire l'evoluzione del formato
+
+Produrre un report aggregato, senza testo privato completo, che mostri:
+
+- prima/ultima data disponibile;
+- numero di Pagine Sacre;
+- copertura per periodo liturgico;
+- frequenza delle sezioni;
+- quando compaiono/scompaiono `Il Re Oggi`, `Fuoco`, `Presenza`, `Regno`, `Rosario`, `Gesto`,
+  `Avversario`, `Oggi cammino`, `Sintesi`;
+- fonti/modelli/prompt quando ricostruibili;
+- gap e ambiguità.
+
+Questo report può entrare in git perché contiene struttura e conteggi, non il corpus privato.
+
+Output suggerito:
+
+`docs/research/ORIGIN-SYSTEM-AUDIT.md`
+
+---
+
+## Criteri d'accettazione
+
+R1-first-slice è completata solo quando:
+
+1. **una data campione** può essere seguita dalla sorgente originale alla Pagina integrale e al suo
+   `Oggi cammino`;
+2. l'estrazione `Oggi cammino` è verbatim e linkata alla Pagina sorgente;
+3. ogni record ha provenance e stato di adozione/trasporto esplicito o `unknown`;
+4. gli atomi non vengono usati come sostituto della Pagina integrale;
+5. nessun buco viene riempito da generazione AI;
+6. i B5 non vengono trattati come sorgente mancante se il testo digitale esiste già;
+7. i quadernini vengono riservati alla fase di verifica `carried`, non usati come prerequisito;
+8. nessun contenuto privato nuovo viene committato accidentalmente;
+9. viene aggiornato `STATUS.md` con conteggi **verificati**, non stimati;
+10. viene scelto il prossimo slice: completare R1 sull'intero corpus oppure passare al prototipo
+    R2 solo se la copertura è già sufficiente.
+
+---
+
+## Cosa NON fare ora
+
+- non integrare RAG nel generatore pubblico;
+- non deployare `pagine_sacre` generate;
+- non seminare il corpus su D1 remoto;
+- non costruire `Sei stato qui` prima della cronologia;
+- non ridisegnare ancora il sito pubblico;
+- non attivare social/WhatsApp;
+- non creare prodotti KDP;
+- non fotografare migliaia di pagine B5;
+- non modificare la branch di Claude con reset/rebase/merge mentre l'audit concettuale è in corso.
+
+## Gate
+
+Nessun gate esterno per l'audit locale.
+
+Qualunque scrittura in produzione, invio esterno o pubblicazione resta gate umano secondo
+`AGENTS.md`.

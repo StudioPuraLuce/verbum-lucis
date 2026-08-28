@@ -1,68 +1,179 @@
-# AGENTS.md — istruzioni permanenti per l'AI su Verbum Lucis
+# AGENTS.md — istruzioni permanenti per l'AI su Verbum Lucis / Theosis
 
 > Come si lavora qui. Leggi prima `docs/00-governance/STELLA-POLARE.md` (identità, invarianti) e
 > `STATUS.md` (dov'è il progetto ora). Questo file dice **come** operare.
 
 ## Missione
 
-Portare Verbum Lucis (portale cattolico italiano, Astro 5 SSR + Cloudflare Workers/D1) a essere
-un'opera **strutturata, in direzione, votata alla perfezione anche tecnica**, che rende gloria e
-fa soldi tramite un motore organico. Vedi la Stella Polare per l'identità.
+Mantenere due obiettivi distinti senza confonderli:
 
-## Ordine di autorità (in conflitto, vince il più alto)
+1. **Theosis** — continuare e custodire il sistema personale di cammino, con memoria fedele,
+   provenance e AI come strumento;
+2. **Verbum Lucis** — costruire un servizio pubblico cattolico semplice, fonte-based, tecnicamente
+   eccellente e tendenzialmente hands-off.
 
-1. `docs/00-governance/STELLA-POLARE.md` — identità, offerta, promesse, non-negoziabili.
-2. Questo `AGENTS.md` — metodo e invarianti tecnici.
-3. `DECISIONS.md` — decisioni prese (ADR).
-4. `ROADMAP.md` → `NEXT.md` — cosa costruire ora.
+**Fedele Messaggero** distribuisce soltanto materiale pubblico.
 
-**Una decisione tecnica non cambia mai identità/offerta/promesse.** Se un'implementazione
-richiederebbe di violare la Stella Polare: **fermati e descrivi il conflitto**, non reinterpretare.
+## Ordine di autorità
 
-## Invarianti (non si toccano senza gate umano)
+1. `docs/00-governance/STELLA-POLARE.md` — identità e non-negoziabili.
+2. `docs/00-governance/ORIGIN-SYSTEM.md` — funzione reale del sistema privato.
+3. `docs/00-governance/PRIVATE-PUBLIC-BOUNDARY.md` — firewall.
+4. Questo `AGENTS.md` — metodo e invarianti tecnici.
+5. `DECISIONS.md` — ADR, incluse quelle che superano decisioni precedenti.
+6. `ROADMAP.md` → `NEXT.md` — cosa costruire ora.
 
-- **Ortodossia**: lo strato dottrinale/esoterico non entra mai nel prompt/contenuto mainstream.
-  Gli atomi `concetto` esoterici sono esclusi dal generatore devozionale.
-- **Privacy corpus**: gli artefatti-testimonianza restano **gitignorati** (`corpus/*.jsonl`,
-  `corpus/atoms-cache/`, `corpus/*.html`, `corpus/*.sqlite`, `drizzle/seed-*.sql`). In git solo
-  codice, schema, prompt, doc. `.dev.vars`/segreti **mai** committati.
-- **Fonte di verità**: `db/schema.ts` (Drizzle) è la verità dello schema; **tutto `drizzle/` è
-  gitignorato** (le SQL sono artefatti locali). La spina liturgica è `src/lib/liturgical-spiral.ts`
-  (motore deterministico offline), unica autorità sulla coordinata.
+Una decisione tecnica non cambia identità/offerta/promesse. Se un'implementazione richiede di
+violare un livello più alto: **fermarsi e descrivere il conflitto**, non reinterpretare.
+
+---
+
+## Invarianti
+
+### Firewall privato/pubblico
+
+- **Mai** pipeline automatica `corpus privato → RAG → generatore pubblico → publish`.
+- Il pubblico deve poter funzionare con **Nucleo Liturgico + fonti pubbliche/attribuibili**.
+- Qualunque export privato→pubblico richiede selezione umana esplicita, nuovo artefatto editoriale
+  e gate di pubblicazione.
+- `Sei stato qui`, `Oggi cammino`, quaderni, Praxis e analisi longitudinali sono private.
+
+### Privacy corpus
+
+Gli artefatti-testimonianza restano gitignorati (`corpus/*.jsonl`, cache, HTML privati, SQLite,
+seed privati, export, scansioni). In git entrano codice, schema e report aggregati senza testo
+personale.
+
+`.dev.vars`, token, credenziali, export personali e path sensibili **mai** committati.
+
+### Provenienza
+
+Non confondere:
+
+- fonte ricevuta;
+- testo originale autore;
+- output AI;
+- output adottato/modificato;
+- memento realmente portato;
+- osservazione di vita;
+- interpretazione personale;
+- comprensione storica poi superata.
+
+Se lo stato non è verificato usare `unknown`, non inferire.
+
+### Fonte di verità
+
+- `db/schema.ts` = verità dello schema applicativo.
+- `src/lib/liturgical-spiral.ts` = motore deterministico della coordinata liturgica.
+- La **Pagina integrale** è superiore agli atomi come memoria del cammino.
+- Gli atomi/embedding/ranking sono indici ricostruibili, non sostituti della sorgente.
+
+---
+
+## AI: ruolo
+
+### Privato / Theosis
+
+L'AI può:
+
+- estrarre e classificare;
+- cercare e collegare;
+- confrontare ritorni;
+- comporre bozze private della Pagina Sacra;
+- proporre semi per `Oggi cammino`;
+- sintetizzare evoluzioni con citazione delle sorgenti.
+
+Non può:
+
+- dichiarare cosa Dio vuole;
+- impersonare Cristo come nuova autorità;
+- inventare testimonianze;
+- riscrivere il passato;
+- trasformare una similarità in `Sei stato qui`.
+
+Formula: **La Liturgia parla. Il corpus testimonia. L'AI collega. L'autore discerne.**
+
+### Pubblico / Verbum Lucis
+
+Preferire trasformazioni deterministiche/source-based. L'AI può aiutare con:
+
+- normalizzazione;
+- riassunti fattuali verificabili;
+- formattazione;
+- metadata/SEO sotto controllo;
+- derivazione multiformato dal `Public Daily Pack`.
+
+Da evitare:
+
+- `Dio oggi ti dice...`;
+- coaching spirituale AI;
+- diagnosi personali;
+- preghiere personalizzate a pagamento;
+- engagement bait religioso;
+- cosmologia privata presentata come dottrina cattolica.
+
+---
 
 ## Principi tecnici
 
-- **Un modello per il lavoro giusto.** Estrazione/lavori meccanici (verbatim, batch) → modello
-  economico (**Haiku** via Gateway). Generazione customer-facing ("voce del Re", Pagina Sacra) →
-  modello forte (**Sonnet**). Non pagare Sonnet per lavoro meccanico.
-- **AI via Cloudflare AI Gateway** `verbum-lucis` (account `60496826f56a093a72602bfae074fdcf`),
-  fatturazione unificata. Offline: `POST …/verbum-lucis/anthropic/v1/messages` con header
-  `cf-aig-authorization: Bearer $CF_AIG_TOKEN`. Modello Sonnet = `claude-sonnet-4-6` (NON
-  `claude-sonnet-4.6`); Haiku = `claude-haiku-4-5`. In-Worker: `env.AI.run(...)` con `{gateway}`.
-- **Idempotenza**: i batch AI hanno cache per-record (es. `atoms-cache/`), riavviabili senza
-  ri-spendere. Guardia anti-allucinazione sull'estrazione verbatim (l'atomo è sottostringa
-  normalizzata della fonte).
-- **Offline-first**: la coordinata liturgica è deterministica (nessuna dipendenza di rete). D1/API
-  esterne solo per i dati che non si calcolano (letture, ecc.).
-- **Costo consapevole**: preferire sempre la via più economica che regge la qualità richiesta;
-  segnalare la spesa stimata prima dei run a pagamento grossi.
-- Lingua operativa **italiano**; timezone **Europe/Rome**.
+- **Offline-first** per ciò che è calcolabile (coordinata liturgica).
+- **Fonte esplicita** per ciò che arriva dalla rete (letture, santi, ecc.).
+- **Idempotenza** per batch e ingest; cache per-record dove utile.
+- **Fail-closed** su privacy e pubblicazione.
+- **Costo consapevole**: modello economico per lavoro meccanico; modello forte soltanto dove la
+  qualità lo richiede.
+- **Zero output privato in log pubblicabili**.
+- Lingua operativa: italiano; timezone: `Europe/Rome`.
 
-## Gate umani (l'AI prepara e propone, Chris approva ed esegue)
+### Cloudflare / AI Gateway
 
-Semina D1 **remota/prod** · creazione DB/deploy in produzione · **prezzi** dei prodotti ·
-**comunicazioni esterne** (post IG, broadcast WhatsApp) · **pubblicazioni** (KDP, stampe) ·
-listing prodotti · qualsiasi scrittura su servizi esterni · operazioni distruttive. Default
-**fail-closed**.
+Lo stack corrente usa Cloudflare Workers/D1/KV e AI Gateway `verbum-lucis`. Le configurazioni
+tecniche già funzionanti non vanno cambiate durante la rifondazione documentale se non richiesto dal
+`NEXT.md`.
+
+Se si usa Anthropic via Gateway, rispettare nomi modello e configurazione correnti nel codice/env;
+non hardcodare segreti nei documenti o nei sorgenti.
+
+---
+
+## Gate umani
+
+Richiedono approvazione esplicita:
+
+- semina D1 remota/prod;
+- deploy produzione;
+- attivazione/invio su social, WhatsApp o email;
+- prezzi;
+- KDP/stampe/listing;
+- pubblicazioni;
+- export di materiale privato verso pubblico;
+- operazioni distruttive;
+- modifiche che rendano accessibili dati Theosis dall'esterno.
+
+Una richiesta esplicita dell'utente nel turno corrente può costituire il gate per l'azione descritta,
+ma non autorizza azioni ulteriori non implicate.
+
+---
 
 ## Metodo di lavoro
 
-1. Leggi la spec (Stella Polare → ROADMAP → NEXT). 2. Elenca file/risorse toccati e dichiara le
-assunzioni. 3. Fai la **minima fetta verticale funzionante**. 4. Verifica (browser preview / query /
-test). 5. Aggiorna `STATUS.md` + `CHANGELOG.md` + `NEXT.md`. Per fasi: mai tutto in un rilascio.
+1. Leggi Stella Polare → Origin System → Boundary → STATUS → ROADMAP → NEXT.
+2. Verifica lo stato reale prima di modificare.
+3. Dichiara file/risorse toccati e assunzioni.
+4. Fai **una minima fetta verticale**.
+5. Verifica con dati reali/test, non con intenzioni.
+6. Aggiorna `STATUS.md`, `CHANGELOG.md`, `NEXT.md`.
+7. Non accelerare verso deploy/monetizzazione saltando i criteri d'uscita.
 
-## Definizione di "completato"
+## Definizione di completato
 
-Fonte-dati definita · ID/stati canonici · error-handling + retry dove serve · idempotenza ·
-criteri d'accettazione verificati (non "dovrebbe funzionare") · doc + changelog aggiornati ·
-log puliti.
+Un risultato è completato quando:
+
+- sorgenti e provenance sono definite;
+- stati/ID sono canonici;
+- errori e ambiguità sono rappresentati esplicitamente;
+- il processo è riavviabile/idempotente quando pertinente;
+- i criteri d'accettazione sono verificati;
+- privacy/firewall restano intatti;
+- documentazione canonica è aggiornata;
+- nessun numero o fatto è inventato.
