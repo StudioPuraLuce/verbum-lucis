@@ -1,0 +1,104 @@
+{
+  "schema": "inner-atlas.public-graph.v0",
+  "name": "The Divided Will",
+  "status": "DRAFT",
+  "authorApproved": false,
+  "origin": "Original source-based public study; never copied from private Theosis graph",
+  "nodes": [
+    {
+      "id": "question",
+      "type": "central_question",
+      "label": "Why does intention fail to become action?",
+      "text": "An invitation to examine the moment intention gives way to reaction.",
+      "refs": []
+    },
+    {
+      "id": "paul",
+      "type": "scripture",
+      "label": "Romans 7:15–25",
+      "text": "Paul's discussion of wanting to do good and acting otherwise belongs to an argument about sin, law and deliverance.",
+      "refs": [
+        "romans7"
+      ]
+    },
+    {
+      "id": "many-i",
+      "type": "fourth_way",
+      "label": "Changing inner 'I's",
+      "text": "Fourth Way teaching describes changing and sometimes conflicting inner 'I's; this is a doctrinal concept in that tradition, not clinically verified psychology.",
+      "refs": [
+        "nicoll"
+      ]
+    },
+    {
+      "id": "observer",
+      "type": "practice",
+      "label": "Self-observation",
+      "text": "Observing shifting states rather than identifying immediately with them is a recurring Fourth Way practice.",
+      "refs": [
+        "nicoll"
+      ]
+    },
+    {
+      "id": "new-man",
+      "type": "literature",
+      "label": "Nicoll's inner reading of the Gospels",
+      "text": "The New Man interprets Gospel material psychologically; it does not make Romans 7 a Fourth Way text.",
+      "refs": [
+        "newman"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "question",
+      "to": "paul",
+      "relation": "source_frame",
+      "strength": "editorial"
+    },
+    {
+      "from": "question",
+      "to": "many-i",
+      "relation": "source_frame",
+      "strength": "editorial"
+    },
+    {
+      "from": "many-i",
+      "to": "observer",
+      "relation": "same_tradition",
+      "strength": "source_grounded_general"
+    },
+    {
+      "from": "new-man",
+      "to": "observer",
+      "relation": "author_context",
+      "strength": "source_grounded_general"
+    },
+    {
+      "from": "paul",
+      "to": "many-i",
+      "relation": "analogy_not_identity",
+      "strength": "editorial_interpretation"
+    }
+  ],
+  "sources": [
+    {
+      "id": "romans7",
+      "url": "https://bible.usccb.org/bible/romans/7",
+      "title": "Romans 7, USCCB",
+      "use": "reference_link_only"
+    },
+    {
+      "id": "newman",
+      "url": "https://books.google.com/books/about/The_New_Man.html?id=I-Y8AAAAIAAJ",
+      "title": "Maurice Nicoll, The New Man (1950)",
+      "use": "bibliographic"
+    },
+    {
+      "id": "nicoll",
+      "url": "https://books.google.com/books?id=tUYqAQAAMAAJ",
+      "title": "Maurice Nicoll, Psychological Commentaries, Vol. 4",
+      "use": "bibliographic_specific_passage_pending"
+    }
+  ]
+}
