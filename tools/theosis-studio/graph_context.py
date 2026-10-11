@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DB = ROOT / "corpus" / "graph.sqlite"
-TERM = re.compile(r"[^\\W_]+", re.UNICODE)
+TERM = re.compile(r"[^\W_]+", re.UNICODE)
 STOP = {"the", "and", "from", "about", "with", "per", "del", "della", "che", "una", "sono", "come"}
 
 
